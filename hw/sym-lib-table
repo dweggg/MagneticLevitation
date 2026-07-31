@@ -1,0 +1,4 @@
+(sym_lib_table
+	(version 7)
+	(lib (name "ExtraLib") (type "KiCad") (uri "/mnt/data/Documents/KiCad/lib") (options "") (descr ""))
+)

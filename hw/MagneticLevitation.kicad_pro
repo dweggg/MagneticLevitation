@@ -60,16 +60,22 @@
           "hatch_smoothing_level": 0,
           "hatch_smoothing_value": 0.1,
           "hatch_thickness": 1.0,
-          "min_clearance": 0.5,
+          "min_clearance": 0.2,
           "min_island_area": 10.0,
           "min_thickness": 0.25,
-          "pad_connection": 1,
+          "pad_connection": 2,
           "remove_islands": 0,
           "thermal_relief_gap": 0.5,
           "thermal_relief_spoke_width": 0.5
         }
       },
-      "diff_pair_dimensions": [],
+      "diff_pair_dimensions": [
+        {
+          "gap": 0.0,
+          "via_gap": 0.0,
+          "width": 0.0
+        }
+      ],
       "drc_exclusions": [],
       "meta": {
         "version": 2
@@ -140,9 +146,9 @@
       },
       "rules": {
         "max_error": 0.005,
-        "min_clearance": 0.0,
-        "min_connection": 0.0,
-        "min_copper_edge_clearance": 0.5,
+        "min_clearance": 0.2,
+        "min_connection": 0.2,
+        "min_copper_edge_clearance": 0.2,
         "min_groove_width": 0.0,
         "min_hole_clearance": 0.25,
         "min_hole_to_hole": 0.25,
@@ -156,7 +162,7 @@
         "min_track_width": 0.2,
         "min_via_annular_width": 0.1,
         "min_via_diameter": 0.5,
-        "solder_mask_to_copper_clearance": 0.0,
+        "solder_mask_to_copper_clearance": 0.005,
         "use_height_for_length_calcs": true
       },
       "teardrop_options": [
@@ -203,7 +209,9 @@
           "td_width_to_size_filter_ratio": 0.9
         }
       ],
-      "track_widths": [],
+      "track_widths": [
+        0.0
+      ],
       "tuning_pattern_settings": {
         "diff_pair_defaults": {
           "corner_radius_percentage": 80,
@@ -230,7 +238,12 @@
           "spacing": 0.6
         }
       },
-      "via_dimensions": [],
+      "via_dimensions": [
+        {
+          "diameter": 0.0,
+          "drill": 0.0
+        }
+      ],
       "zones_allow_external_fillets": false
     },
     "ipc2581": {
@@ -515,19 +528,9 @@
       {
         "line_style": 0,
         "name": "Analog",
-        "pcb_color": "rgba(0, 0, 0, 0.000)",
-        "priority": 1,
-        "schematic_color": "rgb(0, 194, 194)",
-        "tuning_profile": "",
-        "wire_width": 6
-      },
-      {
-        "bus_width": 12,
-        "line_style": 0,
-        "name": "Data",
-        "pcb_color": "rgb(0, 0, 132)",
+        "pcb_color": "rgb(0, 194, 194)",
         "priority": 3,
-        "schematic_color": "rgb(0, 0, 132)",
+        "schematic_color": "rgb(0, 194, 194)",
         "tuning_profile": "",
         "wire_width": 6
       },
@@ -535,16 +538,35 @@
         "line_style": 0,
         "name": "GND",
         "pcb_color": "rgb(72, 72, 72)",
-        "priority": 4,
+        "priority": 6,
         "schematic_color": "rgb(72, 72, 72)",
         "tuning_profile": "",
         "wire_width": 12
       },
       {
+        "bus_width": 12,
+        "line_style": 0,
+        "name": "MCU",
+        "pcb_color": "rgb(0, 194, 0)",
+        "priority": 1,
+        "schematic_color": "rgb(0, 194, 0)",
+        "tuning_profile": "",
+        "wire_width": 6
+      },
+      {
+        "bus_width": 12,
+        "name": "PWM",
+        "pcb_color": "rgb(148, 78, 255)",
+        "priority": 0,
+        "schematic_color": "rgb(148, 78, 255)",
+        "tuning_profile": "",
+        "wire_width": 6
+      },
+      {
         "line_style": 0,
         "name": "Power",
         "pcb_color": "rgb(194, 0, 0)",
-        "priority": 5,
+        "priority": 7,
         "schematic_color": "rgb(194, 0, 0)",
         "tuning_profile": "",
         "wire_width": 20
@@ -553,7 +575,7 @@
         "line_style": 0,
         "name": "PowerClean",
         "pcb_color": "rgb(194, 0, 194)",
-        "priority": 2,
+        "priority": 4,
         "schematic_color": "rgb(194, 0, 194)",
         "tuning_profile": "",
         "wire_width": 12
@@ -561,11 +583,21 @@
       {
         "line_style": 0,
         "name": "SwitchingNode",
-        "pcb_color": "rgba(0, 0, 0, 0.000)",
-        "priority": 0,
+        "pcb_color": "rgb(255, 153, 0)",
+        "priority": 2,
         "schematic_color": "rgb(255, 153, 0)",
         "tuning_profile": "",
         "wire_width": 20
+      },
+      {
+        "bus_width": 12,
+        "line_style": 0,
+        "name": "USB",
+        "pcb_color": "rgb(0, 0, 132)",
+        "priority": 5,
+        "schematic_color": "rgb(0, 0, 132)",
+        "tuning_profile": "",
+        "wire_width": 6
       }
     ],
     "meta": {
@@ -583,27 +615,27 @@
         "pattern": "GND"
       },
       {
-        "netclass": "Data",
+        "netclass": "USB",
         "pattern": "CC1"
       },
       {
-        "netclass": "Data",
+        "netclass": "USB",
         "pattern": "CC2"
       },
       {
-        "netclass": "Data",
+        "netclass": "USB",
         "pattern": "/D-"
       },
       {
-        "netclass": "Data",
+        "netclass": "USB",
         "pattern": "/D+"
       },
       {
-        "netclass": "Data",
+        "netclass": "USB",
         "pattern": "UDM"
       },
       {
-        "netclass": "Data",
+        "netclass": "USB",
         "pattern": "UDP"
       },
       {
@@ -645,6 +677,42 @@
       {
         "netclass": "Analog",
         "pattern": "magMeas"
+      },
+      {
+        "netclass": "SwitchingNode",
+        "pattern": "/SWA_"
+      },
+      {
+        "netclass": "Analog",
+        "pattern": "/iRef"
+      },
+      {
+        "netclass": "Analog",
+        "pattern": "/iRef_"
+      },
+      {
+        "netclass": "MCU",
+        "pattern": "RST|SWCLK|SWDIO|UART_RX|UART_TX"
+      },
+      {
+        "netclass": "Analog",
+        "pattern": "/magMeas_"
+      },
+      {
+        "netclass": "PWM",
+        "pattern": "/GA_L|/G_AH|/G_BH|/G_BL|GD_EN|PWM_AH|PWM_AL|PWM_BH|PWM_BL"
+      },
+      {
+        "netclass": "USB",
+        "pattern": "CC1|CC2|UDM|UDP"
+      },
+      {
+        "netclass": "USB",
+        "pattern": "/D(+|-)"
+      },
+      {
+        "netclass": "Analog",
+        "pattern": "iRef"
       }
     ]
   },
@@ -739,12 +807,438 @@
           "label": "Datasheet",
           "name": "Datasheet",
           "show": true
+        },
+        {
+          "group_by": false,
+          "label": "Breakdown Voltage",
+          "name": "Breakdown Voltage",
+          "show": false
+        },
+        {
+          "group_by": false,
+          "label": "Breakdown Voltage (Vbr)",
+          "name": "Breakdown Voltage (Vbr)",
+          "show": false
+        },
+        {
+          "group_by": false,
+          "label": "Capacitance",
+          "name": "Capacitance",
+          "show": false
+        },
+        {
+          "group_by": false,
+          "label": "Category",
+          "name": "Category",
+          "show": false
+        },
+        {
+          "group_by": false,
+          "label": "Circuit",
+          "name": "Circuit",
+          "show": false
+        },
+        {
+          "group_by": false,
+          "label": "Clamping Voltage@Ipp",
+          "name": "Clamping Voltage@Ipp",
+          "show": false
+        },
+        {
+          "group_by": false,
+          "label": "Class",
+          "name": "Class",
+          "show": false
+        },
+        {
+          "group_by": false,
+          "label": "Contact Current",
+          "name": "Contact Current",
+          "show": false
+        },
+        {
+          "group_by": false,
+          "label": "Contact Discharge Vesd",
+          "name": "Contact Discharge Vesd",
+          "show": false
+        },
+        {
+          "group_by": false,
+          "label": "Continuous Drain Current (Id)",
+          "name": "Continuous Drain Current (Id)",
+          "show": false
+        },
+        {
+          "group_by": false,
+          "label": "Dominant Wavelength",
+          "name": "Dominant Wavelength",
+          "show": false
+        },
+        {
+          "group_by": false,
+          "label": "Drain Source On Resistance (RDS(on)@Vgs,Id)",
+          "name": "Drain Source On Resistance (RDS(on)@Vgs,Id)",
+          "show": false
+        },
+        {
+          "group_by": false,
+          "label": "Drain Source Voltage (Vdss)",
+          "name": "Drain Source Voltage (Vdss)",
+          "show": false
+        },
+        {
+          "group_by": false,
+          "label": "Emitted Color",
+          "name": "Emitted Color",
+          "show": false
+        },
+        {
+          "group_by": false,
+          "label": "FT Rotation Offset",
+          "name": "FT Rotation Offset",
+          "show": false
+        },
+        {
+          "group_by": false,
+          "label": "Forward Current",
+          "name": "Forward Current",
+          "show": false
+        },
+        {
+          "group_by": false,
+          "label": "Forward Voltage (VF)",
+          "name": "Forward Voltage (VF)",
+          "show": false
+        },
+        {
+          "group_by": false,
+          "label": "Gate Threshold Voltage (Vgs(th)@Id)",
+          "name": "Gate Threshold Voltage (Vgs(th)@Id)",
+          "show": false
+        },
+        {
+          "group_by": false,
+          "label": "Input Capacitance (Ciss@Vds)",
+          "name": "Input Capacitance (Ciss@Vds)",
+          "show": false
+        },
+        {
+          "group_by": false,
+          "label": "Insulation Resistance",
+          "name": "Insulation Resistance",
+          "show": false
+        },
+        {
+          "group_by": false,
+          "label": "Junction Capacitance(Cj)@1Mhz",
+          "name": "Junction Capacitance(Cj)@1Mhz",
+          "show": false
+        },
+        {
+          "group_by": false,
+          "label": "LCSC",
+          "name": "LCSC",
+          "show": false
+        },
+        {
+          "group_by": false,
+          "label": "LCSC Part",
+          "name": "LCSC Part",
+          "show": false
+        },
+        {
+          "group_by": false,
+          "label": "Lens Color",
+          "name": "Lens Color",
+          "show": false
+        },
+        {
+          "group_by": false,
+          "label": "Luminous Intensity",
+          "name": "Luminous Intensity",
+          "show": false
+        },
+        {
+          "group_by": false,
+          "label": "MPN",
+          "name": "MPN",
+          "show": false
+        },
+        {
+          "group_by": false,
+          "label": "Manufacturer",
+          "name": "Manufacturer",
+          "show": false
+        },
+        {
+          "group_by": false,
+          "label": "Maximum Clamping Voltage",
+          "name": "Maximum Clamping Voltage",
+          "show": false
+        },
+        {
+          "group_by": false,
+          "label": "Mechanical Life",
+          "name": "Mechanical Life",
+          "show": false
+        },
+        {
+          "group_by": false,
+          "label": "Minimum Qty",
+          "name": "Minimum Qty",
+          "show": false
+        },
+        {
+          "group_by": false,
+          "label": "Mounting Style",
+          "name": "Mounting Style",
+          "show": false
+        },
+        {
+          "group_by": false,
+          "label": "Number Of Lines",
+          "name": "Number Of Lines",
+          "show": false
+        },
+        {
+          "group_by": false,
+          "label": "Operating Force",
+          "name": "Operating Force",
+          "show": false
+        },
+        {
+          "group_by": false,
+          "label": "Operating Temperature",
+          "name": "Operating Temperature",
+          "show": false
+        },
+        {
+          "group_by": false,
+          "label": "Operating Temperature Range",
+          "name": "Operating Temperature Range",
+          "show": false
+        },
+        {
+          "group_by": false,
+          "label": "Overload Voltage (Max)",
+          "name": "Overload Voltage (Max)",
+          "show": false
+        },
+        {
+          "group_by": false,
+          "label": "Part",
+          "name": "Part",
+          "show": false
+        },
+        {
+          "group_by": false,
+          "label": "Peak Pulse Current (Ipp)",
+          "name": "Peak Pulse Current (Ipp)",
+          "show": false
+        },
+        {
+          "group_by": false,
+          "label": "Peak Pulse Current(Ipp)@8/20Us",
+          "name": "Peak Pulse Current(Ipp)@8/20Us",
+          "show": false
+        },
+        {
+          "group_by": false,
+          "label": "Peak Pulse Power Dissipation (Ppp)",
+          "name": "Peak Pulse Power Dissipation (Ppp)",
+          "show": false
+        },
+        {
+          "group_by": false,
+          "label": "Peak Pulse Power(Ppp)@8/20Us",
+          "name": "Peak Pulse Power(Ppp)@8/20Us",
+          "show": false
+        },
+        {
+          "group_by": false,
+          "label": "Pin Style",
+          "name": "Pin Style",
+          "show": false
+        },
+        {
+          "group_by": false,
+          "label": "Polarity",
+          "name": "Polarity",
+          "show": false
+        },
+        {
+          "group_by": false,
+          "label": "Power Dissipation",
+          "name": "Power Dissipation",
+          "show": false
+        },
+        {
+          "group_by": false,
+          "label": "Power Dissipation (Pd)",
+          "name": "Power Dissipation (Pd)",
+          "show": false
+        },
+        {
+          "group_by": false,
+          "label": "Power(Watts)",
+          "name": "Power(Watts)",
+          "show": false
+        },
+        {
+          "group_by": false,
+          "label": "Price",
+          "name": "Price",
+          "show": false
+        },
+        {
+          "group_by": false,
+          "label": "Process",
+          "name": "Process",
+          "show": false
+        },
+        {
+          "group_by": false,
+          "label": "Resistance",
+          "name": "Resistance",
+          "show": false
+        },
+        {
+          "group_by": false,
+          "label": "Reverse Leakage Current",
+          "name": "Reverse Leakage Current",
+          "show": false
+        },
+        {
+          "group_by": false,
+          "label": "Reverse Leakage Current (Ir)",
+          "name": "Reverse Leakage Current (Ir)",
+          "show": false
+        },
+        {
+          "group_by": false,
+          "label": "Reverse Stand-Off Voltage (Vrwm)",
+          "name": "Reverse Stand-Off Voltage (Vrwm)",
+          "show": false
+        },
+        {
+          "group_by": false,
+          "label": "Reverse Transfer Capacitance (Crss@Vds)",
+          "name": "Reverse Transfer Capacitance (Crss@Vds)",
+          "show": false
+        },
+        {
+          "group_by": false,
+          "label": "Stock",
+          "name": "Stock",
+          "show": false
+        },
+        {
+          "group_by": false,
+          "label": "Strike Gundam",
+          "name": "Strike Gundam",
+          "show": false
+        },
+        {
+          "group_by": false,
+          "label": "Switch Height",
+          "name": "Switch Height",
+          "show": false
+        },
+        {
+          "group_by": false,
+          "label": "Switch Length",
+          "name": "Switch Length",
+          "show": false
+        },
+        {
+          "group_by": false,
+          "label": "Switch Width",
+          "name": "Switch Width",
+          "show": false
+        },
+        {
+          "group_by": false,
+          "label": "Temperature Coefficient",
+          "name": "Temperature Coefficient",
+          "show": false
+        },
+        {
+          "group_by": false,
+          "label": "Tolerance",
+          "name": "Tolerance",
+          "show": false
+        },
+        {
+          "group_by": false,
+          "label": "Total Gate Charge (Qg@Vgs)",
+          "name": "Total Gate Charge (Qg@Vgs)",
+          "show": false
+        },
+        {
+          "group_by": false,
+          "label": "Type",
+          "name": "Type",
+          "show": false
+        },
+        {
+          "group_by": false,
+          "label": "Viewing Angle",
+          "name": "Viewing Angle",
+          "show": false
+        },
+        {
+          "group_by": false,
+          "label": "Voltage Rated",
+          "name": "Voltage Rated",
+          "show": false
+        },
+        {
+          "group_by": false,
+          "label": "Voltage Rating (Dc)",
+          "name": "Voltage Rating (Dc)",
+          "show": false
+        },
+        {
+          "group_by": false,
+          "label": "With Lamp",
+          "name": "With Lamp",
+          "show": false
+        },
+        {
+          "group_by": false,
+          "label": "Attrition Qty",
+          "name": "Attrition Qty",
+          "show": false
+        },
+        {
+          "group_by": false,
+          "label": "Description",
+          "name": "Description",
+          "show": false
+        },
+        {
+          "group_by": false,
+          "label": "Actuator/Cap Color",
+          "name": "Actuator/Cap Color",
+          "show": false
+        },
+        {
+          "group_by": false,
+          "label": "#",
+          "name": "${ITEM_NUMBER}",
+          "show": false
+        },
+        {
+          "group_by": false,
+          "label": "Actuator Style",
+          "name": "Actuator Style",
+          "show": false
         }
       ],
       "filter_string": "",
       "group_symbols": true,
       "include_excluded_from_bom": true,
-      "name": "Default Editing",
+      "name": "",
       "sort_asc": true,
       "sort_field": "Reference"
     },
@@ -789,7 +1283,7 @@
         "uuid": "fdb537e3-598b-439b-adb3-5b03aa38dd63"
       }
     ],
-    "used_designators": "L1,S1,D1-9,C1-17,R1-29,FB1,#PWR1-50,J1-2,H1-6,Q1-4,PN1,U1-4",
+    "used_designators": "C1-34,R1-31,Q1-4,S1,D1-10,U1-9,#PWR1-67,CN1,UART1,J1-2,FB1,L1-2,FID1-3,LED1-3,H1-6,PN1,SWD1",
     "variants": []
   },
   "sheets": [

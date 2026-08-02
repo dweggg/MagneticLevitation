@@ -150,7 +150,7 @@
         "min_connection": 0.2,
         "min_copper_edge_clearance": 0.2,
         "min_groove_width": 0.0,
-        "min_hole_clearance": 0.25,
+        "min_hole_clearance": 0.2,
         "min_hole_to_hole": 0.25,
         "min_microvia_diameter": 0.2,
         "min_microvia_drill": 0.1,
@@ -158,10 +158,10 @@
         "min_silk_clearance": 0.0,
         "min_text_height": 0.8,
         "min_text_thickness": 0.08,
-        "min_through_hole_diameter": 0.3,
+        "min_through_hole_diameter": 0.2,
         "min_track_width": 0.2,
         "min_via_annular_width": 0.1,
-        "min_via_diameter": 0.5,
+        "min_via_diameter": 0.45,
         "solder_mask_to_copper_clearance": 0.005,
         "use_height_for_length_calcs": true
       },
@@ -713,6 +713,18 @@
       {
         "netclass": "Analog",
         "pattern": "iRef"
+      },
+      {
+        "netclass": "USB",
+        "pattern": "/CC(1_|2_)"
+      },
+      {
+        "netclass": "Analog",
+        "pattern": "/iSns(+|-)"
+      },
+      {
+        "netclass": "Analog",
+        "pattern": "/shunt(+|-)"
       }
     ]
   },
@@ -1233,9 +1245,21 @@
           "label": "Actuator Style",
           "name": "Actuator Style",
           "show": false
+        },
+        {
+          "group_by": false,
+          "label": "Field4",
+          "name": "Field4",
+          "show": false
+        },
+        {
+          "group_by": false,
+          "label": "KiLib_Generator",
+          "name": "KiLib_Generator",
+          "show": false
         }
       ],
-      "filter_string": "",
+      "filter_string": "tp",
       "group_symbols": true,
       "include_excluded_from_bom": true,
       "name": "",
@@ -1283,7 +1307,7 @@
         "uuid": "fdb537e3-598b-439b-adb3-5b03aa38dd63"
       }
     ],
-    "used_designators": "FID1-3,L1-2,FB1,SWD1,PN1,Q1-4,H1-6,LED1-3,R1-31,C1-34,U1-9,D1-10,S1,#PWR1-67,J1-2,CN1,UART1",
+    "used_designators": "D1-10,U1-9,C1-34,S1,FID1-3,#PWR1-67,J1-2,UART1,CN1,TP1-65,R1-34,LED1-3,H1-6,SWD1,PN1,Q1-4,FB1,L1-2",
     "variants": []
   },
   "sheets": [

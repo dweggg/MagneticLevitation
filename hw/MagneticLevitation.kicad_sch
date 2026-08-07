@@ -2255,7 +2255,7 @@
 			)
 			(embedded_fonts no)
 		)
-		(symbol "PCM_JLCPCB-Capacitors:0603,22nF"
+		(symbol "PCM_JLCPCB-Capacitors:0603,220nF"
 			(pin_numbers
 				(hide yes)
 			)
@@ -2278,7 +2278,7 @@
 					(justify left)
 				)
 			)
-			(property "Value" "22nF"
+			(property "Value" "220nF"
 				(at 2.032 -0.3782 0)
 				(show_name no)
 				(do_not_autoplace no)
@@ -2300,7 +2300,7 @@
 					)
 				)
 			)
-			(property "Datasheet" "https://www.lcsc.com/datasheet/lcsc_datasheet_2304140030_Samsung-Electro-Mechanics-CL10B223KB8NNNC_C21122.pdf"
+			(property "Datasheet" "https://www.lcsc.com/datasheet/lcsc_datasheet_2304140030_Samsung-Electro-Mechanics-CL10B224KA8NNNC_C21120.pdf"
 				(at 0 0 0)
 				(show_name no)
 				(do_not_autoplace no)
@@ -2311,7 +2311,7 @@
 					)
 				)
 			)
-			(property "Description" "50V 22nF X7R ±10% 0603 Multilayer Ceramic Capacitors MLCC - SMD/SMT ROHS"
+			(property "Description" "25V 220nF X7R ±10% 0603 Multilayer Ceramic Capacitors MLCC - SMD/SMT ROHS"
 				(at 0 0 0)
 				(show_name no)
 				(do_not_autoplace no)
@@ -2322,7 +2322,7 @@
 					)
 				)
 			)
-			(property "LCSC" "C21122"
+			(property "LCSC" "C21120"
 				(at 0 0 0)
 				(show_name no)
 				(do_not_autoplace no)
@@ -2333,7 +2333,7 @@
 					)
 				)
 			)
-			(property "Stock" "746157"
+			(property "Stock" "781839"
 				(at 0 0 0)
 				(show_name no)
 				(do_not_autoplace no)
@@ -2344,7 +2344,7 @@
 					)
 				)
 			)
-			(property "Price" "0.007USD"
+			(property "Price" "0.009USD"
 				(at 0 0 0)
 				(show_name no)
 				(do_not_autoplace no)
@@ -2421,7 +2421,7 @@
 					)
 				)
 			)
-			(property "Part" "CL10B223KB8NNNC"
+			(property "Part" "CL10B224KA8NNNC"
 				(at 0 0 0)
 				(show_name no)
 				(do_not_autoplace no)
@@ -2432,7 +2432,7 @@
 					)
 				)
 			)
-			(property "Voltage Rated" "50V"
+			(property "Voltage Rated" "25V"
 				(at 2.032 -2.0462 0)
 				(show_name no)
 				(do_not_autoplace no)
@@ -2454,7 +2454,7 @@
 					)
 				)
 			)
-			(property "Capacitance" "22nF"
+			(property "Capacitance" "220nF"
 				(at 0 0 0)
 				(show_name no)
 				(do_not_autoplace no)
@@ -2487,7 +2487,7 @@
 					)
 				)
 			)
-			(symbol "0603,22nF_0_1"
+			(symbol "0603,220nF_0_1"
 				(polyline
 					(pts
 						(xy -1.27 0.635) (xy 1.27 0.635)
@@ -2513,7 +2513,7 @@
 					)
 				)
 			)
-			(symbol "0603,22nF_1_1"
+			(symbol "0603,220nF_1_1"
 				(pin passive line
 					(at 0 3.81 270)
 					(length 3.175)
@@ -13622,7 +13622,7 @@
 		(uuid "59c4694b-f70f-493e-b14d-a2da5be1e4ca")
 	)
 	(junction
-		(at 264.16 27.94)
+		(at 194.31 22.86)
 		(diameter 0)
 		(color 0 0 0 0)
 		(uuid "5b76e5cb-229c-46f1-8566-1af002bb38e4")
@@ -13646,7 +13646,7 @@
 		(uuid "63c4c97f-0de6-4c68-9219-2c969bae9589")
 	)
 	(junction
-		(at 273.05 27.94)
+		(at 203.2 22.86)
 		(diameter 0)
 		(color 0 0 0 0)
 		(uuid "64f4a61d-ca2e-4b05-a5ee-3dcabe9ad3fb")
@@ -13712,7 +13712,7 @@
 		(uuid "79640a85-fda0-4a06-86ac-339a5e082781")
 	)
 	(junction
-		(at 273.05 35.56)
+		(at 203.2 30.48)
 		(diameter 0)
 		(color 0 0 0 0)
 		(uuid "79e6ffef-ee3b-44f5-9ad9-cc4e3abe342f")
@@ -13964,7 +13964,7 @@
 		(uuid "c990fb3a-02d6-489a-a80c-0bb6261101f6")
 	)
 	(junction
-		(at 264.16 35.56)
+		(at 194.31 30.48)
 		(diameter 0)
 		(color 0 0 0 0)
 		(uuid "cc1ddeac-a4a2-4f64-ab56-93f14b4648d8")
@@ -14075,7 +14075,7 @@
 	)
 	(wire
 		(pts
-			(xy 255.27 35.56) (xy 264.16 35.56)
+			(xy 185.42 30.48) (xy 194.31 30.48)
 		)
 		(stroke
 			(width 0)
@@ -14222,6 +14222,16 @@
 			(type default)
 		)
 		(uuid "0ade6523-24e0-4b57-96d8-4ab7d044a691")
+	)
+	(wire
+		(pts
+			(xy 267.97 25.4) (xy 267.97 26.67)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "10a38273-8812-4a75-8e0a-f214a0d4668b")
 	)
 	(wire
 		(pts
@@ -14755,7 +14765,7 @@
 	)
 	(wire
 		(pts
-			(xy 273.05 26.67) (xy 273.05 27.94)
+			(xy 203.2 21.59) (xy 203.2 22.86)
 		)
 		(stroke
 			(width 0)
@@ -14855,6 +14865,16 @@
 	)
 	(wire
 		(pts
+			(xy 266.7 34.29) (xy 267.97 34.29)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "47c18c77-2d6a-489c-8833-5fb241724107")
+	)
+	(wire
+		(pts
 			(xy 198.12 46.99) (xy 208.28 46.99)
 		)
 		(stroke
@@ -14905,7 +14925,7 @@
 	)
 	(wire
 		(pts
-			(xy 264.16 27.94) (xy 273.05 27.94)
+			(xy 194.31 22.86) (xy 203.2 22.86)
 		)
 		(stroke
 			(width 0)
@@ -15055,7 +15075,7 @@
 	)
 	(wire
 		(pts
-			(xy 255.27 27.94) (xy 264.16 27.94)
+			(xy 185.42 22.86) (xy 194.31 22.86)
 		)
 		(stroke
 			(width 0)
@@ -15855,7 +15875,7 @@
 	)
 	(wire
 		(pts
-			(xy 273.05 35.56) (xy 273.05 36.83)
+			(xy 203.2 30.48) (xy 203.2 31.75)
 		)
 		(stroke
 			(width 0)
@@ -16265,7 +16285,7 @@
 	)
 	(wire
 		(pts
-			(xy 264.16 35.56) (xy 273.05 35.56)
+			(xy 194.31 30.48) (xy 203.2 30.48)
 		)
 		(stroke
 			(width 0)
@@ -16782,6 +16802,16 @@
 			(type default)
 		)
 		(uuid "d9d12e27-9457-4d38-9e9b-4c30e22e078e")
+	)
+	(wire
+		(pts
+			(xy 266.7 41.91) (xy 273.05 41.91)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "da0809ae-9615-419b-91b5-b95c1edd0680")
 	)
 	(wire
 		(pts
@@ -17574,6 +17604,30 @@
 					(size 1.27 1.27)
 				)
 				(justify right)
+			)
+		)
+	)
+	(global_label "UDP"
+		(shape input)
+		(at 273.05 41.91 0)
+		(fields_autoplaced yes)
+		(effects
+			(font
+				(size 1.27 1.27)
+			)
+			(justify left)
+		)
+		(uuid "21615627-bca8-4f26-a806-b5c801989c11")
+		(property "Intersheetrefs" "${INTERSHEET_REFS}"
+			(at 279.9057 41.91 0)
+			(hide yes)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left)
 			)
 		)
 	)
@@ -18926,7 +18980,7 @@
 	)
 	(symbol
 		(lib_id "PCM_JLCPCB-Capacitors:0402,10nF")
-		(at 255.27 31.75 0)
+		(at 185.42 26.67 0)
 		(unit 1)
 		(body_style 1)
 		(exclude_from_sim no)
@@ -18936,8 +18990,8 @@
 		(dnp no)
 		(fields_autoplaced yes)
 		(uuid "0457aa9e-8a3e-49a7-956a-173abe22d100")
-		(property "Reference" "C5"
-			(at 257.81 29.2099 0)
+		(property "Reference" "C1"
+			(at 187.96 24.1299 0)
 			(show_name no)
 			(do_not_autoplace no)
 			(effects
@@ -18948,7 +19002,7 @@
 			)
 		)
 		(property "Value" "10nF"
-			(at 257.81 31.75 0)
+			(at 187.96 26.67 0)
 			(show_name no)
 			(do_not_autoplace no)
 			(effects
@@ -18959,7 +19013,7 @@
 			)
 		)
 		(property "Footprint" "PCM_JLCPCB:C_0402"
-			(at 253.492 31.75 90)
+			(at 183.642 26.67 90)
 			(hide yes)
 			(show_name no)
 			(do_not_autoplace no)
@@ -18970,7 +19024,7 @@
 			)
 		)
 		(property "Datasheet" "https://www.lcsc.com/datasheet/lcsc_datasheet_2304140030_Samsung-Electro-Mechanics-CL05B103KB5NNNC_C15195.pdf"
-			(at 255.27 31.75 0)
+			(at 185.42 26.67 0)
 			(hide yes)
 			(show_name no)
 			(do_not_autoplace no)
@@ -18981,7 +19035,7 @@
 			)
 		)
 		(property "Description" "50V 10nF X7R ±10% 0402 Multilayer Ceramic Capacitors MLCC - SMD/SMT ROHS"
-			(at 255.27 31.75 0)
+			(at 185.42 26.67 0)
 			(hide yes)
 			(show_name no)
 			(do_not_autoplace no)
@@ -18992,7 +19046,7 @@
 			)
 		)
 		(property "LCSC" "C15195"
-			(at 255.27 31.75 0)
+			(at 185.42 26.67 0)
 			(hide yes)
 			(show_name no)
 			(do_not_autoplace no)
@@ -19003,7 +19057,7 @@
 			)
 		)
 		(property "Stock" "4779042"
-			(at 255.27 31.75 0)
+			(at 185.42 26.67 0)
 			(hide yes)
 			(show_name no)
 			(do_not_autoplace no)
@@ -19014,7 +19068,7 @@
 			)
 		)
 		(property "Price" "0.005USD"
-			(at 255.27 31.75 0)
+			(at 185.42 26.67 0)
 			(hide yes)
 			(show_name no)
 			(do_not_autoplace no)
@@ -19025,7 +19079,7 @@
 			)
 		)
 		(property "Process" "SMT"
-			(at 255.27 31.75 0)
+			(at 185.42 26.67 0)
 			(hide yes)
 			(show_name no)
 			(do_not_autoplace no)
@@ -19036,7 +19090,7 @@
 			)
 		)
 		(property "Minimum Qty" "20"
-			(at 255.27 31.75 0)
+			(at 185.42 26.67 0)
 			(hide yes)
 			(show_name no)
 			(do_not_autoplace no)
@@ -19047,7 +19101,7 @@
 			)
 		)
 		(property "Attrition Qty" "10"
-			(at 255.27 31.75 0)
+			(at 185.42 26.67 0)
 			(hide yes)
 			(show_name no)
 			(do_not_autoplace no)
@@ -19058,7 +19112,7 @@
 			)
 		)
 		(property "Class" "Basic Component"
-			(at 255.27 31.75 0)
+			(at 185.42 26.67 0)
 			(hide yes)
 			(show_name no)
 			(do_not_autoplace no)
@@ -19069,7 +19123,7 @@
 			)
 		)
 		(property "Category" "Capacitors,Multilayer Ceramic Capacitors MLCC - SMD/SMT"
-			(at 255.27 31.75 0)
+			(at 185.42 26.67 0)
 			(hide yes)
 			(show_name no)
 			(do_not_autoplace no)
@@ -19080,7 +19134,7 @@
 			)
 		)
 		(property "Manufacturer" "Samsung Electro-Mechanics"
-			(at 255.27 31.75 0)
+			(at 185.42 26.67 0)
 			(hide yes)
 			(show_name no)
 			(do_not_autoplace no)
@@ -19091,7 +19145,7 @@
 			)
 		)
 		(property "Part" "CL05B103KB5NNNC"
-			(at 255.27 31.75 0)
+			(at 185.42 26.67 0)
 			(hide yes)
 			(show_name no)
 			(do_not_autoplace no)
@@ -19102,7 +19156,7 @@
 			)
 		)
 		(property "Voltage Rated" "50V"
-			(at 257.81 34.29 0)
+			(at 187.96 29.21 0)
 			(show_name no)
 			(do_not_autoplace no)
 			(effects
@@ -19113,7 +19167,7 @@
 			)
 		)
 		(property "Tolerance" "±10%"
-			(at 255.27 31.75 0)
+			(at 185.42 26.67 0)
 			(hide yes)
 			(show_name no)
 			(do_not_autoplace no)
@@ -19124,7 +19178,7 @@
 			)
 		)
 		(property "Capacitance" "10nF"
-			(at 255.27 31.75 0)
+			(at 185.42 26.67 0)
 			(hide yes)
 			(show_name no)
 			(do_not_autoplace no)
@@ -19135,7 +19189,7 @@
 			)
 		)
 		(property "Temperature Coefficient" "X7R"
-			(at 255.27 31.75 0)
+			(at 185.42 26.67 0)
 			(hide yes)
 			(show_name no)
 			(do_not_autoplace no)
@@ -19146,7 +19200,7 @@
 			)
 		)
 		(property "Breakdown Voltage (Vbr)" ""
-			(at 255.27 31.75 0)
+			(at 185.42 26.67 0)
 			(hide yes)
 			(show_name no)
 			(do_not_autoplace no)
@@ -19157,7 +19211,7 @@
 			)
 		)
 		(property "Clamping Voltage@Ipp" ""
-			(at 255.27 31.75 0)
+			(at 185.42 26.67 0)
 			(hide yes)
 			(show_name no)
 			(do_not_autoplace no)
@@ -19168,7 +19222,7 @@
 			)
 		)
 		(property "Contact Discharge Vesd" ""
-			(at 255.27 31.75 0)
+			(at 185.42 26.67 0)
 			(hide yes)
 			(show_name no)
 			(do_not_autoplace no)
@@ -19179,7 +19233,7 @@
 			)
 		)
 		(property "Dominant Wavelength" ""
-			(at 255.27 31.75 0)
+			(at 185.42 26.67 0)
 			(hide yes)
 			(show_name no)
 			(do_not_autoplace no)
@@ -19190,7 +19244,7 @@
 			)
 		)
 		(property "Emitted Color" ""
-			(at 255.27 31.75 0)
+			(at 185.42 26.67 0)
 			(hide yes)
 			(show_name no)
 			(do_not_autoplace no)
@@ -19201,7 +19255,7 @@
 			)
 		)
 		(property "Forward Current" ""
-			(at 255.27 31.75 0)
+			(at 185.42 26.67 0)
 			(hide yes)
 			(show_name no)
 			(do_not_autoplace no)
@@ -19212,7 +19266,7 @@
 			)
 		)
 		(property "Forward Voltage (VF)" ""
-			(at 255.27 31.75 0)
+			(at 185.42 26.67 0)
 			(hide yes)
 			(show_name no)
 			(do_not_autoplace no)
@@ -19223,7 +19277,7 @@
 			)
 		)
 		(property "Junction Capacitance(Cj)@1Mhz" ""
-			(at 255.27 31.75 0)
+			(at 185.42 26.67 0)
 			(hide yes)
 			(show_name no)
 			(do_not_autoplace no)
@@ -19234,7 +19288,7 @@
 			)
 		)
 		(property "Lens Color" ""
-			(at 255.27 31.75 0)
+			(at 185.42 26.67 0)
 			(hide yes)
 			(show_name no)
 			(do_not_autoplace no)
@@ -19245,7 +19299,7 @@
 			)
 		)
 		(property "Luminous Intensity" ""
-			(at 255.27 31.75 0)
+			(at 185.42 26.67 0)
 			(hide yes)
 			(show_name no)
 			(do_not_autoplace no)
@@ -19256,7 +19310,7 @@
 			)
 		)
 		(property "Number Of Lines" ""
-			(at 255.27 31.75 0)
+			(at 185.42 26.67 0)
 			(hide yes)
 			(show_name no)
 			(do_not_autoplace no)
@@ -19267,7 +19321,7 @@
 			)
 		)
 		(property "Peak Pulse Current(Ipp)@8/20Us" ""
-			(at 255.27 31.75 0)
+			(at 185.42 26.67 0)
 			(hide yes)
 			(show_name no)
 			(do_not_autoplace no)
@@ -19278,7 +19332,7 @@
 			)
 		)
 		(property "Peak Pulse Power(Ppp)@8/20Us" ""
-			(at 255.27 31.75 0)
+			(at 185.42 26.67 0)
 			(hide yes)
 			(show_name no)
 			(do_not_autoplace no)
@@ -19289,7 +19343,7 @@
 			)
 		)
 		(property "Polarity" ""
-			(at 255.27 31.75 0)
+			(at 185.42 26.67 0)
 			(hide yes)
 			(show_name no)
 			(do_not_autoplace no)
@@ -19300,7 +19354,7 @@
 			)
 		)
 		(property "Power Dissipation" ""
-			(at 255.27 31.75 0)
+			(at 185.42 26.67 0)
 			(hide yes)
 			(show_name no)
 			(do_not_autoplace no)
@@ -19311,7 +19365,7 @@
 			)
 		)
 		(property "Reverse Leakage Current" ""
-			(at 255.27 31.75 0)
+			(at 185.42 26.67 0)
 			(hide yes)
 			(show_name no)
 			(do_not_autoplace no)
@@ -19322,7 +19376,7 @@
 			)
 		)
 		(property "Viewing Angle" ""
-			(at 255.27 31.75 0)
+			(at 185.42 26.67 0)
 			(hide yes)
 			(show_name no)
 			(do_not_autoplace no)
@@ -19341,7 +19395,7 @@
 		(instances
 			(project "MagneticLevitation"
 				(path "/fdb537e3-598b-439b-adb3-5b03aa38dd63"
-					(reference "C5")
+					(reference "C1")
 					(unit 1)
 				)
 			)
@@ -20231,7 +20285,7 @@
 		(dnp no)
 		(fields_autoplaced yes)
 		(uuid "0c1cb70b-4624-4db6-a393-1ece3b10d843")
-		(property "Reference" "R8"
+		(property "Reference" "R9"
 			(at 171.45 62.2299 0)
 			(show_name no)
 			(do_not_autoplace no)
@@ -20668,7 +20722,7 @@
 		(instances
 			(project "MagneticLevitation"
 				(path "/fdb537e3-598b-439b-adb3-5b03aa38dd63"
-					(reference "R8")
+					(reference "R9")
 					(unit 1)
 				)
 			)
@@ -21709,7 +21763,7 @@
 		(in_pos_files yes)
 		(dnp no)
 		(uuid "14d7bbe3-b6a5-4218-b077-77bd8f9d9897")
-		(property "Reference" "R21"
+		(property "Reference" "R22"
 			(at 53.34 125.476 90)
 			(show_name no)
 			(do_not_autoplace no)
@@ -22145,7 +22199,7 @@
 		(instances
 			(project "MagneticLevitation"
 				(path "/fdb537e3-598b-439b-adb3-5b03aa38dd63"
-					(reference "R21")
+					(reference "R22")
 					(unit 1)
 				)
 			)
@@ -22162,7 +22216,7 @@
 		(in_pos_files yes)
 		(dnp no)
 		(uuid "164d941d-1b8e-4397-91b3-5e5b54e67450")
-		(property "Reference" "#PWR037"
+		(property "Reference" "#PWR038"
 			(at 72.39 105.41 0)
 			(hide yes)
 			(show_name no)
@@ -22222,7 +22276,7 @@
 		(instances
 			(project "MagneticLevitation"
 				(path "/fdb537e3-598b-439b-adb3-5b03aa38dd63"
-					(reference "#PWR037")
+					(reference "#PWR038")
 					(unit 1)
 				)
 			)
@@ -22239,7 +22293,7 @@
 		(in_pos_files yes)
 		(dnp no)
 		(uuid "17272fa8-dc06-4127-aaf7-1cc8df702d97")
-		(property "Reference" "#PWR051"
+		(property "Reference" "#PWR052"
 			(at 93.98 137.16 0)
 			(hide yes)
 			(show_name no)
@@ -22299,7 +22353,7 @@
 		(instances
 			(project "MagneticLevitation"
 				(path "/fdb537e3-598b-439b-adb3-5b03aa38dd63"
-					(reference "#PWR051")
+					(reference "#PWR052")
 					(unit 1)
 				)
 			)
@@ -22738,7 +22792,7 @@
 		(in_pos_files yes)
 		(dnp no)
 		(uuid "18d5369c-72ce-4ad2-906a-efd5c6fdbd77")
-		(property "Reference" "#PWR018"
+		(property "Reference" "#PWR019"
 			(at 265.43 64.77 0)
 			(hide yes)
 			(show_name no)
@@ -22798,7 +22852,7 @@
 		(instances
 			(project "MagneticLevitation"
 				(path "/fdb537e3-598b-439b-adb3-5b03aa38dd63"
-					(reference "#PWR018")
+					(reference "#PWR019")
 					(unit 1)
 				)
 			)
@@ -22816,7 +22870,7 @@
 		(in_pos_files yes)
 		(dnp no)
 		(uuid "1b5a1c9d-36d0-400d-bce1-5cf363dcbd66")
-		(property "Reference" "#PWR019"
+		(property "Reference" "#PWR020"
 			(at 265.43 77.47 0)
 			(hide yes)
 			(show_name no)
@@ -22876,7 +22930,7 @@
 		(instances
 			(project "MagneticLevitation"
 				(path "/fdb537e3-598b-439b-adb3-5b03aa38dd63"
-					(reference "#PWR019")
+					(reference "#PWR020")
 					(unit 1)
 				)
 			)
@@ -23426,7 +23480,7 @@
 		(in_pos_files yes)
 		(dnp no)
 		(uuid "1efde006-34c1-4c46-9674-b61c9733e760")
-		(property "Reference" "#PWR016"
+		(property "Reference" "#PWR017"
 			(at 168.91 60.96 0)
 			(hide yes)
 			(show_name no)
@@ -23486,7 +23540,7 @@
 		(instances
 			(project "MagneticLevitation"
 				(path "/fdb537e3-598b-439b-adb3-5b03aa38dd63"
-					(reference "#PWR016")
+					(reference "#PWR017")
 					(unit 1)
 				)
 			)
@@ -23916,7 +23970,7 @@
 	)
 	(symbol
 		(lib_id "power:VBUS")
-		(at 273.05 26.67 0)
+		(at 203.2 21.59 0)
 		(unit 1)
 		(body_style 1)
 		(exclude_from_sim no)
@@ -23925,8 +23979,8 @@
 		(in_pos_files yes)
 		(dnp no)
 		(uuid "23ae415a-6ee8-447c-a7de-c5bdb1fe3624")
-		(property "Reference" "#PWR04"
-			(at 273.05 30.48 0)
+		(property "Reference" "#PWR01"
+			(at 203.2 25.4 0)
 			(hide yes)
 			(show_name no)
 			(do_not_autoplace no)
@@ -23937,7 +23991,7 @@
 			)
 		)
 		(property "Value" "+3V3"
-			(at 273.05 22.606 0)
+			(at 203.2 17.526 0)
 			(show_name no)
 			(do_not_autoplace no)
 			(effects
@@ -23947,7 +24001,7 @@
 			)
 		)
 		(property "Footprint" ""
-			(at 273.05 26.67 0)
+			(at 203.2 21.59 0)
 			(hide yes)
 			(show_name no)
 			(do_not_autoplace no)
@@ -23958,7 +24012,7 @@
 			)
 		)
 		(property "Datasheet" ""
-			(at 273.05 26.67 0)
+			(at 203.2 21.59 0)
 			(hide yes)
 			(show_name no)
 			(do_not_autoplace no)
@@ -23969,7 +24023,7 @@
 			)
 		)
 		(property "Description" "Power symbol creates a global label with name \"VBUS\""
-			(at 273.05 26.67 0)
+			(at 203.2 21.59 0)
 			(hide yes)
 			(show_name no)
 			(do_not_autoplace no)
@@ -23985,7 +24039,7 @@
 		(instances
 			(project "MagneticLevitation"
 				(path "/fdb537e3-598b-439b-adb3-5b03aa38dd63"
-					(reference "#PWR04")
+					(reference "#PWR01")
 					(unit 1)
 				)
 			)
@@ -25292,7 +25346,7 @@
 		(in_pos_files yes)
 		(dnp no)
 		(uuid "2bc06bf4-c878-44f9-be6f-feec63713c8a")
-		(property "Reference" "R18"
+		(property "Reference" "R19"
 			(at 122.936 118.11 0)
 			(show_name no)
 			(do_not_autoplace no)
@@ -25740,7 +25794,7 @@
 		(instances
 			(project "MagneticLevitation"
 				(path "/fdb537e3-598b-439b-adb3-5b03aa38dd63"
-					(reference "R18")
+					(reference "R19")
 					(unit 1)
 				)
 			)
@@ -26072,7 +26126,7 @@
 		(in_pos_files yes)
 		(dnp no)
 		(uuid "2d0eebf8-9781-4bab-a648-13d0ec8a4bb6")
-		(property "Reference" "#PWR026"
+		(property "Reference" "#PWR027"
 			(at 157.48 81.28 0)
 			(hide yes)
 			(show_name no)
@@ -26132,7 +26186,7 @@
 		(instances
 			(project "MagneticLevitation"
 				(path "/fdb537e3-598b-439b-adb3-5b03aa38dd63"
-					(reference "#PWR026")
+					(reference "#PWR027")
 					(unit 1)
 				)
 			)
@@ -27073,7 +27127,7 @@
 		(in_pos_files yes)
 		(dnp no)
 		(uuid "30d7f9ad-9ba1-4685-83f2-8e35514c52c2")
-		(property "Reference" "R23"
+		(property "Reference" "R24"
 			(at 64.77 129.794 0)
 			(show_name no)
 			(do_not_autoplace no)
@@ -27521,7 +27575,7 @@
 		(instances
 			(project "MagneticLevitation"
 				(path "/fdb537e3-598b-439b-adb3-5b03aa38dd63"
-					(reference "R23")
+					(reference "R24")
 					(unit 1)
 				)
 			)
@@ -27960,7 +28014,7 @@
 		(in_pos_files yes)
 		(dnp no)
 		(uuid "32149bd6-4e88-4aa1-95a0-c426b70b8c5d")
-		(property "Reference" "#PWR07"
+		(property "Reference" "#PWR09"
 			(at 101.6 43.18 0)
 			(hide yes)
 			(show_name no)
@@ -28020,7 +28074,7 @@
 		(instances
 			(project "MagneticLevitation"
 				(path "/fdb537e3-598b-439b-adb3-5b03aa38dd63"
-					(reference "#PWR07")
+					(reference "#PWR09")
 					(unit 1)
 				)
 			)
@@ -28028,7 +28082,7 @@
 	)
 	(symbol
 		(lib_id "PCM_JLCPCB-Capacitors:0603,4.7uF")
-		(at 273.05 31.75 0)
+		(at 203.2 26.67 0)
 		(unit 1)
 		(body_style 1)
 		(exclude_from_sim no)
@@ -28038,8 +28092,8 @@
 		(dnp no)
 		(fields_autoplaced yes)
 		(uuid "321c5d48-93fe-4a5a-982b-b1442ec1d53c")
-		(property "Reference" "C7"
-			(at 275.59 29.2099 0)
+		(property "Reference" "C3"
+			(at 205.74 24.1299 0)
 			(show_name no)
 			(do_not_autoplace no)
 			(effects
@@ -28050,7 +28104,7 @@
 			)
 		)
 		(property "Value" "4.7uF"
-			(at 275.59 31.75 0)
+			(at 205.74 26.67 0)
 			(show_name no)
 			(do_not_autoplace no)
 			(effects
@@ -28061,7 +28115,7 @@
 			)
 		)
 		(property "Footprint" "PCM_JLCPCB:C_0603"
-			(at 271.272 31.75 90)
+			(at 201.422 26.67 90)
 			(hide yes)
 			(show_name no)
 			(do_not_autoplace no)
@@ -28072,7 +28126,7 @@
 			)
 		)
 		(property "Datasheet" "https://www.lcsc.com/datasheet/lcsc_datasheet_2304140030_Samsung-Electro-Mechanics-CL10A475KO8NNNC_C19666.pdf"
-			(at 273.05 31.75 0)
+			(at 203.2 26.67 0)
 			(hide yes)
 			(show_name no)
 			(do_not_autoplace no)
@@ -28083,7 +28137,7 @@
 			)
 		)
 		(property "Description" "16V 4.7uF X5R ±10% 0603 Multilayer Ceramic Capacitors MLCC - SMD/SMT ROHS"
-			(at 273.05 31.75 0)
+			(at 203.2 26.67 0)
 			(hide yes)
 			(show_name no)
 			(do_not_autoplace no)
@@ -28094,7 +28148,7 @@
 			)
 		)
 		(property "LCSC" "C19666"
-			(at 273.05 31.75 0)
+			(at 203.2 26.67 0)
 			(hide yes)
 			(show_name no)
 			(do_not_autoplace no)
@@ -28105,7 +28159,7 @@
 			)
 		)
 		(property "Stock" "4246728"
-			(at 273.05 31.75 0)
+			(at 203.2 26.67 0)
 			(hide yes)
 			(show_name no)
 			(do_not_autoplace no)
@@ -28116,7 +28170,7 @@
 			)
 		)
 		(property "Price" "0.013USD"
-			(at 273.05 31.75 0)
+			(at 203.2 26.67 0)
 			(hide yes)
 			(show_name no)
 			(do_not_autoplace no)
@@ -28127,7 +28181,7 @@
 			)
 		)
 		(property "Process" "SMT"
-			(at 273.05 31.75 0)
+			(at 203.2 26.67 0)
 			(hide yes)
 			(show_name no)
 			(do_not_autoplace no)
@@ -28138,7 +28192,7 @@
 			)
 		)
 		(property "Minimum Qty" "20"
-			(at 273.05 31.75 0)
+			(at 203.2 26.67 0)
 			(hide yes)
 			(show_name no)
 			(do_not_autoplace no)
@@ -28149,7 +28203,7 @@
 			)
 		)
 		(property "Attrition Qty" "10"
-			(at 273.05 31.75 0)
+			(at 203.2 26.67 0)
 			(hide yes)
 			(show_name no)
 			(do_not_autoplace no)
@@ -28160,7 +28214,7 @@
 			)
 		)
 		(property "Class" "Basic Component"
-			(at 273.05 31.75 0)
+			(at 203.2 26.67 0)
 			(hide yes)
 			(show_name no)
 			(do_not_autoplace no)
@@ -28171,7 +28225,7 @@
 			)
 		)
 		(property "Category" "Capacitors,Multilayer Ceramic Capacitors MLCC - SMD/SMT"
-			(at 273.05 31.75 0)
+			(at 203.2 26.67 0)
 			(hide yes)
 			(show_name no)
 			(do_not_autoplace no)
@@ -28182,7 +28236,7 @@
 			)
 		)
 		(property "Manufacturer" "Samsung Electro-Mechanics"
-			(at 273.05 31.75 0)
+			(at 203.2 26.67 0)
 			(hide yes)
 			(show_name no)
 			(do_not_autoplace no)
@@ -28193,7 +28247,7 @@
 			)
 		)
 		(property "Part" "CL10A475KO8NNNC"
-			(at 273.05 31.75 0)
+			(at 203.2 26.67 0)
 			(hide yes)
 			(show_name no)
 			(do_not_autoplace no)
@@ -28204,7 +28258,7 @@
 			)
 		)
 		(property "Voltage Rated" "16V"
-			(at 275.59 34.29 0)
+			(at 205.74 29.21 0)
 			(show_name no)
 			(do_not_autoplace no)
 			(effects
@@ -28215,7 +28269,7 @@
 			)
 		)
 		(property "Tolerance" "±10%"
-			(at 273.05 31.75 0)
+			(at 203.2 26.67 0)
 			(hide yes)
 			(show_name no)
 			(do_not_autoplace no)
@@ -28226,7 +28280,7 @@
 			)
 		)
 		(property "Capacitance" "4.7uF"
-			(at 273.05 31.75 0)
+			(at 203.2 26.67 0)
 			(hide yes)
 			(show_name no)
 			(do_not_autoplace no)
@@ -28237,7 +28291,7 @@
 			)
 		)
 		(property "Temperature Coefficient" "X5R"
-			(at 273.05 31.75 0)
+			(at 203.2 26.67 0)
 			(hide yes)
 			(show_name no)
 			(do_not_autoplace no)
@@ -28248,7 +28302,7 @@
 			)
 		)
 		(property "Breakdown Voltage (Vbr)" ""
-			(at 273.05 31.75 0)
+			(at 203.2 26.67 0)
 			(hide yes)
 			(show_name no)
 			(do_not_autoplace no)
@@ -28259,7 +28313,7 @@
 			)
 		)
 		(property "Clamping Voltage@Ipp" ""
-			(at 273.05 31.75 0)
+			(at 203.2 26.67 0)
 			(hide yes)
 			(show_name no)
 			(do_not_autoplace no)
@@ -28270,7 +28324,7 @@
 			)
 		)
 		(property "Contact Discharge Vesd" ""
-			(at 273.05 31.75 0)
+			(at 203.2 26.67 0)
 			(hide yes)
 			(show_name no)
 			(do_not_autoplace no)
@@ -28281,7 +28335,7 @@
 			)
 		)
 		(property "Dominant Wavelength" ""
-			(at 273.05 31.75 0)
+			(at 203.2 26.67 0)
 			(hide yes)
 			(show_name no)
 			(do_not_autoplace no)
@@ -28292,7 +28346,7 @@
 			)
 		)
 		(property "Emitted Color" ""
-			(at 273.05 31.75 0)
+			(at 203.2 26.67 0)
 			(hide yes)
 			(show_name no)
 			(do_not_autoplace no)
@@ -28303,7 +28357,7 @@
 			)
 		)
 		(property "Forward Current" ""
-			(at 273.05 31.75 0)
+			(at 203.2 26.67 0)
 			(hide yes)
 			(show_name no)
 			(do_not_autoplace no)
@@ -28314,7 +28368,7 @@
 			)
 		)
 		(property "Forward Voltage (VF)" ""
-			(at 273.05 31.75 0)
+			(at 203.2 26.67 0)
 			(hide yes)
 			(show_name no)
 			(do_not_autoplace no)
@@ -28325,7 +28379,7 @@
 			)
 		)
 		(property "Junction Capacitance(Cj)@1Mhz" ""
-			(at 273.05 31.75 0)
+			(at 203.2 26.67 0)
 			(hide yes)
 			(show_name no)
 			(do_not_autoplace no)
@@ -28336,7 +28390,7 @@
 			)
 		)
 		(property "Lens Color" ""
-			(at 273.05 31.75 0)
+			(at 203.2 26.67 0)
 			(hide yes)
 			(show_name no)
 			(do_not_autoplace no)
@@ -28347,7 +28401,7 @@
 			)
 		)
 		(property "Luminous Intensity" ""
-			(at 273.05 31.75 0)
+			(at 203.2 26.67 0)
 			(hide yes)
 			(show_name no)
 			(do_not_autoplace no)
@@ -28358,7 +28412,7 @@
 			)
 		)
 		(property "Number Of Lines" ""
-			(at 273.05 31.75 0)
+			(at 203.2 26.67 0)
 			(hide yes)
 			(show_name no)
 			(do_not_autoplace no)
@@ -28369,7 +28423,7 @@
 			)
 		)
 		(property "Peak Pulse Current(Ipp)@8/20Us" ""
-			(at 273.05 31.75 0)
+			(at 203.2 26.67 0)
 			(hide yes)
 			(show_name no)
 			(do_not_autoplace no)
@@ -28380,7 +28434,7 @@
 			)
 		)
 		(property "Peak Pulse Power(Ppp)@8/20Us" ""
-			(at 273.05 31.75 0)
+			(at 203.2 26.67 0)
 			(hide yes)
 			(show_name no)
 			(do_not_autoplace no)
@@ -28391,7 +28445,7 @@
 			)
 		)
 		(property "Polarity" ""
-			(at 273.05 31.75 0)
+			(at 203.2 26.67 0)
 			(hide yes)
 			(show_name no)
 			(do_not_autoplace no)
@@ -28402,7 +28456,7 @@
 			)
 		)
 		(property "Power Dissipation" ""
-			(at 273.05 31.75 0)
+			(at 203.2 26.67 0)
 			(hide yes)
 			(show_name no)
 			(do_not_autoplace no)
@@ -28413,7 +28467,7 @@
 			)
 		)
 		(property "Reverse Leakage Current" ""
-			(at 273.05 31.75 0)
+			(at 203.2 26.67 0)
 			(hide yes)
 			(show_name no)
 			(do_not_autoplace no)
@@ -28424,7 +28478,7 @@
 			)
 		)
 		(property "Viewing Angle" ""
-			(at 273.05 31.75 0)
+			(at 203.2 26.67 0)
 			(hide yes)
 			(show_name no)
 			(do_not_autoplace no)
@@ -28443,7 +28497,7 @@
 		(instances
 			(project "MagneticLevitation"
 				(path "/fdb537e3-598b-439b-adb3-5b03aa38dd63"
-					(reference "C7")
+					(reference "C3")
 					(unit 1)
 				)
 			)
@@ -28716,7 +28770,7 @@
 		)
 	)
 	(symbol
-		(lib_id "PCM_JLCPCB-Capacitors:0603,22nF")
+		(lib_id "PCM_JLCPCB-Capacitors:0603,220nF")
 		(at 139.7 116.84 0)
 		(mirror y)
 		(unit 1)
@@ -28738,7 +28792,7 @@
 				(justify left)
 			)
 		)
-		(property "Value" "22nF"
+		(property "Value" "220nF"
 			(at 138.684 113.284 0)
 			(show_name no)
 			(do_not_autoplace no)
@@ -28760,7 +28814,7 @@
 				)
 			)
 		)
-		(property "Datasheet" "https://www.lcsc.com/datasheet/lcsc_datasheet_2304140030_Samsung-Electro-Mechanics-CL10B223KB8NNNC_C21122.pdf"
+		(property "Datasheet" "https://www.lcsc.com/datasheet/lcsc_datasheet_2304140030_Samsung-Electro-Mechanics-CL10B224KA8NNNC_C21120.pdf"
 			(at 139.7 116.84 0)
 			(hide yes)
 			(show_name no)
@@ -28771,7 +28825,7 @@
 				)
 			)
 		)
-		(property "Description" "50V 22nF X7R ±10% 0603 Multilayer Ceramic Capacitors MLCC - SMD/SMT ROHS"
+		(property "Description" "25V 220nF X7R ±10% 0603 Multilayer Ceramic Capacitors MLCC - SMD/SMT ROHS"
 			(at 139.7 116.84 0)
 			(hide yes)
 			(show_name no)
@@ -28782,7 +28836,7 @@
 				)
 			)
 		)
-		(property "LCSC" "C21122"
+		(property "LCSC" "C21120"
 			(at 139.7 116.84 0)
 			(hide yes)
 			(show_name no)
@@ -28793,7 +28847,7 @@
 				)
 			)
 		)
-		(property "Stock" "746157"
+		(property "Stock" "781839"
 			(at 139.7 116.84 0)
 			(hide yes)
 			(show_name no)
@@ -28804,7 +28858,7 @@
 				)
 			)
 		)
-		(property "Price" "0.007USD"
+		(property "Price" "0.009USD"
 			(at 139.7 116.84 0)
 			(hide yes)
 			(show_name no)
@@ -28881,7 +28935,7 @@
 				)
 			)
 		)
-		(property "Part" "CL10B223KB8NNNC"
+		(property "Part" "CL10B224KA8NNNC"
 			(at 139.7 116.84 0)
 			(hide yes)
 			(show_name no)
@@ -28892,8 +28946,8 @@
 				)
 			)
 		)
-		(property "Voltage Rated" "50V"
-			(at 138.938 115.316 0)
+		(property "Voltage Rated" "25V"
+			(at 138.938 115.062 0)
 			(show_name no)
 			(do_not_autoplace no)
 			(effects
@@ -28914,7 +28968,7 @@
 				)
 			)
 		)
-		(property "Capacitance" "22nF"
+		(property "Capacitance" "220nF"
 			(at 139.7 116.84 0)
 			(hide yes)
 			(show_name no)
@@ -29417,7 +29471,7 @@
 		(in_pos_files yes)
 		(dnp no)
 		(uuid "360ed704-24f5-42be-ab15-3dca1db48c19")
-		(property "Reference" "#PWR061"
+		(property "Reference" "#PWR062"
 			(at 107.95 185.42 0)
 			(hide yes)
 			(show_name no)
@@ -29477,7 +29531,7 @@
 		(instances
 			(project "MagneticLevitation"
 				(path "/fdb537e3-598b-439b-adb3-5b03aa38dd63"
-					(reference "#PWR061")
+					(reference "#PWR062")
 					(unit 1)
 				)
 			)
@@ -29494,7 +29548,7 @@
 		(in_pos_files yes)
 		(dnp no)
 		(uuid "371156d5-3ab6-436a-9d64-3bc15bc9171c")
-		(property "Reference" "#PWR029"
+		(property "Reference" "#PWR030"
 			(at 261.62 92.71 0)
 			(hide yes)
 			(show_name no)
@@ -29554,7 +29608,7 @@
 		(instances
 			(project "MagneticLevitation"
 				(path "/fdb537e3-598b-439b-adb3-5b03aa38dd63"
-					(reference "#PWR029")
+					(reference "#PWR030")
 					(unit 1)
 				)
 			)
@@ -29571,7 +29625,7 @@
 		(in_pos_files yes)
 		(dnp no)
 		(uuid "37147cce-69c7-4b73-94e3-610572c496fa")
-		(property "Reference" "R28"
+		(property "Reference" "R29"
 			(at 185.674 142.748 0)
 			(show_name no)
 			(do_not_autoplace no)
@@ -30019,7 +30073,7 @@
 		(instances
 			(project "MagneticLevitation"
 				(path "/fdb537e3-598b-439b-adb3-5b03aa38dd63"
-					(reference "R28")
+					(reference "R29")
 					(unit 1)
 				)
 			)
@@ -30302,7 +30356,7 @@
 		(in_pos_files yes)
 		(dnp no)
 		(uuid "394c0525-578c-4ed3-9551-0acc8df59f42")
-		(property "Reference" "#PWR023"
+		(property "Reference" "#PWR024"
 			(at 102.87 81.28 0)
 			(hide yes)
 			(show_name no)
@@ -30362,7 +30416,7 @@
 		(instances
 			(project "MagneticLevitation"
 				(path "/fdb537e3-598b-439b-adb3-5b03aa38dd63"
-					(reference "#PWR023")
+					(reference "#PWR024")
 					(unit 1)
 				)
 			)
@@ -30379,7 +30433,7 @@
 		(in_pos_files yes)
 		(dnp no)
 		(uuid "3bdb8234-5af3-44b8-bfb0-8327608caf5d")
-		(property "Reference" "R3"
+		(property "Reference" "R4"
 			(at 50.8 39.116 90)
 			(show_name no)
 			(do_not_autoplace no)
@@ -30826,7 +30880,7 @@
 		(instances
 			(project "MagneticLevitation"
 				(path "/fdb537e3-598b-439b-adb3-5b03aa38dd63"
-					(reference "R3")
+					(reference "R4")
 					(unit 1)
 				)
 			)
@@ -30843,7 +30897,7 @@
 		(in_pos_files yes)
 		(dnp no)
 		(uuid "3bdb919f-f391-43ce-bc7b-91318373b7b5")
-		(property "Reference" "R29"
+		(property "Reference" "R30"
 			(at 201.676 153.924 0)
 			(show_name no)
 			(do_not_autoplace no)
@@ -31124,7 +31178,7 @@
 		(instances
 			(project "MagneticLevitation"
 				(path "/fdb537e3-598b-439b-adb3-5b03aa38dd63"
-					(reference "R29")
+					(reference "R30")
 					(unit 1)
 				)
 			)
@@ -31141,7 +31195,7 @@
 		(in_pos_files yes)
 		(dnp no)
 		(uuid "3c41a50a-bab2-4f4c-a53c-99d0e42f23f6")
-		(property "Reference" "R13"
+		(property "Reference" "R14"
 			(at 262.636 80.264 90)
 			(show_name no)
 			(do_not_autoplace no)
@@ -31577,7 +31631,7 @@
 		(instances
 			(project "MagneticLevitation"
 				(path "/fdb537e3-598b-439b-adb3-5b03aa38dd63"
-					(reference "R13")
+					(reference "R14")
 					(unit 1)
 				)
 			)
@@ -33001,7 +33055,7 @@
 		(in_pos_files yes)
 		(dnp no)
 		(uuid "40c7270c-e7ad-44a2-9173-36cba3a71eac")
-		(property "Reference" "R16"
+		(property "Reference" "R17"
 			(at 146.05 95.504 0)
 			(show_name no)
 			(do_not_autoplace no)
@@ -33448,7 +33502,7 @@
 		(instances
 			(project "MagneticLevitation"
 				(path "/fdb537e3-598b-439b-adb3-5b03aa38dd63"
-					(reference "R16")
+					(reference "R17")
 					(unit 1)
 				)
 			)
@@ -33465,7 +33519,7 @@
 		(in_pos_files yes)
 		(dnp no)
 		(uuid "42a72a11-2d76-4f18-8694-60835f701d8d")
-		(property "Reference" "#PWR045"
+		(property "Reference" "#PWR046"
 			(at 158.75 118.11 0)
 			(hide yes)
 			(show_name no)
@@ -33525,7 +33579,7 @@
 		(instances
 			(project "MagneticLevitation"
 				(path "/fdb537e3-598b-439b-adb3-5b03aa38dd63"
-					(reference "#PWR045")
+					(reference "#PWR046")
 					(unit 1)
 				)
 			)
@@ -33542,7 +33596,7 @@
 		(in_pos_files yes)
 		(dnp no)
 		(uuid "43f8cb12-f47e-4576-9e5b-6133da1640b1")
-		(property "Reference" "#PWR046"
+		(property "Reference" "#PWR047"
 			(at 29.21 130.81 0)
 			(hide yes)
 			(show_name no)
@@ -33602,14 +33656,14 @@
 		(instances
 			(project "MagneticLevitation"
 				(path "/fdb537e3-598b-439b-adb3-5b03aa38dd63"
-					(reference "#PWR046")
+					(reference "#PWR047")
 					(unit 1)
 				)
 			)
 		)
 	)
 	(symbol
-		(lib_id "PCM_JLCPCB-Capacitors:0603,22nF")
+		(lib_id "PCM_JLCPCB-Capacitors:0603,220nF")
 		(at 48.26 116.84 0)
 		(unit 1)
 		(body_style 1)
@@ -33620,7 +33674,7 @@
 		(dnp no)
 		(uuid "46c3239b-68a9-44ce-addc-33f7d752e9eb")
 		(property "Reference" "C25"
-			(at 49.022 110.2359 0)
+			(at 48.768 110.744 0)
 			(show_name no)
 			(do_not_autoplace no)
 			(effects
@@ -33630,8 +33684,8 @@
 				(justify left)
 			)
 		)
-		(property "Value" "22nF"
-			(at 49.022 112.776 0)
+		(property "Value" "220nF"
+			(at 49.022 113.03 0)
 			(show_name no)
 			(do_not_autoplace no)
 			(effects
@@ -33652,7 +33706,7 @@
 				)
 			)
 		)
-		(property "Datasheet" "https://www.lcsc.com/datasheet/lcsc_datasheet_2304140030_Samsung-Electro-Mechanics-CL10B223KB8NNNC_C21122.pdf"
+		(property "Datasheet" "https://www.lcsc.com/datasheet/lcsc_datasheet_2304140030_Samsung-Electro-Mechanics-CL10B224KA8NNNC_C21120.pdf"
 			(at 48.26 116.84 0)
 			(hide yes)
 			(show_name no)
@@ -33663,7 +33717,7 @@
 				)
 			)
 		)
-		(property "Description" "50V 22nF X7R ±10% 0603 Multilayer Ceramic Capacitors MLCC - SMD/SMT ROHS"
+		(property "Description" "25V 220nF X7R ±10% 0603 Multilayer Ceramic Capacitors MLCC - SMD/SMT ROHS"
 			(at 48.26 116.84 0)
 			(hide yes)
 			(show_name no)
@@ -33674,7 +33728,7 @@
 				)
 			)
 		)
-		(property "LCSC" "C21122"
+		(property "LCSC" "C21120"
 			(at 48.26 116.84 0)
 			(hide yes)
 			(show_name no)
@@ -33685,7 +33739,7 @@
 				)
 			)
 		)
-		(property "Stock" "746157"
+		(property "Stock" "781839"
 			(at 48.26 116.84 0)
 			(hide yes)
 			(show_name no)
@@ -33696,7 +33750,7 @@
 				)
 			)
 		)
-		(property "Price" "0.007USD"
+		(property "Price" "0.009USD"
 			(at 48.26 116.84 0)
 			(hide yes)
 			(show_name no)
@@ -33773,7 +33827,7 @@
 				)
 			)
 		)
-		(property "Part" "CL10B223KB8NNNC"
+		(property "Part" "CL10B224KA8NNNC"
 			(at 48.26 116.84 0)
 			(hide yes)
 			(show_name no)
@@ -33784,8 +33838,8 @@
 				)
 			)
 		)
-		(property "Voltage Rated" "50V"
-			(at 49.022 115.316 0)
+		(property "Voltage Rated" "25V"
+			(at 49.022 115.062 0)
 			(show_name no)
 			(do_not_autoplace no)
 			(effects
@@ -33806,7 +33860,7 @@
 				)
 			)
 		)
-		(property "Capacitance" "22nF"
+		(property "Capacitance" "220nF"
 			(at 48.26 116.84 0)
 			(hide yes)
 			(show_name no)
@@ -34041,7 +34095,7 @@
 		(in_pos_files yes)
 		(dnp no)
 		(uuid "47f66707-4391-4e86-bb7d-d4308d50b76c")
-		(property "Reference" "#PWR058"
+		(property "Reference" "#PWR059"
 			(at 165.1 163.83 0)
 			(hide yes)
 			(show_name no)
@@ -34101,7 +34155,7 @@
 		(instances
 			(project "MagneticLevitation"
 				(path "/fdb537e3-598b-439b-adb3-5b03aa38dd63"
-					(reference "#PWR058")
+					(reference "#PWR059")
 					(unit 1)
 				)
 			)
@@ -34118,7 +34172,7 @@
 		(in_pos_files yes)
 		(dnp no)
 		(uuid "4a169bea-6643-41b2-8847-1cc4b05a23fa")
-		(property "Reference" "C4"
+		(property "Reference" "C7"
 			(at 161.036 30.734 90)
 			(show_name no)
 			(do_not_autoplace no)
@@ -34401,7 +34455,7 @@
 		(instances
 			(project "MagneticLevitation"
 				(path "/fdb537e3-598b-439b-adb3-5b03aa38dd63"
-					(reference "C4")
+					(reference "C7")
 					(unit 1)
 				)
 			)
@@ -34418,7 +34472,7 @@
 		(in_pos_files yes)
 		(dnp no)
 		(uuid "4af9996b-f6d1-42d0-8d5b-c357ed81f674")
-		(property "Reference" "#PWR08"
+		(property "Reference" "#PWR010"
 			(at 106.68 43.18 0)
 			(hide yes)
 			(show_name no)
@@ -34478,7 +34532,7 @@
 		(instances
 			(project "MagneticLevitation"
 				(path "/fdb537e3-598b-439b-adb3-5b03aa38dd63"
-					(reference "#PWR08")
+					(reference "#PWR010")
 					(unit 1)
 				)
 			)
@@ -34495,7 +34549,7 @@
 		(in_pos_files yes)
 		(dnp no)
 		(uuid "4d90c962-51fb-4300-b8e0-223993f388d3")
-		(property "Reference" "#PWR038"
+		(property "Reference" "#PWR039"
 			(at 167.64 102.87 0)
 			(hide yes)
 			(show_name no)
@@ -34555,7 +34609,7 @@
 		(instances
 			(project "MagneticLevitation"
 				(path "/fdb537e3-598b-439b-adb3-5b03aa38dd63"
-					(reference "#PWR038")
+					(reference "#PWR039")
 					(unit 1)
 				)
 			)
@@ -35844,7 +35898,7 @@
 		(in_pos_files yes)
 		(dnp no)
 		(uuid "52623204-f830-4e22-93b5-6e153207e317")
-		(property "Reference" "R17"
+		(property "Reference" "R18"
 			(at 65.532 117.856 0)
 			(show_name no)
 			(do_not_autoplace no)
@@ -36292,7 +36346,7 @@
 		(instances
 			(project "MagneticLevitation"
 				(path "/fdb537e3-598b-439b-adb3-5b03aa38dd63"
-					(reference "R17")
+					(reference "R18")
 					(unit 1)
 				)
 			)
@@ -36310,7 +36364,7 @@
 		(in_pos_files yes)
 		(dnp no)
 		(uuid "5342bfe4-dba1-4cf7-a31f-51d12cfb14d0")
-		(property "Reference" "#PWR060"
+		(property "Reference" "#PWR061"
 			(at 80.01 185.42 0)
 			(hide yes)
 			(show_name no)
@@ -36370,7 +36424,7 @@
 		(instances
 			(project "MagneticLevitation"
 				(path "/fdb537e3-598b-439b-adb3-5b03aa38dd63"
-					(reference "#PWR060")
+					(reference "#PWR061")
 					(unit 1)
 				)
 			)
@@ -36921,7 +36975,7 @@
 		(in_pos_files yes)
 		(dnp no)
 		(uuid "5aeecfc0-3e2b-489f-ad82-ca07d876cb91")
-		(property "Reference" "#PWR049"
+		(property "Reference" "#PWR050"
 			(at 226.06 130.81 0)
 			(hide yes)
 			(show_name no)
@@ -36981,7 +37035,7 @@
 		(instances
 			(project "MagneticLevitation"
 				(path "/fdb537e3-598b-439b-adb3-5b03aa38dd63"
-					(reference "#PWR049")
+					(reference "#PWR050")
 					(unit 1)
 				)
 			)
@@ -36998,7 +37052,7 @@
 		(in_pos_files yes)
 		(dnp no)
 		(uuid "5b862591-32d2-4099-b5b0-1415eae55551")
-		(property "Reference" "R6"
+		(property "Reference" "R7"
 			(at 85.09 41.91 0)
 			(show_name no)
 			(do_not_autoplace no)
@@ -37446,7 +37500,7 @@
 		(instances
 			(project "MagneticLevitation"
 				(path "/fdb537e3-598b-439b-adb3-5b03aa38dd63"
-					(reference "R6")
+					(reference "R7")
 					(unit 1)
 				)
 			)
@@ -37730,7 +37784,7 @@
 		(in_pos_files yes)
 		(dnp no)
 		(uuid "5c41de80-8c6e-47ae-b02c-491a820b404e")
-		(property "Reference" "R4"
+		(property "Reference" "R5"
 			(at 50.8 44.196 90)
 			(show_name no)
 			(do_not_autoplace no)
@@ -38177,7 +38231,7 @@
 		(instances
 			(project "MagneticLevitation"
 				(path "/fdb537e3-598b-439b-adb3-5b03aa38dd63"
-					(reference "R4")
+					(reference "R5")
 					(unit 1)
 				)
 			)
@@ -38727,7 +38781,7 @@
 		(in_pos_files yes)
 		(dnp no)
 		(uuid "5d864abe-9e8e-4b19-948e-de40031509ad")
-		(property "Reference" "R32"
+		(property "Reference" "R33"
 			(at 135.89 166.624 90)
 			(show_name no)
 			(do_not_autoplace no)
@@ -39163,7 +39217,7 @@
 		(instances
 			(project "MagneticLevitation"
 				(path "/fdb537e3-598b-439b-adb3-5b03aa38dd63"
-					(reference "R32")
+					(reference "R33")
 					(unit 1)
 				)
 			)
@@ -39181,7 +39235,7 @@
 		(dnp no)
 		(fields_autoplaced yes)
 		(uuid "5ecc4ee5-a360-4a7c-85df-e30eafa6db94")
-		(property "Reference" "R30"
+		(property "Reference" "R31"
 			(at 111.76 161.2899 90)
 			(show_name no)
 			(do_not_autoplace no)
@@ -39465,7 +39519,7 @@
 		(instances
 			(project "MagneticLevitation"
 				(path "/fdb537e3-598b-439b-adb3-5b03aa38dd63"
-					(reference "R30")
+					(reference "R31")
 					(unit 1)
 				)
 			)
@@ -40053,7 +40107,7 @@
 		(in_pos_files yes)
 		(dnp no)
 		(uuid "636a930e-166f-4e51-84f3-7ff13ed04640")
-		(property "Reference" "#PWR025"
+		(property "Reference" "#PWR026"
 			(at 152.4 81.28 0)
 			(hide yes)
 			(show_name no)
@@ -40113,7 +40167,7 @@
 		(instances
 			(project "MagneticLevitation"
 				(path "/fdb537e3-598b-439b-adb3-5b03aa38dd63"
-					(reference "#PWR025")
+					(reference "#PWR026")
 					(unit 1)
 				)
 			)
@@ -40712,7 +40766,7 @@
 		(in_pos_files yes)
 		(dnp no)
 		(uuid "6a98d137-5ff9-4bf8-b41c-c63fc5c9b0b1")
-		(property "Reference" "#PWR034"
+		(property "Reference" "#PWR035"
 			(at 142.24 93.98 0)
 			(hide yes)
 			(show_name no)
@@ -40772,7 +40826,7 @@
 		(instances
 			(project "MagneticLevitation"
 				(path "/fdb537e3-598b-439b-adb3-5b03aa38dd63"
-					(reference "#PWR034")
+					(reference "#PWR035")
 					(unit 1)
 				)
 			)
@@ -40789,7 +40843,7 @@
 		(in_pos_files yes)
 		(dnp no)
 		(uuid "6c3e85b7-9705-4314-9b4a-f075556dcaad")
-		(property "Reference" "#PWR035"
+		(property "Reference" "#PWR036"
 			(at 223.52 97.79 0)
 			(hide yes)
 			(show_name no)
@@ -40849,7 +40903,7 @@
 		(instances
 			(project "MagneticLevitation"
 				(path "/fdb537e3-598b-439b-adb3-5b03aa38dd63"
-					(reference "#PWR035")
+					(reference "#PWR036")
 					(unit 1)
 				)
 			)
@@ -41641,7 +41695,7 @@
 		(dnp no)
 		(fields_autoplaced yes)
 		(uuid "6da370dd-bc72-4a2a-a94e-47236b05e9e8")
-		(property "Reference" "R11"
+		(property "Reference" "R12"
 			(at 171.45 69.8499 0)
 			(show_name no)
 			(do_not_autoplace no)
@@ -42078,7 +42132,7 @@
 		(instances
 			(project "MagneticLevitation"
 				(path "/fdb537e3-598b-439b-adb3-5b03aa38dd63"
-					(reference "R11")
+					(reference "R12")
 					(unit 1)
 				)
 			)
@@ -42369,7 +42423,7 @@
 		(in_pos_files yes)
 		(dnp no)
 		(uuid "70fb4089-0e46-46e3-a075-96f1778a239b")
-		(property "Reference" "R27"
+		(property "Reference" "R28"
 			(at 209.55 141.986 90)
 			(show_name no)
 			(do_not_autoplace no)
@@ -42805,7 +42859,7 @@
 		(instances
 			(project "MagneticLevitation"
 				(path "/fdb537e3-598b-439b-adb3-5b03aa38dd63"
-					(reference "R27")
+					(reference "R28")
 					(unit 1)
 				)
 			)
@@ -44121,7 +44175,7 @@
 		(in_pos_files yes)
 		(dnp no)
 		(uuid "7390d7d4-15ec-40e5-a116-7c495322b5d0")
-		(property "Reference" "#PWR054"
+		(property "Reference" "#PWR055"
 			(at 251.46 153.67 0)
 			(hide yes)
 			(show_name no)
@@ -44181,7 +44235,7 @@
 		(instances
 			(project "MagneticLevitation"
 				(path "/fdb537e3-598b-439b-adb3-5b03aa38dd63"
-					(reference "#PWR054")
+					(reference "#PWR055")
 					(unit 1)
 				)
 			)
@@ -44199,7 +44253,7 @@
 		(in_pos_files yes)
 		(dnp no)
 		(uuid "7404ef59-06b1-4cb6-9eb0-664cfe45da97")
-		(property "Reference" "#PWR056"
+		(property "Reference" "#PWR057"
 			(at 80.01 162.56 0)
 			(hide yes)
 			(show_name no)
@@ -44259,7 +44313,7 @@
 		(instances
 			(project "MagneticLevitation"
 				(path "/fdb537e3-598b-439b-adb3-5b03aa38dd63"
-					(reference "#PWR056")
+					(reference "#PWR057")
 					(unit 1)
 				)
 			)
@@ -45092,7 +45146,7 @@
 		(in_pos_files yes)
 		(dnp no)
 		(uuid "79daff05-bfd8-40aa-a3b0-de2fe1111b6e")
-		(property "Reference" "#PWR014"
+		(property "Reference" "#PWR015"
 			(at 82.55 54.61 0)
 			(hide yes)
 			(show_name no)
@@ -45152,7 +45206,7 @@
 		(instances
 			(project "MagneticLevitation"
 				(path "/fdb537e3-598b-439b-adb3-5b03aa38dd63"
-					(reference "#PWR014")
+					(reference "#PWR015")
 					(unit 1)
 				)
 			)
@@ -47251,7 +47305,7 @@
 		(in_pos_files yes)
 		(dnp no)
 		(uuid "8472fbaa-b250-4d6e-97db-639a6df0a875")
-		(property "Reference" "#PWR055"
+		(property "Reference" "#PWR056"
 			(at 107.95 160.02 0)
 			(hide yes)
 			(show_name no)
@@ -47311,7 +47365,7 @@
 		(instances
 			(project "MagneticLevitation"
 				(path "/fdb537e3-598b-439b-adb3-5b03aa38dd63"
-					(reference "#PWR055")
+					(reference "#PWR056")
 					(unit 1)
 				)
 			)
@@ -47328,7 +47382,7 @@
 		(in_pos_files yes)
 		(dnp no)
 		(uuid "849f0332-4479-4fb4-92e8-16a4c5fccc0d")
-		(property "Reference" "R9"
+		(property "Reference" "R10"
 			(at 193.548 64.77 0)
 			(show_name no)
 			(do_not_autoplace no)
@@ -47776,7 +47830,7 @@
 		(instances
 			(project "MagneticLevitation"
 				(path "/fdb537e3-598b-439b-adb3-5b03aa38dd63"
-					(reference "R9")
+					(reference "R10")
 					(unit 1)
 				)
 			)
@@ -47794,7 +47848,7 @@
 		(in_pos_files yes)
 		(dnp no)
 		(uuid "85ec8edf-00e6-4ef9-8d97-11b00908e754")
-		(property "Reference" "#PWR052"
+		(property "Reference" "#PWR053"
 			(at 184.15 153.67 0)
 			(hide yes)
 			(show_name no)
@@ -47854,7 +47908,7 @@
 		(instances
 			(project "MagneticLevitation"
 				(path "/fdb537e3-598b-439b-adb3-5b03aa38dd63"
-					(reference "#PWR052")
+					(reference "#PWR053")
 					(unit 1)
 				)
 			)
@@ -47871,7 +47925,7 @@
 		(in_pos_files yes)
 		(dnp no)
 		(uuid "870d1ff9-d3cc-4116-addc-33bfb037a1ac")
-		(property "Reference" "#PWR036"
+		(property "Reference" "#PWR037"
 			(at 20.32 102.87 0)
 			(hide yes)
 			(show_name no)
@@ -47931,7 +47985,7 @@
 		(instances
 			(project "MagneticLevitation"
 				(path "/fdb537e3-598b-439b-adb3-5b03aa38dd63"
-					(reference "#PWR036")
+					(reference "#PWR037")
 					(unit 1)
 				)
 			)
@@ -48222,7 +48276,7 @@
 		(in_pos_files yes)
 		(dnp no)
 		(uuid "8a9897c1-133b-48e4-8d38-a6e9654a1f6a")
-		(property "Reference" "#PWR043"
+		(property "Reference" "#PWR044"
 			(at 167.64 115.57 0)
 			(hide yes)
 			(show_name no)
@@ -48282,7 +48336,7 @@
 		(instances
 			(project "MagneticLevitation"
 				(path "/fdb537e3-598b-439b-adb3-5b03aa38dd63"
-					(reference "#PWR043")
+					(reference "#PWR044")
 					(unit 1)
 				)
 			)
@@ -48300,7 +48354,7 @@
 		(in_pos_files yes)
 		(dnp no)
 		(uuid "8ac495c6-38e3-4d15-9956-45b8c417d99c")
-		(property "Reference" "R31"
+		(property "Reference" "R32"
 			(at 85.344 163.83 0)
 			(show_name no)
 			(do_not_autoplace no)
@@ -48737,7 +48791,7 @@
 		(instances
 			(project "MagneticLevitation"
 				(path "/fdb537e3-598b-439b-adb3-5b03aa38dd63"
-					(reference "R31")
+					(reference "R32")
 					(unit 1)
 				)
 			)
@@ -49320,7 +49374,7 @@
 		(in_pos_files yes)
 		(dnp no)
 		(uuid "8d1bb643-bd35-46ec-91a3-693af8e8a025")
-		(property "Reference" "#PWR017"
+		(property "Reference" "#PWR018"
 			(at 191.77 63.5 0)
 			(hide yes)
 			(show_name no)
@@ -49380,7 +49434,7 @@
 		(instances
 			(project "MagneticLevitation"
 				(path "/fdb537e3-598b-439b-adb3-5b03aa38dd63"
-					(reference "#PWR017")
+					(reference "#PWR018")
 					(unit 1)
 				)
 			)
@@ -49397,7 +49451,7 @@
 		(in_pos_files yes)
 		(dnp no)
 		(uuid "8e65e478-26f2-4a5b-b266-f0285688f18c")
-		(property "Reference" "#PWR050"
+		(property "Reference" "#PWR051"
 			(at 251.46 130.81 0)
 			(hide yes)
 			(show_name no)
@@ -49457,7 +49511,7 @@
 		(instances
 			(project "MagneticLevitation"
 				(path "/fdb537e3-598b-439b-adb3-5b03aa38dd63"
-					(reference "#PWR050")
+					(reference "#PWR051")
 					(unit 1)
 				)
 			)
@@ -49474,7 +49528,7 @@
 		(in_pos_files yes)
 		(dnp no)
 		(uuid "8f6d6a94-0dd8-4aa3-b1e6-248195a85183")
-		(property "Reference" "#PWR011"
+		(property "Reference" "#PWR013"
 			(at 158.75 43.18 0)
 			(hide yes)
 			(show_name no)
@@ -49534,7 +49588,7 @@
 		(instances
 			(project "MagneticLevitation"
 				(path "/fdb537e3-598b-439b-adb3-5b03aa38dd63"
-					(reference "#PWR011")
+					(reference "#PWR013")
 					(unit 1)
 				)
 			)
@@ -49551,7 +49605,7 @@
 		(in_pos_files yes)
 		(dnp no)
 		(uuid "945f870e-731c-4d1e-857f-b318f9208d96")
-		(property "Reference" "C2"
+		(property "Reference" "C5"
 			(at 106.934 31.4959 0)
 			(show_name no)
 			(do_not_autoplace no)
@@ -49956,7 +50010,7 @@
 		(instances
 			(project "MagneticLevitation"
 				(path "/fdb537e3-598b-439b-adb3-5b03aa38dd63"
-					(reference "C2")
+					(reference "C5")
 					(unit 1)
 				)
 			)
@@ -49973,7 +50027,7 @@
 		(in_pos_files yes)
 		(dnp no)
 		(uuid "968732ee-dbfa-4aec-82fd-6d892deb67eb")
-		(property "Reference" "R25"
+		(property "Reference" "R26"
 			(at 185.674 132.334 0)
 			(show_name no)
 			(do_not_autoplace no)
@@ -50421,7 +50475,7 @@
 		(instances
 			(project "MagneticLevitation"
 				(path "/fdb537e3-598b-439b-adb3-5b03aa38dd63"
-					(reference "R25")
+					(reference "R26")
 					(unit 1)
 				)
 			)
@@ -51272,7 +51326,7 @@
 		(in_pos_files yes)
 		(dnp no)
 		(uuid "9c8b8763-4436-43e4-b62f-d49955e132b8")
-		(property "Reference" "#PWR03"
+		(property "Reference" "#PWR05"
 			(at 223.52 30.48 0)
 			(hide yes)
 			(show_name no)
@@ -51332,7 +51386,7 @@
 		(instances
 			(project "MagneticLevitation"
 				(path "/fdb537e3-598b-439b-adb3-5b03aa38dd63"
-					(reference "#PWR03")
+					(reference "#PWR05")
 					(unit 1)
 				)
 			)
@@ -51350,7 +51404,7 @@
 		(dnp no)
 		(fields_autoplaced yes)
 		(uuid "9d4ba840-7e01-4bd6-a5d9-a0319a05a653")
-		(property "Reference" "R33"
+		(property "Reference" "R34"
 			(at 82.55 173.9899 0)
 			(show_name no)
 			(do_not_autoplace no)
@@ -51787,7 +51841,7 @@
 		(instances
 			(project "MagneticLevitation"
 				(path "/fdb537e3-598b-439b-adb3-5b03aa38dd63"
-					(reference "R33")
+					(reference "R34")
 					(unit 1)
 				)
 			)
@@ -51804,7 +51858,7 @@
 		(in_pos_files yes)
 		(dnp no)
 		(uuid "9d840ea8-f99d-4def-a939-8e814e9a0277")
-		(property "Reference" "#PWR030"
+		(property "Reference" "#PWR031"
 			(at 278.13 92.71 0)
 			(hide yes)
 			(show_name no)
@@ -51864,7 +51918,7 @@
 		(instances
 			(project "MagneticLevitation"
 				(path "/fdb537e3-598b-439b-adb3-5b03aa38dd63"
-					(reference "#PWR030")
+					(reference "#PWR031")
 					(unit 1)
 				)
 			)
@@ -51881,7 +51935,7 @@
 		(in_pos_files yes)
 		(dnp no)
 		(uuid "9e0a1b62-d55d-4297-a769-6fa8bc411e7a")
-		(property "Reference" "#PWR020"
+		(property "Reference" "#PWR021"
 			(at 26.67 78.74 0)
 			(hide yes)
 			(show_name no)
@@ -51941,7 +51995,7 @@
 		(instances
 			(project "MagneticLevitation"
 				(path "/fdb537e3-598b-439b-adb3-5b03aa38dd63"
-					(reference "#PWR020")
+					(reference "#PWR021")
 					(unit 1)
 				)
 			)
@@ -51958,7 +52012,7 @@
 		(in_pos_files yes)
 		(dnp no)
 		(uuid "a0151741-d47b-4938-ba5a-83240cacec8f")
-		(property "Reference" "R2"
+		(property "Reference" "R3"
 			(at 51.054 32.004 90)
 			(show_name no)
 			(do_not_autoplace no)
@@ -52405,7 +52459,7 @@
 		(instances
 			(project "MagneticLevitation"
 				(path "/fdb537e3-598b-439b-adb3-5b03aa38dd63"
-					(reference "R2")
+					(reference "R3")
 					(unit 1)
 				)
 			)
@@ -52844,7 +52898,7 @@
 		(in_pos_files yes)
 		(dnp no)
 		(uuid "a0622948-b675-4030-8226-fd0c561b6e2f")
-		(property "Reference" "#PWR028"
+		(property "Reference" "#PWR029"
 			(at 199.39 83.82 0)
 			(hide yes)
 			(show_name no)
@@ -52904,7 +52958,7 @@
 		(instances
 			(project "MagneticLevitation"
 				(path "/fdb537e3-598b-439b-adb3-5b03aa38dd63"
-					(reference "#PWR028")
+					(reference "#PWR029")
 					(unit 1)
 				)
 			)
@@ -53187,7 +53241,7 @@
 		(in_pos_files yes)
 		(dnp no)
 		(uuid "a1ed5b9b-d877-4a61-bb45-b8cca7016985")
-		(property "Reference" "R10"
+		(property "Reference" "R11"
 			(at 116.586 68.326 0)
 			(show_name no)
 			(do_not_autoplace no)
@@ -53635,7 +53689,7 @@
 		(instances
 			(project "MagneticLevitation"
 				(path "/fdb537e3-598b-439b-adb3-5b03aa38dd63"
-					(reference "R10")
+					(reference "R11")
 					(unit 1)
 				)
 			)
@@ -53652,7 +53706,7 @@
 		(in_pos_files yes)
 		(dnp no)
 		(uuid "a1f5abe9-0423-4e61-8e4c-65a40794d3a0")
-		(property "Reference" "#PWR06"
+		(property "Reference" "#PWR07"
 			(at 66.04 35.56 0)
 			(hide yes)
 			(show_name no)
@@ -53712,7 +53766,7 @@
 		(instances
 			(project "MagneticLevitation"
 				(path "/fdb537e3-598b-439b-adb3-5b03aa38dd63"
-					(reference "#PWR06")
+					(reference "#PWR07")
 					(unit 1)
 				)
 			)
@@ -54045,7 +54099,7 @@
 		(in_pos_files yes)
 		(dnp no)
 		(uuid "a36bd36d-54f2-41e3-af57-d4cca5d52e1b")
-		(property "Reference" "R24"
+		(property "Reference" "R25"
 			(at 123.444 130.048 0)
 			(show_name no)
 			(do_not_autoplace no)
@@ -54493,7 +54547,7 @@
 		(instances
 			(project "MagneticLevitation"
 				(path "/fdb537e3-598b-439b-adb3-5b03aa38dd63"
-					(reference "R24")
+					(reference "R25")
 					(unit 1)
 				)
 			)
@@ -54510,7 +54564,7 @@
 		(in_pos_files yes)
 		(dnp no)
 		(uuid "a51e6b4f-9c3a-4540-80f6-898b92cc87fb")
-		(property "Reference" "#PWR024"
+		(property "Reference" "#PWR025"
 			(at 129.54 81.28 0)
 			(hide yes)
 			(show_name no)
@@ -54570,7 +54624,7 @@
 		(instances
 			(project "MagneticLevitation"
 				(path "/fdb537e3-598b-439b-adb3-5b03aa38dd63"
-					(reference "#PWR024")
+					(reference "#PWR025")
 					(unit 1)
 				)
 			)
@@ -54587,7 +54641,7 @@
 		(in_pos_files yes)
 		(dnp no)
 		(uuid "a5ab2b20-6b18-45de-bf06-cd94a1362f66")
-		(property "Reference" "R26"
+		(property "Reference" "R27"
 			(at 209.55 132.334 90)
 			(show_name no)
 			(do_not_autoplace no)
@@ -55023,7 +55077,7 @@
 		(instances
 			(project "MagneticLevitation"
 				(path "/fdb537e3-598b-439b-adb3-5b03aa38dd63"
-					(reference "R26")
+					(reference "R27")
 					(unit 1)
 				)
 			)
@@ -55040,7 +55094,7 @@
 		(in_pos_files yes)
 		(dnp no)
 		(uuid "a5e2e439-4f51-4b87-931c-1c046ecbe215")
-		(property "Reference" "#PWR047"
+		(property "Reference" "#PWR048"
 			(at 158.75 130.81 0)
 			(hide yes)
 			(show_name no)
@@ -55100,7 +55154,7 @@
 		(instances
 			(project "MagneticLevitation"
 				(path "/fdb537e3-598b-439b-adb3-5b03aa38dd63"
-					(reference "#PWR047")
+					(reference "#PWR048")
 					(unit 1)
 				)
 			)
@@ -55117,7 +55171,7 @@
 		(in_pos_files yes)
 		(dnp no)
 		(uuid "a6875d89-12f4-45e5-bb18-d199bf21e277")
-		(property "Reference" "#PWR01"
+		(property "Reference" "#PWR02"
 			(at 100.33 26.67 0)
 			(hide yes)
 			(show_name no)
@@ -55177,7 +55231,7 @@
 		(instances
 			(project "MagneticLevitation"
 				(path "/fdb537e3-598b-439b-adb3-5b03aa38dd63"
-					(reference "#PWR01")
+					(reference "#PWR02")
 					(unit 1)
 				)
 			)
@@ -55493,7 +55547,7 @@
 		(in_pos_files yes)
 		(dnp no)
 		(uuid "aaf85355-aa9a-472a-951f-5f9388a530ce")
-		(property "Reference" "R22"
+		(property "Reference" "R23"
 			(at 134.62 125.476 90)
 			(show_name no)
 			(do_not_autoplace no)
@@ -55929,7 +55983,7 @@
 		(instances
 			(project "MagneticLevitation"
 				(path "/fdb537e3-598b-439b-adb3-5b03aa38dd63"
-					(reference "R22")
+					(reference "R23")
 					(unit 1)
 				)
 			)
@@ -55947,7 +56001,7 @@
 		(in_pos_files yes)
 		(dnp no)
 		(uuid "ab1e3b7a-c3b0-4473-8be9-1e16395ebda9")
-		(property "Reference" "S1"
+		(property "Reference" "S2"
 			(at 185.42 64.516 0)
 			(show_name no)
 			(do_not_autoplace no)
@@ -56486,7 +56540,7 @@
 		(instances
 			(project "MagneticLevitation"
 				(path "/fdb537e3-598b-439b-adb3-5b03aa38dd63"
-					(reference "S1")
+					(reference "S2")
 					(unit 1)
 				)
 			)
@@ -56769,7 +56823,7 @@
 		(in_pos_files yes)
 		(dnp no)
 		(uuid "af6ef4dd-37bb-47bf-a297-2a9658564df5")
-		(property "Reference" "#PWR05"
+		(property "Reference" "#PWR06"
 			(at 49.53 31.75 0)
 			(hide yes)
 			(show_name no)
@@ -56829,7 +56883,7 @@
 		(instances
 			(project "MagneticLevitation"
 				(path "/fdb537e3-598b-439b-adb3-5b03aa38dd63"
-					(reference "#PWR05")
+					(reference "#PWR06")
 					(unit 1)
 				)
 			)
@@ -57112,7 +57166,7 @@
 		(in_pos_files yes)
 		(dnp no)
 		(uuid "b29b799c-04e5-4e09-88a4-e0e884ecbd05")
-		(property "Reference" "#PWR022"
+		(property "Reference" "#PWR023"
 			(at 73.66 78.74 0)
 			(hide yes)
 			(show_name no)
@@ -57172,7 +57226,7 @@
 		(instances
 			(project "MagneticLevitation"
 				(path "/fdb537e3-598b-439b-adb3-5b03aa38dd63"
-					(reference "#PWR022")
+					(reference "#PWR023")
 					(unit 1)
 				)
 			)
@@ -57455,7 +57509,7 @@
 		(in_pos_files yes)
 		(dnp no)
 		(uuid "b350e462-f1cf-4096-97db-18a6654b42ee")
-		(property "Reference" "#PWR063"
+		(property "Reference" "#PWR064"
 			(at 165.1 185.42 0)
 			(hide yes)
 			(show_name no)
@@ -57515,7 +57569,641 @@
 		(instances
 			(project "MagneticLevitation"
 				(path "/fdb537e3-598b-439b-adb3-5b03aa38dd63"
-					(reference "#PWR063")
+					(reference "#PWR064")
+					(unit 1)
+				)
+			)
+		)
+	)
+	(symbol
+		(lib_id "PCM_JLCPCB-Connectors_Buttons:Tactile Button, 160gf, 12V, 50mA, 4.0mm")
+		(at 261.62 36.83 0)
+		(mirror y)
+		(unit 1)
+		(body_style 1)
+		(exclude_from_sim no)
+		(in_bom yes)
+		(on_board yes)
+		(in_pos_files yes)
+		(dnp no)
+		(uuid "b5316eff-57df-4dc3-8e1a-8ccbd3248c28")
+		(property "Reference" "S1"
+			(at 261.62 30.226 0)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left)
+			)
+		)
+		(property "Value" "Tactile Button, 160gf"
+			(at 272.034 45.974 0)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 0.8 0.8)
+				)
+				(justify left)
+			)
+		)
+		(property "Footprint" "PCM_JLCPCB:SW_TS-1088-AR02016"
+			(at 261.62 46.99 0)
+			(hide yes)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+					(italic yes)
+				)
+			)
+		)
+		(property "Datasheet" "https://www.lcsc.com/datasheet/lcsc_datasheet_2304140030_XUNPU-TS-1088-AR02016_C720477.pdf"
+			(at 263.906 36.703 0)
+			(hide yes)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left)
+			)
+		)
+		(property "Description" "Without 50mA 4mm 100MΩ 100000 Times 12V 160gf 3mm 2mm Round Button Standing paste SPST SMD Tactile Switches ROHS"
+			(at 261.62 36.83 0)
+			(hide yes)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "LCSC" "C720477"
+			(at 261.62 36.83 0)
+			(hide yes)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "Stock" "346801"
+			(at 261.62 36.83 0)
+			(hide yes)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "Price" "0.044USD"
+			(at 261.62 36.83 0)
+			(hide yes)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "Process" "SMT"
+			(at 261.62 36.83 0)
+			(hide yes)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "Minimum Qty" "5"
+			(at 261.62 36.83 0)
+			(hide yes)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "Attrition Qty" "4"
+			(at 261.62 36.83 0)
+			(hide yes)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "Class" "Basic Component"
+			(at 261.62 36.83 0)
+			(hide yes)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "Category" "Switches,Tactile Switches"
+			(at 261.62 36.83 0)
+			(hide yes)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "Manufacturer" "XUNPU"
+			(at 261.62 36.83 0)
+			(hide yes)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "Part" "TS-1088-AR02016"
+			(at 261.62 36.83 0)
+			(hide yes)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "Switch Length" "4mm"
+			(at 261.62 36.83 0)
+			(hide yes)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "Voltage Rating (Dc)" "12V"
+			(at 261.62 36.83 0)
+			(hide yes)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "With Lamp" "No"
+			(at 261.62 36.83 0)
+			(hide yes)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "Operating Force" "160gf@±50gf"
+			(at 261.62 36.83 0)
+			(hide yes)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "Actuator/Cap Color" "Black"
+			(at 261.62 36.83 0)
+			(hide yes)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "Mechanical Life" "100000 Times"
+			(at 261.62 36.83 0)
+			(hide yes)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "Strike Gundam" "NO"
+			(at 261.62 36.83 0)
+			(hide yes)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "Circuit" "SPST"
+			(at 261.62 36.83 0)
+			(hide yes)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "Switch Height" "2mm"
+			(at 261.62 36.83 0)
+			(hide yes)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "Actuator Style" "Round Button"
+			(at 261.62 36.83 0)
+			(hide yes)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "Switch Width" "3mm"
+			(at 261.62 36.83 0)
+			(hide yes)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "Contact Current" "50mA"
+			(at 261.62 36.83 0)
+			(hide yes)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "Operating Temperature" "-30°C~+80°C"
+			(at 261.62 36.83 0)
+			(hide yes)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "Mounting Style" "Brick nogging"
+			(at 261.62 36.83 0)
+			(hide yes)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "Insulation Resistance" "100MΩ"
+			(at 261.62 36.83 0)
+			(hide yes)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "Pin Style" "SMDSplicing"
+			(at 261.62 36.83 0)
+			(hide yes)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "Breakdown Voltage (Vbr)" ""
+			(at 261.62 36.83 0)
+			(hide yes)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "Clamping Voltage@Ipp" ""
+			(at 261.62 36.83 0)
+			(hide yes)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "Contact Discharge Vesd" ""
+			(at 261.62 36.83 0)
+			(hide yes)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "Dominant Wavelength" ""
+			(at 261.62 36.83 0)
+			(hide yes)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "Emitted Color" ""
+			(at 261.62 36.83 0)
+			(hide yes)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "Forward Current" ""
+			(at 261.62 36.83 0)
+			(hide yes)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "Forward Voltage (VF)" ""
+			(at 261.62 36.83 0)
+			(hide yes)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "Junction Capacitance(Cj)@1Mhz" ""
+			(at 261.62 36.83 0)
+			(hide yes)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "Lens Color" ""
+			(at 261.62 36.83 0)
+			(hide yes)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "Luminous Intensity" ""
+			(at 261.62 36.83 0)
+			(hide yes)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "Number Of Lines" ""
+			(at 261.62 36.83 0)
+			(hide yes)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "Peak Pulse Current(Ipp)@8/20Us" ""
+			(at 261.62 36.83 0)
+			(hide yes)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "Peak Pulse Power(Ppp)@8/20Us" ""
+			(at 261.62 36.83 0)
+			(hide yes)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "Polarity" ""
+			(at 261.62 36.83 0)
+			(hide yes)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "Power Dissipation" ""
+			(at 261.62 36.83 0)
+			(hide yes)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "Reverse Leakage Current" ""
+			(at 261.62 36.83 0)
+			(hide yes)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "Viewing Angle" ""
+			(at 261.62 36.83 0)
+			(hide yes)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(pin "1"
+			(uuid "e54a8f96-7bdd-4e8d-8bdc-f78b873fa8c6")
+		)
+		(pin "2"
+			(uuid "fa56a933-a315-4016-8e7a-a204ff130e0d")
+		)
+		(instances
+			(project "MagneticLevitation"
+				(path "/fdb537e3-598b-439b-adb3-5b03aa38dd63"
+					(reference "S1")
+					(unit 1)
+				)
+			)
+		)
+	)
+	(symbol
+		(lib_id "power:VBUS")
+		(at 267.97 25.4 0)
+		(unit 1)
+		(body_style 1)
+		(exclude_from_sim no)
+		(in_bom yes)
+		(on_board yes)
+		(in_pos_files yes)
+		(dnp no)
+		(uuid "b5e08b81-a508-4277-8b62-7290bdc1d41d")
+		(property "Reference" "#PWR04"
+			(at 267.97 29.21 0)
+			(hide yes)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "Value" "+3V3"
+			(at 267.97 21.336 0)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "Footprint" ""
+			(at 267.97 25.4 0)
+			(hide yes)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "Datasheet" ""
+			(at 267.97 25.4 0)
+			(hide yes)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "Description" "Power symbol creates a global label with name \"VBUS\""
+			(at 267.97 25.4 0)
+			(hide yes)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(pin "1"
+			(uuid "94e07f88-4c47-42f3-a4c5-80a1a2411dac")
+		)
+		(instances
+			(project "MagneticLevitation"
+				(path "/fdb537e3-598b-439b-adb3-5b03aa38dd63"
+					(reference "#PWR04")
 					(unit 1)
 				)
 			)
@@ -57532,7 +58220,7 @@
 		(in_pos_files yes)
 		(dnp no)
 		(uuid "b642a8a4-a727-405f-a96f-f94f4b1dbae3")
-		(property "Reference" "#PWR021"
+		(property "Reference" "#PWR022"
 			(at 59.69 78.74 0)
 			(hide yes)
 			(show_name no)
@@ -57592,7 +58280,7 @@
 		(instances
 			(project "MagneticLevitation"
 				(path "/fdb537e3-598b-439b-adb3-5b03aa38dd63"
-					(reference "#PWR021")
+					(reference "#PWR022")
 					(unit 1)
 				)
 			)
@@ -57600,7 +58288,7 @@
 	)
 	(symbol
 		(lib_id "PCM_JLCPCB-Capacitors:0402,100nF")
-		(at 264.16 31.75 0)
+		(at 194.31 26.67 0)
 		(unit 1)
 		(body_style 1)
 		(exclude_from_sim no)
@@ -57610,8 +58298,8 @@
 		(dnp no)
 		(fields_autoplaced yes)
 		(uuid "b6fe61d7-da43-4ee8-8e1e-399bb744b8b0")
-		(property "Reference" "C6"
-			(at 266.7 29.2099 0)
+		(property "Reference" "C2"
+			(at 196.85 24.1299 0)
 			(show_name no)
 			(do_not_autoplace no)
 			(effects
@@ -57622,7 +58310,7 @@
 			)
 		)
 		(property "Value" "100nF"
-			(at 266.7 31.75 0)
+			(at 196.85 26.67 0)
 			(show_name no)
 			(do_not_autoplace no)
 			(effects
@@ -57633,7 +58321,7 @@
 			)
 		)
 		(property "Footprint" "PCM_JLCPCB:C_0402"
-			(at 262.382 31.75 90)
+			(at 192.532 26.67 90)
 			(hide yes)
 			(show_name no)
 			(do_not_autoplace no)
@@ -57644,7 +58332,7 @@
 			)
 		)
 		(property "Datasheet" "https://www.lcsc.com/datasheet/lcsc_datasheet_2304140030_Samsung-Electro-Mechanics-CL05B104KO5NNNC_C1525.pdf"
-			(at 264.16 31.75 0)
+			(at 194.31 26.67 0)
 			(hide yes)
 			(show_name no)
 			(do_not_autoplace no)
@@ -57655,7 +58343,7 @@
 			)
 		)
 		(property "Description" "16V 100nF X7R ±10% 0402 Multilayer Ceramic Capacitors MLCC - SMD/SMT ROHS"
-			(at 264.16 31.75 0)
+			(at 194.31 26.67 0)
 			(hide yes)
 			(show_name no)
 			(do_not_autoplace no)
@@ -57666,7 +58354,7 @@
 			)
 		)
 		(property "LCSC" "C1525"
-			(at 264.16 31.75 0)
+			(at 194.31 26.67 0)
 			(hide yes)
 			(show_name no)
 			(do_not_autoplace no)
@@ -57677,7 +58365,7 @@
 			)
 		)
 		(property "Stock" "20208285"
-			(at 264.16 31.75 0)
+			(at 194.31 26.67 0)
 			(hide yes)
 			(show_name no)
 			(do_not_autoplace no)
@@ -57688,7 +58376,7 @@
 			)
 		)
 		(property "Price" "0.004USD"
-			(at 264.16 31.75 0)
+			(at 194.31 26.67 0)
 			(hide yes)
 			(show_name no)
 			(do_not_autoplace no)
@@ -57699,7 +58387,7 @@
 			)
 		)
 		(property "Process" "SMT"
-			(at 264.16 31.75 0)
+			(at 194.31 26.67 0)
 			(hide yes)
 			(show_name no)
 			(do_not_autoplace no)
@@ -57710,7 +58398,7 @@
 			)
 		)
 		(property "Minimum Qty" "20"
-			(at 264.16 31.75 0)
+			(at 194.31 26.67 0)
 			(hide yes)
 			(show_name no)
 			(do_not_autoplace no)
@@ -57721,7 +58409,7 @@
 			)
 		)
 		(property "Attrition Qty" "10"
-			(at 264.16 31.75 0)
+			(at 194.31 26.67 0)
 			(hide yes)
 			(show_name no)
 			(do_not_autoplace no)
@@ -57732,7 +58420,7 @@
 			)
 		)
 		(property "Class" "Basic Component"
-			(at 264.16 31.75 0)
+			(at 194.31 26.67 0)
 			(hide yes)
 			(show_name no)
 			(do_not_autoplace no)
@@ -57743,7 +58431,7 @@
 			)
 		)
 		(property "Category" "Capacitors,Multilayer Ceramic Capacitors MLCC - SMD/SMT"
-			(at 264.16 31.75 0)
+			(at 194.31 26.67 0)
 			(hide yes)
 			(show_name no)
 			(do_not_autoplace no)
@@ -57754,7 +58442,7 @@
 			)
 		)
 		(property "Manufacturer" "Samsung Electro-Mechanics"
-			(at 264.16 31.75 0)
+			(at 194.31 26.67 0)
 			(hide yes)
 			(show_name no)
 			(do_not_autoplace no)
@@ -57765,7 +58453,7 @@
 			)
 		)
 		(property "Part" "CL05B104KO5NNNC"
-			(at 264.16 31.75 0)
+			(at 194.31 26.67 0)
 			(hide yes)
 			(show_name no)
 			(do_not_autoplace no)
@@ -57776,7 +58464,7 @@
 			)
 		)
 		(property "Voltage Rated" "16V"
-			(at 266.7 34.29 0)
+			(at 196.85 29.21 0)
 			(show_name no)
 			(do_not_autoplace no)
 			(effects
@@ -57787,7 +58475,7 @@
 			)
 		)
 		(property "Tolerance" "±10%"
-			(at 264.16 31.75 0)
+			(at 194.31 26.67 0)
 			(hide yes)
 			(show_name no)
 			(do_not_autoplace no)
@@ -57798,7 +58486,7 @@
 			)
 		)
 		(property "Capacitance" "100nF"
-			(at 264.16 31.75 0)
+			(at 194.31 26.67 0)
 			(hide yes)
 			(show_name no)
 			(do_not_autoplace no)
@@ -57809,7 +58497,7 @@
 			)
 		)
 		(property "Temperature Coefficient" "X7R"
-			(at 264.16 31.75 0)
+			(at 194.31 26.67 0)
 			(hide yes)
 			(show_name no)
 			(do_not_autoplace no)
@@ -57820,7 +58508,7 @@
 			)
 		)
 		(property "Breakdown Voltage (Vbr)" ""
-			(at 264.16 31.75 0)
+			(at 194.31 26.67 0)
 			(hide yes)
 			(show_name no)
 			(do_not_autoplace no)
@@ -57831,7 +58519,7 @@
 			)
 		)
 		(property "Clamping Voltage@Ipp" ""
-			(at 264.16 31.75 0)
+			(at 194.31 26.67 0)
 			(hide yes)
 			(show_name no)
 			(do_not_autoplace no)
@@ -57842,7 +58530,7 @@
 			)
 		)
 		(property "Contact Discharge Vesd" ""
-			(at 264.16 31.75 0)
+			(at 194.31 26.67 0)
 			(hide yes)
 			(show_name no)
 			(do_not_autoplace no)
@@ -57853,7 +58541,7 @@
 			)
 		)
 		(property "Dominant Wavelength" ""
-			(at 264.16 31.75 0)
+			(at 194.31 26.67 0)
 			(hide yes)
 			(show_name no)
 			(do_not_autoplace no)
@@ -57864,7 +58552,7 @@
 			)
 		)
 		(property "Emitted Color" ""
-			(at 264.16 31.75 0)
+			(at 194.31 26.67 0)
 			(hide yes)
 			(show_name no)
 			(do_not_autoplace no)
@@ -57875,7 +58563,7 @@
 			)
 		)
 		(property "Forward Current" ""
-			(at 264.16 31.75 0)
+			(at 194.31 26.67 0)
 			(hide yes)
 			(show_name no)
 			(do_not_autoplace no)
@@ -57886,7 +58574,7 @@
 			)
 		)
 		(property "Forward Voltage (VF)" ""
-			(at 264.16 31.75 0)
+			(at 194.31 26.67 0)
 			(hide yes)
 			(show_name no)
 			(do_not_autoplace no)
@@ -57897,7 +58585,7 @@
 			)
 		)
 		(property "Junction Capacitance(Cj)@1Mhz" ""
-			(at 264.16 31.75 0)
+			(at 194.31 26.67 0)
 			(hide yes)
 			(show_name no)
 			(do_not_autoplace no)
@@ -57908,7 +58596,7 @@
 			)
 		)
 		(property "Lens Color" ""
-			(at 264.16 31.75 0)
+			(at 194.31 26.67 0)
 			(hide yes)
 			(show_name no)
 			(do_not_autoplace no)
@@ -57919,7 +58607,7 @@
 			)
 		)
 		(property "Luminous Intensity" ""
-			(at 264.16 31.75 0)
+			(at 194.31 26.67 0)
 			(hide yes)
 			(show_name no)
 			(do_not_autoplace no)
@@ -57930,7 +58618,7 @@
 			)
 		)
 		(property "Number Of Lines" ""
-			(at 264.16 31.75 0)
+			(at 194.31 26.67 0)
 			(hide yes)
 			(show_name no)
 			(do_not_autoplace no)
@@ -57941,7 +58629,7 @@
 			)
 		)
 		(property "Peak Pulse Current(Ipp)@8/20Us" ""
-			(at 264.16 31.75 0)
+			(at 194.31 26.67 0)
 			(hide yes)
 			(show_name no)
 			(do_not_autoplace no)
@@ -57952,7 +58640,7 @@
 			)
 		)
 		(property "Peak Pulse Power(Ppp)@8/20Us" ""
-			(at 264.16 31.75 0)
+			(at 194.31 26.67 0)
 			(hide yes)
 			(show_name no)
 			(do_not_autoplace no)
@@ -57963,7 +58651,7 @@
 			)
 		)
 		(property "Polarity" ""
-			(at 264.16 31.75 0)
+			(at 194.31 26.67 0)
 			(hide yes)
 			(show_name no)
 			(do_not_autoplace no)
@@ -57974,7 +58662,7 @@
 			)
 		)
 		(property "Power Dissipation" ""
-			(at 264.16 31.75 0)
+			(at 194.31 26.67 0)
 			(hide yes)
 			(show_name no)
 			(do_not_autoplace no)
@@ -57985,7 +58673,7 @@
 			)
 		)
 		(property "Reverse Leakage Current" ""
-			(at 264.16 31.75 0)
+			(at 194.31 26.67 0)
 			(hide yes)
 			(show_name no)
 			(do_not_autoplace no)
@@ -57996,7 +58684,7 @@
 			)
 		)
 		(property "Viewing Angle" ""
-			(at 264.16 31.75 0)
+			(at 194.31 26.67 0)
 			(hide yes)
 			(show_name no)
 			(do_not_autoplace no)
@@ -58015,7 +58703,7 @@
 		(instances
 			(project "MagneticLevitation"
 				(path "/fdb537e3-598b-439b-adb3-5b03aa38dd63"
-					(reference "C6")
+					(reference "C2")
 					(unit 1)
 				)
 			)
@@ -59136,7 +59824,7 @@
 		(in_pos_files yes)
 		(dnp no)
 		(uuid "bbc5cd07-5e2e-41a0-a31f-713554d7ee7d")
-		(property "Reference" "R19"
+		(property "Reference" "R20"
 			(at 53.34 116.078 90)
 			(show_name no)
 			(do_not_autoplace no)
@@ -59572,7 +60260,7 @@
 		(instances
 			(project "MagneticLevitation"
 				(path "/fdb537e3-598b-439b-adb3-5b03aa38dd63"
-					(reference "R19")
+					(reference "R20")
 					(unit 1)
 				)
 			)
@@ -59589,7 +60277,7 @@
 		(in_pos_files yes)
 		(dnp no)
 		(uuid "bcfd77c2-52e2-4e8a-bb81-ffb15c88bb1f")
-		(property "Reference" "C3"
+		(property "Reference" "C6"
 			(at 112.014 31.4959 0)
 			(show_name no)
 			(do_not_autoplace no)
@@ -59994,7 +60682,7 @@
 		(instances
 			(project "MagneticLevitation"
 				(path "/fdb537e3-598b-439b-adb3-5b03aa38dd63"
-					(reference "C3")
+					(reference "C6")
 					(unit 1)
 				)
 			)
@@ -60967,7 +61655,7 @@
 		(in_pos_files yes)
 		(dnp no)
 		(uuid "c3d1e55a-2b39-46aa-83e8-6dc5bcdc4e2a")
-		(property "Reference" "#PWR057"
+		(property "Reference" "#PWR058"
 			(at 148.59 163.83 0)
 			(hide yes)
 			(show_name no)
@@ -61027,7 +61715,7 @@
 		(instances
 			(project "MagneticLevitation"
 				(path "/fdb537e3-598b-439b-adb3-5b03aa38dd63"
-					(reference "#PWR057")
+					(reference "#PWR058")
 					(unit 1)
 				)
 			)
@@ -61044,7 +61732,7 @@
 		(in_pos_files yes)
 		(dnp no)
 		(uuid "c5878bf0-0c88-41a6-a157-b901a16778b1")
-		(property "Reference" "#PWR010"
+		(property "Reference" "#PWR012"
 			(at 118.11 43.18 0)
 			(hide yes)
 			(show_name no)
@@ -61104,7 +61792,7 @@
 		(instances
 			(project "MagneticLevitation"
 				(path "/fdb537e3-598b-439b-adb3-5b03aa38dd63"
-					(reference "#PWR010")
+					(reference "#PWR012")
 					(unit 1)
 				)
 			)
@@ -61543,7 +62231,7 @@
 		(in_pos_files yes)
 		(dnp no)
 		(uuid "c81f0e92-307e-496e-82d2-0863dce4ac39")
-		(property "Reference" "R12"
+		(property "Reference" "R13"
 			(at 22.86 73.406 90)
 			(show_name no)
 			(do_not_autoplace no)
@@ -61990,7 +62678,7 @@
 		(instances
 			(project "MagneticLevitation"
 				(path "/fdb537e3-598b-439b-adb3-5b03aa38dd63"
-					(reference "R12")
+					(reference "R13")
 					(unit 1)
 				)
 			)
@@ -61998,7 +62686,7 @@
 	)
 	(symbol
 		(lib_id "power:GND")
-		(at 273.05 36.83 0)
+		(at 203.2 31.75 0)
 		(unit 1)
 		(body_style 1)
 		(exclude_from_sim no)
@@ -62007,8 +62695,8 @@
 		(in_pos_files yes)
 		(dnp no)
 		(uuid "c943fee9-e5ad-4f5a-9982-39538ee18de4")
-		(property "Reference" "#PWR013"
-			(at 273.05 43.18 0)
+		(property "Reference" "#PWR08"
+			(at 203.2 38.1 0)
 			(hide yes)
 			(show_name no)
 			(do_not_autoplace no)
@@ -62019,7 +62707,7 @@
 			)
 		)
 		(property "Value" "GND"
-			(at 273.05 40.64 0)
+			(at 203.2 35.56 0)
 			(show_name no)
 			(do_not_autoplace no)
 			(effects
@@ -62029,7 +62717,7 @@
 			)
 		)
 		(property "Footprint" ""
-			(at 273.05 36.83 0)
+			(at 203.2 31.75 0)
 			(hide yes)
 			(show_name no)
 			(do_not_autoplace no)
@@ -62040,7 +62728,7 @@
 			)
 		)
 		(property "Datasheet" ""
-			(at 273.05 36.83 0)
+			(at 203.2 31.75 0)
 			(hide yes)
 			(show_name no)
 			(do_not_autoplace no)
@@ -62051,7 +62739,7 @@
 			)
 		)
 		(property "Description" "Power symbol creates a global label with name \"GND\" , ground"
-			(at 273.05 36.83 0)
+			(at 203.2 31.75 0)
 			(hide yes)
 			(show_name no)
 			(do_not_autoplace no)
@@ -62067,7 +62755,7 @@
 		(instances
 			(project "MagneticLevitation"
 				(path "/fdb537e3-598b-439b-adb3-5b03aa38dd63"
-					(reference "#PWR013")
+					(reference "#PWR08")
 					(unit 1)
 				)
 			)
@@ -63687,7 +64375,7 @@
 		(in_pos_files yes)
 		(dnp no)
 		(uuid "d18f9524-a0e2-4d0b-9b16-94293094f2ea")
-		(property "Reference" "#PWR02"
+		(property "Reference" "#PWR03"
 			(at 158.75 26.67 0)
 			(hide yes)
 			(show_name no)
@@ -63747,7 +64435,7 @@
 		(instances
 			(project "MagneticLevitation"
 				(path "/fdb537e3-598b-439b-adb3-5b03aa38dd63"
-					(reference "#PWR02")
+					(reference "#PWR03")
 					(unit 1)
 				)
 			)
@@ -64608,7 +65296,7 @@
 		(in_pos_files yes)
 		(dnp no)
 		(uuid "d38b8f96-24cc-4fe9-8624-4100a92da7bf")
-		(property "Reference" "#PWR032"
+		(property "Reference" "#PWR033"
 			(at 72.39 93.98 0)
 			(hide yes)
 			(show_name no)
@@ -64668,7 +65356,7 @@
 		(instances
 			(project "MagneticLevitation"
 				(path "/fdb537e3-598b-439b-adb3-5b03aa38dd63"
-					(reference "#PWR032")
+					(reference "#PWR033")
 					(unit 1)
 				)
 			)
@@ -65260,7 +65948,7 @@
 		(in_pos_files yes)
 		(dnp no)
 		(uuid "d681a825-80db-4fd6-8d1b-bd5aa57f27cc")
-		(property "Reference" "R15"
+		(property "Reference" "R16"
 			(at 41.91 95.504 0)
 			(show_name no)
 			(do_not_autoplace no)
@@ -65707,7 +66395,7 @@
 		(instances
 			(project "MagneticLevitation"
 				(path "/fdb537e3-598b-439b-adb3-5b03aa38dd63"
-					(reference "R15")
+					(reference "R16")
 					(unit 1)
 				)
 			)
@@ -65724,7 +66412,7 @@
 		(in_pos_files yes)
 		(dnp no)
 		(uuid "d6a6c7ae-69ed-4d5c-8849-4cc023446d2a")
-		(property "Reference" "#PWR044"
+		(property "Reference" "#PWR045"
 			(at 29.21 118.11 0)
 			(hide yes)
 			(show_name no)
@@ -65784,7 +66472,7 @@
 		(instances
 			(project "MagneticLevitation"
 				(path "/fdb537e3-598b-439b-adb3-5b03aa38dd63"
-					(reference "#PWR044")
+					(reference "#PWR045")
 					(unit 1)
 				)
 			)
@@ -65801,7 +66489,7 @@
 		(in_pos_files yes)
 		(dnp no)
 		(uuid "d70b00a9-4316-4d3c-a1c0-c026ea73afdb")
-		(property "Reference" "#PWR015"
+		(property "Reference" "#PWR016"
 			(at 102.87 60.96 0)
 			(hide yes)
 			(show_name no)
@@ -65861,7 +66549,7 @@
 		(instances
 			(project "MagneticLevitation"
 				(path "/fdb537e3-598b-439b-adb3-5b03aa38dd63"
-					(reference "#PWR015")
+					(reference "#PWR016")
 					(unit 1)
 				)
 			)
@@ -66192,7 +66880,7 @@
 		(in_pos_files yes)
 		(dnp no)
 		(uuid "d9eb70fe-84c4-4c70-be10-9c6ae0c4c0fd")
-		(property "Reference" "#PWR053"
+		(property "Reference" "#PWR054"
 			(at 226.06 153.67 0)
 			(hide yes)
 			(show_name no)
@@ -66252,7 +66940,7 @@
 		(instances
 			(project "MagneticLevitation"
 				(path "/fdb537e3-598b-439b-adb3-5b03aa38dd63"
-					(reference "#PWR053")
+					(reference "#PWR054")
 					(unit 1)
 				)
 			)
@@ -66270,7 +66958,7 @@
 		(dnp no)
 		(fields_autoplaced yes)
 		(uuid "da2f0214-a427-4670-bdff-f6a43e4ecdb7")
-		(property "Reference" "#PWR059"
+		(property "Reference" "#PWR060"
 			(at 35.56 176.53 0)
 			(hide yes)
 			(show_name no)
@@ -66331,7 +67019,7 @@
 		(instances
 			(project "MagneticLevitation"
 				(path "/fdb537e3-598b-439b-adb3-5b03aa38dd63"
-					(reference "#PWR059")
+					(reference "#PWR060")
 					(unit 1)
 				)
 			)
@@ -66614,7 +67302,7 @@
 		(in_pos_files yes)
 		(dnp no)
 		(uuid "dbba6924-5eb4-41af-84d8-0f3a92e8923a")
-		(property "Reference" "#PWR041"
+		(property "Reference" "#PWR042"
 			(at 194.31 110.49 0)
 			(hide yes)
 			(show_name no)
@@ -66674,7 +67362,7 @@
 		(instances
 			(project "MagneticLevitation"
 				(path "/fdb537e3-598b-439b-adb3-5b03aa38dd63"
-					(reference "#PWR041")
+					(reference "#PWR042")
 					(unit 1)
 				)
 			)
@@ -67200,7 +67888,7 @@
 		(in_pos_files yes)
 		(dnp no)
 		(uuid "de3ef6ce-9c38-4611-a25d-a11300b80620")
-		(property "Reference" "#PWR033"
+		(property "Reference" "#PWR034"
 			(at 121.92 93.98 0)
 			(hide yes)
 			(show_name no)
@@ -67260,7 +67948,7 @@
 		(instances
 			(project "MagneticLevitation"
 				(path "/fdb537e3-598b-439b-adb3-5b03aa38dd63"
-					(reference "#PWR033")
+					(reference "#PWR034")
 					(unit 1)
 				)
 			)
@@ -67278,7 +67966,7 @@
 		(in_pos_files yes)
 		(dnp no)
 		(uuid "dff793dc-3503-456d-ae1c-3378c033de32")
-		(property "Reference" "#PWR062"
+		(property "Reference" "#PWR063"
 			(at 148.59 185.42 0)
 			(hide yes)
 			(show_name no)
@@ -67338,7 +68026,7 @@
 		(instances
 			(project "MagneticLevitation"
 				(path "/fdb537e3-598b-439b-adb3-5b03aa38dd63"
-					(reference "#PWR062")
+					(reference "#PWR063")
 					(unit 1)
 				)
 			)
@@ -67355,7 +68043,7 @@
 		(in_pos_files yes)
 		(dnp no)
 		(uuid "e2d2777f-367a-42ac-8ce2-5d9dc3f63eeb")
-		(property "Reference" "R5"
+		(property "Reference" "R6"
 			(at 77.216 41.91 0)
 			(show_name no)
 			(do_not_autoplace no)
@@ -67803,7 +68491,7 @@
 		(instances
 			(project "MagneticLevitation"
 				(path "/fdb537e3-598b-439b-adb3-5b03aa38dd63"
-					(reference "R5")
+					(reference "R6")
 					(unit 1)
 				)
 			)
@@ -67820,7 +68508,7 @@
 		(in_pos_files yes)
 		(dnp no)
 		(uuid "e3370817-62f8-447a-b832-521786a689cf")
-		(property "Reference" "R20"
+		(property "Reference" "R21"
 			(at 134.62 116.078 90)
 			(show_name no)
 			(do_not_autoplace no)
@@ -68256,7 +68944,7 @@
 		(instances
 			(project "MagneticLevitation"
 				(path "/fdb537e3-598b-439b-adb3-5b03aa38dd63"
-					(reference "R20")
+					(reference "R21")
 					(unit 1)
 				)
 			)
@@ -68273,7 +68961,7 @@
 		(in_pos_files yes)
 		(dnp no)
 		(uuid "e3c6500d-21b2-4cfb-9e44-d2b9bf7bac18")
-		(property "Reference" "#PWR012"
+		(property "Reference" "#PWR014"
 			(at 168.91 43.18 0)
 			(hide yes)
 			(show_name no)
@@ -68333,7 +69021,7 @@
 		(instances
 			(project "MagneticLevitation"
 				(path "/fdb537e3-598b-439b-adb3-5b03aa38dd63"
-					(reference "#PWR012")
+					(reference "#PWR014")
 					(unit 1)
 				)
 			)
@@ -68918,7 +69606,7 @@
 		(in_pos_files yes)
 		(dnp no)
 		(uuid "e75377fc-c0c0-485b-9996-ccb1d20e31e3")
-		(property "Reference" "R7"
+		(property "Reference" "R8"
 			(at 50.8 49.276 90)
 			(show_name no)
 			(do_not_autoplace no)
@@ -69365,7 +70053,7 @@
 		(instances
 			(project "MagneticLevitation"
 				(path "/fdb537e3-598b-439b-adb3-5b03aa38dd63"
-					(reference "R7")
+					(reference "R8")
 					(unit 1)
 				)
 			)
@@ -69382,7 +70070,7 @@
 		(in_pos_files yes)
 		(dnp no)
 		(uuid "e88087f3-8e44-40a1-ac78-f2fab85649c8")
-		(property "Reference" "#PWR027"
+		(property "Reference" "#PWR028"
 			(at 168.91 81.28 0)
 			(hide yes)
 			(show_name no)
@@ -69442,7 +70130,7 @@
 		(instances
 			(project "MagneticLevitation"
 				(path "/fdb537e3-598b-439b-adb3-5b03aa38dd63"
-					(reference "#PWR027")
+					(reference "#PWR028")
 					(unit 1)
 				)
 			)
@@ -69460,7 +70148,7 @@
 		(in_pos_files yes)
 		(dnp no)
 		(uuid "e9df71cb-67c0-43b7-af0b-8ee5599323d3")
-		(property "Reference" "#PWR048"
+		(property "Reference" "#PWR049"
 			(at 184.15 130.81 0)
 			(hide yes)
 			(show_name no)
@@ -69520,7 +70208,7 @@
 		(instances
 			(project "MagneticLevitation"
 				(path "/fdb537e3-598b-439b-adb3-5b03aa38dd63"
-					(reference "#PWR048")
+					(reference "#PWR049")
 					(unit 1)
 				)
 			)
@@ -70997,7 +71685,7 @@
 		(in_pos_files yes)
 		(dnp no)
 		(uuid "ee2cd983-a9a2-4917-b863-28f4b9e07288")
-		(property "Reference" "#PWR031"
+		(property "Reference" "#PWR032"
 			(at 45.72 93.98 0)
 			(hide yes)
 			(show_name no)
@@ -71057,7 +71745,7 @@
 		(instances
 			(project "MagneticLevitation"
 				(path "/fdb537e3-598b-439b-adb3-5b03aa38dd63"
-					(reference "#PWR031")
+					(reference "#PWR032")
 					(unit 1)
 				)
 			)
@@ -71074,7 +71762,7 @@
 		(in_pos_files yes)
 		(dnp no)
 		(uuid "ef707566-7534-4ac8-8ac4-c7a2b68e1088")
-		(property "Reference" "R14"
+		(property "Reference" "R15"
 			(at 245.11 87.376 90)
 			(show_name no)
 			(do_not_autoplace no)
@@ -71510,7 +72198,7 @@
 		(instances
 			(project "MagneticLevitation"
 				(path "/fdb537e3-598b-439b-adb3-5b03aa38dd63"
-					(reference "R14")
+					(reference "R15")
 					(unit 1)
 				)
 			)
@@ -71794,7 +72482,7 @@
 		(in_pos_files yes)
 		(dnp no)
 		(uuid "f133777b-db98-4af5-86e3-f42f2d6702fc")
-		(property "Reference" "#PWR040"
+		(property "Reference" "#PWR041"
 			(at 121.92 110.49 0)
 			(hide yes)
 			(show_name no)
@@ -71854,7 +72542,7 @@
 		(instances
 			(project "MagneticLevitation"
 				(path "/fdb537e3-598b-439b-adb3-5b03aa38dd63"
-					(reference "#PWR040")
+					(reference "#PWR041")
 					(unit 1)
 				)
 			)
@@ -72874,7 +73562,7 @@
 		(in_pos_files yes)
 		(dnp no)
 		(uuid "f3d3d036-ea2a-483c-a06d-bc6b3e567919")
-		(property "Reference" "#PWR039"
+		(property "Reference" "#PWR040"
 			(at 93.98 106.68 0)
 			(hide yes)
 			(show_name no)
@@ -72934,7 +73622,7 @@
 		(instances
 			(project "MagneticLevitation"
 				(path "/fdb537e3-598b-439b-adb3-5b03aa38dd63"
-					(reference "#PWR039")
+					(reference "#PWR040")
 					(unit 1)
 				)
 			)
@@ -72951,7 +73639,7 @@
 		(in_pos_files yes)
 		(dnp no)
 		(uuid "f4e018bf-2dbc-4a17-9533-b928014e6e7b")
-		(property "Reference" "#PWR09"
+		(property "Reference" "#PWR011"
 			(at 111.76 43.18 0)
 			(hide yes)
 			(show_name no)
@@ -73011,7 +73699,7 @@
 		(instances
 			(project "MagneticLevitation"
 				(path "/fdb537e3-598b-439b-adb3-5b03aa38dd63"
-					(reference "#PWR09")
+					(reference "#PWR011")
 					(unit 1)
 				)
 			)
@@ -73028,7 +73716,7 @@
 		(in_pos_files yes)
 		(dnp no)
 		(uuid "f8419650-6615-48f7-8120-c9465896c964")
-		(property "Reference" "C1"
+		(property "Reference" "C4"
 			(at 101.854 31.4959 0)
 			(show_name no)
 			(do_not_autoplace no)
@@ -73433,7 +74121,7 @@
 		(instances
 			(project "MagneticLevitation"
 				(path "/fdb537e3-598b-439b-adb3-5b03aa38dd63"
-					(reference "C1")
+					(reference "C4")
 					(unit 1)
 				)
 			)
@@ -73873,7 +74561,7 @@
 		(in_pos_files yes)
 		(dnp no)
 		(uuid "f8d107ca-bd33-4c3c-8e49-ba71f3865711")
-		(property "Reference" "#PWR042"
+		(property "Reference" "#PWR043"
 			(at 20.32 115.57 0)
 			(hide yes)
 			(show_name no)
@@ -73933,7 +74621,462 @@
 		(instances
 			(project "MagneticLevitation"
 				(path "/fdb537e3-598b-439b-adb3-5b03aa38dd63"
-					(reference "#PWR042")
+					(reference "#PWR043")
+					(unit 1)
+				)
+			)
+		)
+	)
+	(symbol
+		(lib_id "PCM_JLCPCB-Resistors:0603,5.1kΩ")
+		(at 267.97 30.48 0)
+		(unit 1)
+		(body_style 1)
+		(exclude_from_sim no)
+		(in_bom yes)
+		(on_board yes)
+		(in_pos_files yes)
+		(dnp no)
+		(fields_autoplaced yes)
+		(uuid "fcd5953e-2151-4aa1-886a-20c7d2b50bb8")
+		(property "Reference" "R2"
+			(at 270.51 30.4799 0)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify left)
+			)
+		)
+		(property "Value" "5.1kΩ"
+			(at 267.97 30.48 90)
+			(show_name no)
+			(do_not_autoplace yes)
+			(effects
+				(font
+					(size 0.8 0.8)
+				)
+			)
+		)
+		(property "Footprint" "PCM_JLCPCB:R_0603"
+			(at 266.192 30.48 90)
+			(hide yes)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "Datasheet" "https://www.lcsc.com/datasheet/lcsc_datasheet_2206010116_UNI-ROYAL-Uniroyal-Elec-0603WAF5101T5E_C23186.pdf"
+			(at 267.97 30.48 0)
+			(hide yes)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "Description" "100mW Thick Film Resistors 75V ±100ppm/°C ±1% 5.1kΩ 0603 Chip Resistor - Surface Mount ROHS"
+			(at 267.97 30.48 0)
+			(hide yes)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "LCSC" "C23186"
+			(at 267.97 30.48 0)
+			(hide yes)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "Stock" "9223405"
+			(at 267.97 30.48 0)
+			(hide yes)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "Price" "0.004USD"
+			(at 267.97 30.48 0)
+			(hide yes)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "Process" "SMT"
+			(at 267.97 30.48 0)
+			(hide yes)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "Minimum Qty" "20"
+			(at 267.97 30.48 0)
+			(hide yes)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "Attrition Qty" "10"
+			(at 267.97 30.48 0)
+			(hide yes)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "Class" "Basic Component"
+			(at 267.97 30.48 0)
+			(hide yes)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "Category" "Resistors,Chip Resistor - Surface Mount"
+			(at 267.97 30.48 0)
+			(hide yes)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "Manufacturer" "UNI-ROYAL(Uniroyal Elec)"
+			(at 267.97 30.48 0)
+			(hide yes)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "Part" "0603WAF5101T5E"
+			(at 267.97 30.48 0)
+			(hide yes)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "Resistance" "5.1kΩ"
+			(at 267.97 30.48 0)
+			(hide yes)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "Power(Watts)" "100mW"
+			(at 267.97 30.48 0)
+			(hide yes)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "Type" "Thick Film Resistors"
+			(at 267.97 30.48 0)
+			(hide yes)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "Overload Voltage (Max)" "75V"
+			(at 267.97 30.48 0)
+			(hide yes)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "Operating Temperature Range" "-55°C~+155°C"
+			(at 267.97 30.48 0)
+			(hide yes)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "Tolerance" "±1%"
+			(at 267.97 30.48 0)
+			(hide yes)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "Temperature Coefficient" "±100ppm/°C"
+			(at 267.97 30.48 0)
+			(hide yes)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "Breakdown Voltage (Vbr)" ""
+			(at 267.97 30.48 0)
+			(hide yes)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "Clamping Voltage@Ipp" ""
+			(at 267.97 30.48 0)
+			(hide yes)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "Contact Discharge Vesd" ""
+			(at 267.97 30.48 0)
+			(hide yes)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "Dominant Wavelength" ""
+			(at 267.97 30.48 0)
+			(hide yes)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "Emitted Color" ""
+			(at 267.97 30.48 0)
+			(hide yes)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "Forward Current" ""
+			(at 267.97 30.48 0)
+			(hide yes)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "Forward Voltage (VF)" ""
+			(at 267.97 30.48 0)
+			(hide yes)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "Junction Capacitance(Cj)@1Mhz" ""
+			(at 267.97 30.48 0)
+			(hide yes)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "Lens Color" ""
+			(at 267.97 30.48 0)
+			(hide yes)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "Luminous Intensity" ""
+			(at 267.97 30.48 0)
+			(hide yes)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "Number Of Lines" ""
+			(at 267.97 30.48 0)
+			(hide yes)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "Peak Pulse Current(Ipp)@8/20Us" ""
+			(at 267.97 30.48 0)
+			(hide yes)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "Peak Pulse Power(Ppp)@8/20Us" ""
+			(at 267.97 30.48 0)
+			(hide yes)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "Polarity" ""
+			(at 267.97 30.48 0)
+			(hide yes)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "Power Dissipation" ""
+			(at 267.97 30.48 0)
+			(hide yes)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "Reverse Leakage Current" ""
+			(at 267.97 30.48 0)
+			(hide yes)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "Viewing Angle" ""
+			(at 267.97 30.48 0)
+			(hide yes)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(pin "1"
+			(uuid "93a2f356-1310-486a-b3c9-32a8480518c3")
+		)
+		(pin "2"
+			(uuid "52824bc3-a76e-4939-854a-3ee621e2f14a")
+		)
+		(instances
+			(project "MagneticLevitation"
+				(path "/fdb537e3-598b-439b-adb3-5b03aa38dd63"
+					(reference "R2")
 					(unit 1)
 				)
 			)
@@ -73951,7 +75094,7 @@
 		(dnp no)
 		(fields_autoplaced yes)
 		(uuid "fcff7b45-e232-4f06-92d2-0216964ece21")
-		(property "Reference" "R34"
+		(property "Reference" "R35"
 			(at 110.49 173.9899 0)
 			(show_name no)
 			(do_not_autoplace no)
@@ -74388,7 +75531,7 @@
 		(instances
 			(project "MagneticLevitation"
 				(path "/fdb537e3-598b-439b-adb3-5b03aa38dd63"
-					(reference "R34")
+					(reference "R35")
 					(unit 1)
 				)
 			)

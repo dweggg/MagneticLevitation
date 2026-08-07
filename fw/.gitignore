@@ -1,0 +1,21 @@
+# Build outputs
+*.elf
+*.bin
+*.hex
+*.lst
+*.map
+*.o
+*.d
+
+# ch32fun auto-generates a linker script per chip/package at build time
+ch32fun/generated_*.ld
+
+# clangd / bear tooling
+compile_commands.json
+.cache/
+
+# OS / editor cruft
+.DS_Store
+Thumbs.db
+*.swp
+.vscode/

@@ -39,10 +39,9 @@ int main(void)
 	);
 
     scheduler_add_task(task_led, task_led_hz);
-
     scheduler_run();
-
-	while (1)
+    
+    while (1)
 	{
 
 	}

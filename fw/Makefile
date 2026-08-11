@@ -1,6 +1,10 @@
 # ---- Project ----
-TARGET := app/main
-OUTPUT := output
+# Resolve the directory this Makefile lives in so the Makefile can be
+# invoked from the workspace root or from inside `fw/`.
+MAKEFILE_DIR := $(patsubst %/,%,$(dir $(abspath $(lastword $(MAKEFILE_LIST)))))
+
+TARGET := $(MAKEFILE_DIR)/app/main
+OUTPUT := $(MAKEFILE_DIR)/output
 NAME := MagneticLevitation
 
 ADDITIONAL_C_FILES :=
@@ -10,19 +14,26 @@ TARGET_MCU         := CH32X035
 TARGET_MCU_PACKAGE := CH32X035G8U6
 
 # ---- Paths ----
-CH32FUN := lib
+CH32FUN := $(MAKEFILE_DIR)/lib
 
-EXTRA_CFLAGS += -Iinc
+# Include common include dirs (app, lib, optional inc)
+EXTRA_CFLAGS += -I$(MAKEFILE_DIR)/inc -I$(MAKEFILE_DIR)/app -I$(MAKEFILE_DIR)/lib
 
-ADDITIONAL_C_FILES := $(filter-out app/main.c,$(wildcard app/*.c))
+# Collect additional C files from app/ (exclude main.c)
+APP_C_FILES := $(filter-out $(MAKEFILE_DIR)/app/main.c,$(wildcard $(MAKEFILE_DIR)/app/*.c))
+# Collect additional C files from lib/ (exclude ch32fun.c which is built as SYSTEM_C)
+LIB_C_FILES := $(filter-out $(CH32FUN)/ch32fun.c,$(wildcard $(CH32FUN)/*.c))
+# Combine
+ADDITIONAL_C_FILES := $(APP_C_FILES) $(LIB_C_FILES)
+
 include $(CH32FUN)/ch32fun.mk
 
 # ---- Generated files ----
 BUILD_ARTIFACTS := \
-	app/main.elf \
-	app/main.bin \
-	app/main.hex \
-	app/main.map
+	$(TARGET).elf \
+	$(TARGET).bin \
+	$(TARGET).hex \
+	$(TARGET).map
 
 # ---- USB bootloader flashing via wchisp ----
 WCHISP ?= wchisp

@@ -1,6 +1,8 @@
 #ifndef PINOUT_H
 #define PINOUT_H
 
+#include "ch32fun.h"
+
 /*
  * Board pin definitions
  * MCU: CH32X035G8U6

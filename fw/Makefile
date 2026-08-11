@@ -1,5 +1,5 @@
 # ---- Project ----
-TARGET := src/main
+TARGET := app/main
 OUTPUT := output
 NAME := MagneticLevitation
 
@@ -10,19 +10,19 @@ TARGET_MCU         := CH32X035
 TARGET_MCU_PACKAGE := CH32X035G8U6
 
 # ---- Paths ----
-CH32FUN := ch32fun
+CH32FUN := lib
 
 EXTRA_CFLAGS += -Iinc
 
-ADDITIONAL_C_FILES := $(filter-out src/main.c,$(wildcard src/*.c))
+ADDITIONAL_C_FILES := $(filter-out app/main.c,$(wildcard app/*.c))
 include $(CH32FUN)/ch32fun.mk
 
 # ---- Generated files ----
 BUILD_ARTIFACTS := \
-	src/main.elf \
-	src/main.bin \
-	src/main.hex \
-	src/main.map
+	app/main.elf \
+	app/main.bin \
+	app/main.hex \
+	app/main.map
 
 # ---- USB bootloader flashing via wchisp ----
 WCHISP ?= wchisp
@@ -37,10 +37,10 @@ flash: $(TARGET).bin
 
 package: build
 	mkdir -p $(OUTPUT)
-	cp src/main.elf $(OUTPUT)/$(NAME).elf
-	cp src/main.bin $(OUTPUT)/$(NAME).bin
-	cp src/main.hex $(OUTPUT)/$(NAME).hex
-	cp src/main.map $(OUTPUT)/$(NAME).map
+	cp app/main.elf $(OUTPUT)/$(NAME).elf
+	cp app/main.bin $(OUTPUT)/$(NAME).bin
+	cp app/main.hex $(OUTPUT)/$(NAME).hex
+	cp app/main.map $(OUTPUT)/$(NAME).map
 	$(MAKE) tidy
 
 tidy:

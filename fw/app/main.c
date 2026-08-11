@@ -1,4 +1,3 @@
-#include "main.h"
 #include "pinout.h"
 #include "scheduler.h"
 

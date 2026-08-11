@@ -1,4 +1,4 @@
-#include "../inc/protocol.h"
+#include "protocol.h"
 #include <stdio.h>
 
 void protocol_init(void)

@@ -1,4 +1,4 @@
-#include "../inc/usb_cdc.h"
+#include "usb_cdc.h"
 #include <stdio.h>
 
 void usb_cdc_init(void)

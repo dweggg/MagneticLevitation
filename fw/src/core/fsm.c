@@ -1,4 +1,4 @@
-#include "../inc/fsm.h"
+#include "fsm.h"
 #include <stdio.h>
 
 static fsm_state_t current_state = FSM_STATE_IDLE;

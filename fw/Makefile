@@ -12,9 +12,9 @@ TARGET_MCU_PACKAGE := CH32X035G8U6
 # ---- Paths ----
 CH32FUN := ch32fun
 
-EXTRA_CFLAGS += -Iinc
+EXTRA_CFLAGS += -Iinc -Isrc/control -Isrc/usb -Isrc/comm -Isrc/periph -Isrc/core -Isrc/system
 
-ADDITIONAL_C_FILES := $(filter-out src/main.c,$(wildcard src/*.c))
+ADDITIONAL_C_FILES := $(filter-out src/main.c,$(shell find src -type f -name '*.c'))
 include $(CH32FUN)/ch32fun.mk
 
 # ---- Generated files ----

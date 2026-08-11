@@ -1,4 +1,4 @@
-#include "../inc/current_control.h"
+#include "current_control.h"
 #include <stdio.h>
 
 void current_control_init(void)

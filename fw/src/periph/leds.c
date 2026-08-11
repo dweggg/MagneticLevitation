@@ -1,4 +1,4 @@
-#include "../inc/leds.h"
+#include "leds.h"
 #include <stdio.h>
 
 void leds_init(void)

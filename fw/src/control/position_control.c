@@ -1,4 +1,4 @@
-#include "../inc/position_control.h"
+#include "position_control.h"
 #include <stdio.h>
 
 void position_control_init(void)

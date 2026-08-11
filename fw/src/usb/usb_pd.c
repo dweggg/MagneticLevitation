@@ -1,4 +1,4 @@
-#include "../inc/usb_pd.h"
+#include "usb_pd.h"
 #include <stdio.h>
 
 void usb_pd_init(void)

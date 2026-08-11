@@ -1,7 +1,7 @@
-#include "../inc/tasks.h"
-#include "../inc/leds.h"
-#include "../inc/fsm.h"
-#include "../inc/usb_pd.h"
+#include "tasks.h"
+#include "leds.h"
+#include "fsm.h"
+#include "usb_pd.h"
 #include <stdio.h>
 
 void tasks_init(void)

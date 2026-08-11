@@ -1,4 +1,4 @@
-#include "../inc/parameters.h"
+#include "parameters.h"
 #include <stdio.h>
 
 void parameters_load(void)

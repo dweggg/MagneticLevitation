@@ -3,4 +3,6 @@
 
 void task_usb_pd(void);
 
+int usb_pd_negotiating(void);
+
 #endif // USB_PD_H

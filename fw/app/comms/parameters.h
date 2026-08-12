@@ -1,5 +1,5 @@
-#ifndef PARAMETERS
-#define PARAMETERS
+#ifndef PARAMETERS_H
+#define PARAMETERS_H
 
 
-#endif // PARAMETERS
+#endif // PARAMETERS_H

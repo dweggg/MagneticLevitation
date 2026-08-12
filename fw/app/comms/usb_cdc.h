@@ -1,6 +1,6 @@
-#ifndef USB_CDC
-#define USB_CDC
+#ifndef USB_CDC_H
+#define USB_CDC_H
 
-void _task_usb_cdc(void);
+void task_usb_cdc(void);
 
-#endif // USB_CDC
+#endif // USB_CDC_H

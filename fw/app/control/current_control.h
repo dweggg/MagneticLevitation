@@ -1,6 +1,6 @@
-#ifndef CURRENT_CONTROL
-#define CURRENT_CONTROL
+#ifndef CURRENT_CONTROL_H
+#define CURRENT_CONTROL_H
 
-void _task_current_control(void);
+void task_current_control(void);
 
-#endif // CURRENT_CONTROL
+#endif // CURRENT_CONTROL_H

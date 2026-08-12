@@ -1,6 +1,6 @@
-#ifndef LEDS
-#define LEDS
+#ifndef LEDS_H
+#define LEDS_H
 
-void _task_leds(void);
+void task_leds(void);
 
-#endif // LEDS
+#endif // LEDS_H

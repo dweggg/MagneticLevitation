@@ -1,5 +1,5 @@
-#ifndef TASKS
-#define TASKS
+#ifndef TASKS_H
+#define TASKS_H
 
 #define TASK_CURRENT_CONTROL_HZ 10000
 #define TASK_POSITION_CONTROL_HZ 100
@@ -10,13 +10,13 @@
 
 /*
 Initializes all tasks needed for the platform. These are:
-- _task_current_control (10kHz)
-- _task_position_control (100Hz)
-- _task_usb_pd (1kHz)
-- _task_usb_cdc (100Hz)
-- _task_fsm (1kHz)
-- _task_leds (10Hz)
+- task_current_control (10kHz)
+- task_position_control (100Hz)
+- task_usb_pd (1kHz)
+- task_usb_cdc (100Hz)
+- task_fsm (1kHz)
+- task_leds (10Hz)
 */
 void scheduler_init_tasks(void);
 
-#endif // TASKS
+#endif // TASKS_H

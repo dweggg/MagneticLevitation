@@ -1,6 +1,6 @@
-#ifndef FSM
-#define FSM
+#ifndef FSM_H
+#define FSM_H
 
-void _task_fsm(void);
+void task_fsm(void);
 
-#endif // FSM
+#endif // FSM_H

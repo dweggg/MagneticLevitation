@@ -1,6 +1,6 @@
-#ifndef USB_PD
-#define USB_PD
+#ifndef USB_PD_H
+#define USB_PD_H
 
-void _task_usb_pd(void);
+void task_usb_pd(void);
 
-#endif // USB_PD
+#endif // USB_PD_H

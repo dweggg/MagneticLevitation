@@ -1,5 +1,5 @@
 #include "fsm.h"
 
-void _task_fsm(void){
+void task_fsm(void){
 	
 }

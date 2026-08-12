@@ -16,13 +16,14 @@ TARGET_MCU_PACKAGE := CH32X035G8U6
 # ---- Paths ----
 CH32FUN := $(MAKEFILE_DIR)/lib
 
-# Include common include dirs (app, lib, optional inc)
-EXTRA_CFLAGS += -I$(MAKEFILE_DIR)/inc -I$(MAKEFILE_DIR)/app -I$(MAKEFILE_DIR)/lib
+# Include common include dirs (app, app subdirs, lib, optional inc)
+APP_INCLUDE_DIRS := $(shell find $(MAKEFILE_DIR)/app -type d | sort)
+EXTRA_CFLAGS += -I$(MAKEFILE_DIR)/inc -I$(MAKEFILE_DIR)/app -I$(MAKEFILE_DIR)/lib $(patsubst %,-I%,$(APP_INCLUDE_DIRS))
 
-# Collect additional C files from app/ (exclude main.c)
-APP_C_FILES := $(filter-out $(MAKEFILE_DIR)/app/main.c,$(wildcard $(MAKEFILE_DIR)/app/*.c))
+# Collect additional C files from app/ and nested app subdirectories (exclude main.c)
+APP_C_FILES := $(shell find $(MAKEFILE_DIR)/app -type f -name '*.c' ! -name 'main.c' | sort)
 # Collect additional C files from lib/ (exclude ch32fun.c which is built as SYSTEM_C)
-LIB_C_FILES := $(filter-out $(CH32FUN)/ch32fun.c,$(wildcard $(CH32FUN)/*.c))
+LIB_C_FILES := $(filter-out $(CH32FUN)/ch32fun.c,$(shell find $(CH32FUN) -maxdepth 1 -type f -name '*.c' | sort))
 # Combine
 ADDITIONAL_C_FILES := $(APP_C_FILES) $(LIB_C_FILES)
 

@@ -1,17 +1,23 @@
 #include "usb_cdc.h"
 #include "usb_config.h"
 #include "fsusb.h"
+#include <string.h>
+
+static volatile uint8_t usb_cdc_dtr;
 
 void init_pins_usb_cdc(void){
-
+	USBFSSetup();
 }
 
 void task_usb_cdc(void){
-	
+	if (USB_TX_Pending() > 0) {
+        USBFS_SendEndpoint(3, 0);
+    }
+
 }
 
 int usb_cdc_debug_is_active(void){
-	return 0;
+	return usb_cdc_dtr;
 }
 
 
@@ -172,8 +178,7 @@ int HandleSetupCustom( struct _USBState *ctx, int setup_code )
 				break;
  
 			case CDC_SET_LINE_CTLSTE:
-				// DTR/RTS bits live in CTRL0BUFF[2] (bit0 = DTR, bit1 = RTS)
-				// if you want to detect "a terminal is open."
+				usb_cdc_dtr = (ctx->USBFS_IndexValue & 1) != 0;
 				ret = ( ctx->USBFS_SetupReqLen ) ? ctx->USBFS_SetupReqLen : -1;
 				break;
  

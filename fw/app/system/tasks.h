@@ -38,6 +38,9 @@
 #define TASK_LEDS_S_F16 \
     fix16_div(fix16_one, fix16_from_int(TASK_LEDS_HZ))
 
+// Calls a init_pins_X() for each individual task.
+void init_pins(void);
+
 /*
 Initializes all tasks needed for the platform. These are:
 
@@ -50,7 +53,5 @@ Initializes all tasks needed for the platform. These are:
 */
 void scheduler_init_tasks(void);
 
-// Calls a init_pins_X() for each individual task.
-void init_pins(void);
 
 #endif // TASKS_H

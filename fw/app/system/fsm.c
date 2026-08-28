@@ -2,6 +2,10 @@
 
 static fsm_state_t state;
 
+void init_pins_fsm(void){
+	
+}
+
 void task_fsm(void){
 	
 }

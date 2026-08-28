@@ -18,26 +18,34 @@ static void blink(uint8_t pin, uint32_t interval_ms);
 static inline void turn_on(uint8_t pin);
 static inline void turn_off(uint8_t pin);
 
+void init_pins_leds(void){
+    funPinMode(PIN_LED_RED, GPIO_Speed_10MHz | GPIO_CNF_OUT_PP);
+    funPinMode(PIN_LED_WHITE, GPIO_Speed_10MHz | GPIO_CNF_OUT_PP);
+}
+
 // Task
 void task_leds(void){
 
-	/* White LED */
-	if (usb_cdc_debug_is_active()) {
-		blink(LED_WHITE, SLOW);
-	} else if (usb_pd_negotiating()) {
-		blink(LED_WHITE, FAST);
-	} else {
-		turn_off(LED_WHITE);
-	}
+	blink(LED_WHITE, SLOW);
+	blink(LED_RED, FAST);
 
-	/* Red LED */
-	if (fsm_state() == FSM_FAULT) {
-		blink(LED_RED, FAST);
-	} else if (fsm_state() == FSM_CURRENT_CONTROL) {
-		turn_on(LED_RED);
-	} else {
-		turn_off(LED_RED);
-	}
+	// /* White LED */
+	// if (usb_cdc_debug_is_active()) {
+	// 	blink(LED_WHITE, SLOW);
+	// } else if (usb_pd_negotiating()) {
+	// 	blink(LED_WHITE, FAST);
+	// } else {
+	// 	turn_off(LED_WHITE);
+	// }
+
+	// /* Red LED */
+	// if (fsm_state() == FSM_FAULT) {
+	// 	blink(LED_RED, FAST);
+	// } else if (fsm_state() == FSM_CURRENT_CONTROL) {
+	// 	turn_on(LED_RED);
+	// } else {
+	// 	turn_off(LED_RED);
+	// }
 }
 
 // Helpers

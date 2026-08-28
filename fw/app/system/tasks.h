@@ -50,4 +50,7 @@ Initializes all tasks needed for the platform. These are:
 */
 void scheduler_init_tasks(void);
 
+// Calls a init_pins_X() for each individual task.
+void init_pins(void);
+
 #endif // TASKS_H

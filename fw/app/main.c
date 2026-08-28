@@ -1,6 +1,7 @@
 #include "tasks.h"
 #include "scheduler.h"
 #include "ch32fun.h"
+#include "pinout.h"
 
 static uint32_t systick_get_ticks(void)
 {
@@ -21,6 +22,7 @@ int main(void)
 	SystemInit();
     funGpioInitAll();
 
+
 	systick_init();
 
 	scheduler_init(
@@ -28,6 +30,7 @@ int main(void)
 	    FUNCONF_SYSTEM_CORE_CLOCK
 	);
 
+    init_pins();
     scheduler_init_tasks();
 
     scheduler_run();

@@ -2,6 +2,10 @@
 #include "usb_config.h"
 #include "fsusb.h"
 
+void init_pins_usb_cdc(void){
+
+}
+
 void task_usb_cdc(void){
 	
 }

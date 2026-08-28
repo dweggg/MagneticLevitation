@@ -20,8 +20,8 @@
 
 #include "usb_defines.h"
 
-// TODO: swap in your own VID/PID before shipping anything — 0x1209/0xd035 is the
-// shared ch32fun example PID (from pid.codes), fine for bring-up/testing only.
+// TODO: swap in VID/PID, 0x1209/0xd035 is the
+// shared ch32fun example PID (from pid.codes)
 #define FUSB_USB_VID 0x1209
 #define FUSB_USB_PID 0xd035
 #define FUSB_USB_REV 0x0007

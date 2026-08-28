@@ -18,3 +18,13 @@ void scheduler_init_tasks(void){
 	scheduler_add_task(task_fsm, TASK_FSM_HZ);
 	scheduler_add_task(task_leds, TASK_LEDS_HZ);
 }
+
+void init_pins(void){
+	init_pins_current_control();
+	init_pins_position_control();
+	init_pins_usb_pd();
+	init_pins_usb_cdc();
+	init_pins_fsm();
+	init_pins_leds();
+
+}

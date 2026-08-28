@@ -11,5 +11,7 @@ typedef enum
 
 void task_fsm(void);
 
+void init_pins_fsm(void);
+
 fsm_state_t fsm_state(void);
 #endif // FSM_H

@@ -4,10 +4,10 @@
 #include <stdint.h>
 
 int protocol_log_write(const uint8_t *buf, uint16_t len);
+int protocol_log_format(const char *format, ...);
 
-#define LOG(message) do { \
-	static const uint8_t log_message[] = message "\r\n"; \
-	protocol_log_write(log_message, sizeof(log_message) - 1); \
+#define LOG(format, ...) do { \
+	protocol_log_format(format, ##__VA_ARGS__); \
 } while (0)
 
 

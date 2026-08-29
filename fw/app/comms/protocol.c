@@ -32,7 +32,7 @@ static uint16_t append_unsigned(char *buffer, uint16_t position, uint16_t size,
 
 int protocol_log_write(const uint8_t *buf, uint16_t len)
 {
-	return USB_TX_Send(buf, len);
+	return usb_cdc_tx_send(buf, len);
 }
 
 int protocol_log_format(const char *format, ...)

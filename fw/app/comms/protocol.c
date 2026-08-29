@@ -19,9 +19,46 @@ static uint16_t append_unsigned(char *buffer, uint16_t position, uint16_t size,
 	uint16_t digit_count = 0;
 
 	do {
-		digits[digit_count++] = (char)('0' + value % 10);
-		value /= 10;
-	} while (value != 0);
+		digits[digit_count++] = (char)('0' + value % 10U);
+		value /= 10U;
+	} while (value != 0U);
+
+	while (digit_count != 0 && position < size - 1) {
+		buffer[position++] = digits[--digit_count];
+	}
+
+	return position;
+}
+
+static uint16_t append_unsigned_long(char *buffer, uint16_t position, uint16_t size,
+                                    unsigned long value)
+{
+	char digits[20];
+	uint16_t digit_count = 0;
+
+	do {
+		digits[digit_count++] = (char)('0' + (value % 10UL));
+		value /= 10UL;
+	} while (value != 0UL);
+
+	while (digit_count != 0 && position < size - 1) {
+		buffer[position++] = digits[--digit_count];
+	}
+
+	return position;
+}
+
+static uint16_t append_hex(char *buffer, uint16_t position, uint16_t size,
+                          unsigned long value)
+{
+	char digits[16];
+	uint16_t digit_count = 0;
+
+	do {
+		unsigned int nibble = value & 0xFUL;
+		digits[digit_count++] = (char)(nibble < 10U ? ('0' + nibble) : ('a' + (nibble - 10U)));
+		value >>= 4U;
+	} while (value != 0UL);
 
 	while (digit_count != 0 && position < size - 1) {
 		buffer[position++] = digits[--digit_count];
@@ -49,10 +86,39 @@ int protocol_log_format(const char *format, ...)
 		}
 
 		format++;
+		int is_long = 0;
+		if (*format == 'l') {
+			is_long = 1;
+			format++;
+		}
+
 		switch (*format++) {
 		case 'u':
-			length = append_unsigned(log_message, length, sizeof(log_message),
-			                         va_arg(arguments, unsigned int));
+			if (is_long) {
+				length = append_unsigned_long(log_message, length, sizeof(log_message),
+				                            va_arg(arguments, unsigned long));
+			} else {
+				length = append_unsigned(log_message, length, sizeof(log_message),
+				                       va_arg(arguments, unsigned int));
+			}
+			break;
+		case 'x':
+			if (is_long) {
+				length = append_hex(log_message, length, sizeof(log_message),
+				                   va_arg(arguments, unsigned long));
+			} else {
+				length = append_hex(log_message, length, sizeof(log_message),
+				                   va_arg(arguments, unsigned int));
+			}
+			break;
+		case 'X':
+			if (is_long) {
+				length = append_hex(log_message, length, sizeof(log_message),
+				                   va_arg(arguments, unsigned long));
+			} else {
+				length = append_hex(log_message, length, sizeof(log_message),
+				                   va_arg(arguments, unsigned int));
+			}
 			break;
 		case 's':
 			length = append_text(log_message, length, sizeof(log_message),

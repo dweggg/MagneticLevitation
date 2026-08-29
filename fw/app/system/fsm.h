@@ -4,6 +4,7 @@
 typedef enum
 {
 	FSM_INIT,
+	FSM_RESET,
 	FSM_IDLE,
 	FSM_CURRENT_CONTROL,
 	FSM_FAULT

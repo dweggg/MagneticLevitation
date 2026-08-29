@@ -1,6 +1,7 @@
 #include "usb_cdc.h"
 #include "usb_config.h"
 #include "fsusb.h"
+#include "parameters.h"
 #include <string.h>
 
 #define USB_CDC_RX_RING_SIZE 256
@@ -35,6 +36,7 @@ void task_usb_cdc(void)
 	if (usb_cdc_tx_pending() > 0) {
 		USBFS_SendEndpoint(3, 0);
 	}
+	parameters_bridge_poll();
 }
 
 int usb_cdc_debug_is_active(void)
@@ -96,6 +98,26 @@ int usb_cdc_tx_send(const uint8_t *buf, int len)
 static int usb_cdc_tx_pending(void)
 {
 	return (usb_cdc_tx_head - usb_cdc_tx_tail) & (USB_CDC_TX_RING_SIZE - 1);
+}
+
+int usb_cdc_rx_available(void)
+{
+	return (usb_cdc_rx_head - usb_cdc_rx_tail) & (USB_CDC_RX_RING_SIZE - 1);
+}
+
+int usb_cdc_rx_read(uint8_t *buf, int max_len)
+{
+	int read_count = 0;
+	if (buf == NULL || max_len <= 0) {
+		return 0;
+	}
+
+	while (read_count < max_len && usb_cdc_rx_tail != usb_cdc_rx_head) {
+		buf[read_count++] = usb_cdc_rx_ring[usb_cdc_rx_tail];
+		usb_cdc_rx_tail = (usb_cdc_rx_tail + 1) & (USB_CDC_RX_RING_SIZE - 1);
+	}
+
+	return read_count;
 }
 
 int HandleInRequest(struct _USBState *ctx, int endp, uint8_t *data, int len)

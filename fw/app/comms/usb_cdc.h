@@ -30,4 +30,16 @@ int usb_cdc_debug_is_active(void);
  */
 int usb_cdc_tx_send(const uint8_t *buf, int len);
 
+/**
+ * Return how many bytes are waiting in the receive ring buffer.
+ */
+int usb_cdc_rx_available(void);
+
+/**
+ * Read bytes from the USB CDC receive ring buffer.
+ *
+ * Returns the number of bytes copied into buf.
+ */
+int usb_cdc_rx_read(uint8_t *buf, int max_len);
+
 #endif /* USB_CDC_H */

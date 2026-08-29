@@ -1,5 +1,6 @@
 #include "setpoint.h"
 #include "protocol.h"
+#include "parameters.h"
 #include "ch32fun.h"
 #include "pinout.h"
 #include "protocol.h"
@@ -14,9 +15,6 @@ void init_pins_setpoint(void){
 
 void task_setpoint(void){
     temp_meas_raw = (uint16_t)funAnalogRead(PIN_TEMP_MEAS);
-    LOG("TEMP: %u", (unsigned int)temp_meas_raw);
-}
-
-uint16_t setpoint_get_temp_raw(void){
-    return temp_meas_raw;
+    parameters_publish_u16(PARAM_ID_TEMP_RAW, temp_meas_raw);
+    //LOG("TEMP: %u", (unsigned int)temp_meas_raw);
 }

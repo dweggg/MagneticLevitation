@@ -1,0 +1,35 @@
+{
+  "version": "2.0.0",
+  "tasks": [
+    {
+      "label": "Build package",
+      "type": "shell",
+      "command": "make",
+      "args": [
+        "package",
+        "PREFIX=/home/dweggg/opt/xpack-riscv-none-elf-gcc-15.2.0-1/bin/riscv-none-elf"
+      ],
+      "options": {
+        "cwd": "${workspaceFolder}/fw"
+      },
+      "group": {
+        "kind": "build",
+        "isDefault": true
+      },
+      "problemMatcher": []
+    },
+    {
+      "label": "Flash",
+      "type": "shell",
+      "command": "make",
+      "args": [
+        "flash",
+        "PREFIX=/home/dweggg/opt/xpack-riscv-none-elf-gcc-15.2.0-1/bin/riscv-none-elf"
+      ],
+      "options": {
+        "cwd": "${workspaceFolder}/fw"
+      },
+      "problemMatcher": []
+    }
+  ]
+}

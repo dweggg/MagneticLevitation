@@ -7,9 +7,8 @@ T0_C   = 25           # reference temp [C]
 BETA   = 3450          # beta coefficient [K]
 R_FIX  = 5.1e3      # other resistor in divider [ohm]
 ADC_BITS = 12          # ADC resolution
-NTC_ON_TOP = False
 NTC_ON_TOP = True      # True: NTC between Vref and node, R_FIX to GND
-                        # False: R_FIX between Vref and node, NTC to GND
+                       # False: R_FIX between Vref and node, NTC to GND
 
 T_C = np.linspace(-40, 150, 500)   # temperature sweep [C]
 # ---------------------

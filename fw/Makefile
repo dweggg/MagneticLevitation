@@ -1,6 +1,10 @@
 # ---- Project ----
-TARGET := src/main
-OUTPUT := output
+# Resolve the directory this Makefile lives in so the Makefile can be
+# invoked from the workspace root or from inside `fw/`.
+MAKEFILE_DIR := $(patsubst %/,%,$(dir $(abspath $(lastword $(MAKEFILE_LIST)))))
+
+TARGET := $(MAKEFILE_DIR)/app/main
+OUTPUT := $(MAKEFILE_DIR)/output
 NAME := MagneticLevitation
 
 ADDITIONAL_C_FILES :=
@@ -10,19 +14,27 @@ TARGET_MCU         := CH32X035
 TARGET_MCU_PACKAGE := CH32X035G8U6
 
 # ---- Paths ----
-CH32FUN := ch32fun
+CH32FUN := $(MAKEFILE_DIR)/lib
 
-EXTRA_CFLAGS += -Iinc
+# Include common include dirs (app, app subdirs, lib, optional inc)
+APP_INCLUDE_DIRS := $(shell find $(MAKEFILE_DIR)/app -type d | sort)
+EXTRA_CFLAGS += -I$(MAKEFILE_DIR)/inc -I$(MAKEFILE_DIR)/app -I$(MAKEFILE_DIR)/lib $(patsubst %,-I%,$(APP_INCLUDE_DIRS))
 
-ADDITIONAL_C_FILES := $(filter-out src/main.c,$(wildcard src/*.c))
+# Collect additional C files from app/ and nested app subdirectories (exclude main.c)
+APP_C_FILES := $(shell find $(MAKEFILE_DIR)/app -type f -name '*.c' ! -name 'main.c' | sort)
+# Collect additional C files from lib/ (exclude ch32fun.c which is built as SYSTEM_C)
+LIB_C_FILES := $(filter-out $(CH32FUN)/ch32fun.c,$(shell find $(CH32FUN) -maxdepth 1 -type f -name '*.c' | sort))
+# Combine
+ADDITIONAL_C_FILES := $(APP_C_FILES) $(LIB_C_FILES)
+
 include $(CH32FUN)/ch32fun.mk
 
 # ---- Generated files ----
 BUILD_ARTIFACTS := \
-	src/main.elf \
-	src/main.bin \
-	src/main.hex \
-	src/main.map
+	$(TARGET).elf \
+	$(TARGET).bin \
+	$(TARGET).hex \
+	$(TARGET).map
 
 # ---- USB bootloader flashing via wchisp ----
 WCHISP ?= wchisp
@@ -37,10 +49,10 @@ flash: $(TARGET).bin
 
 package: build
 	mkdir -p $(OUTPUT)
-	cp src/main.elf $(OUTPUT)/$(NAME).elf
-	cp src/main.bin $(OUTPUT)/$(NAME).bin
-	cp src/main.hex $(OUTPUT)/$(NAME).hex
-	cp src/main.map $(OUTPUT)/$(NAME).map
+	cp app/main.elf $(OUTPUT)/$(NAME).elf
+	cp app/main.bin $(OUTPUT)/$(NAME).bin
+	cp app/main.hex $(OUTPUT)/$(NAME).hex
+	cp app/main.map $(OUTPUT)/$(NAME).map
 	$(MAKE) tidy
 
 tidy:

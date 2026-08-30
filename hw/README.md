@@ -27,19 +27,23 @@ I think I might have added those two via groups to lower switching loop inductan
 ---
 
 # Changes to be made
+[ ] -> Pending
+[S] -> Schematic only
+[P] -> Partially done
+[X] -> Complete
 
 - [ ] 1. Remove violating via groups
-- [ ] 2. Swap LCSC PN for U1 (XLSEMI XL1509-3.3E1)
-- [ ] 3. Review LED resistor values
+- [S] 2. Swap LCSC PN for U1 (XLSEMI XL1509-3.3E1)
+- [P] 3. Review LED resistor values
 - [ ] 4. Add external fixed voltage reference, maybe even replacing iRef divider
 - [ ] 5. Add EEPROM?
 - [ ] 6. Review RST button behavior, or think of a way to HW reset the MCU
 - [ ] 7. Disconnect U2 (MT3608) output without EN pin, PMOS maybe
-- [ ] 8. Remove JLCJLCJLCJLC
+- [S] 8. Remove JLCJLCJLCJLC
 - [ ] 9. Move power supply section a bit down and leave more clearance with board edge
 - [ ] 10. Move debug/UART connectors and RST button, also turn them DNP
 - [ ] 11. Improve bootstrap layout?
-- [ ] 12. Replace expensive capacitors with something cheaper available as basic JLCPCBA
+- [P] 12. Replace expensive capacitors with something cheaper available as basic JLCPCBA
 - [ ] 13. Find cuter output connector? Maybe even SMD so back side stays clean
 - [ ] 14. Review Rgate, since at 12V V_GS, I_G_pk = 12V/10R = 1.2A which is bigger than XJNG2103 1A
 - [ ] 15. Try to reduce electrolytic cap height? If we have XY space we can have half capacitance, half height but x2 parts

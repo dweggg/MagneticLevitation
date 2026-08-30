@@ -23,3 +23,39 @@ These are all in the bottom inner layer so it can't be seen on the PCB itself. F
 So that explains issues #2 and #3: L2 was overheating bc it's rated at 100mA, and when the boost is disabled, the inductor is getting the 3.3V (well, 4.3V) to the gate driver supply, and since Vboot is shorted to GND, it goes trough R16/R17 to D6/D7 to GND... That's also why the power output (SWA/SWB) was shorted to ground, initially I thought it was some sort of gate driver protection magically turning on the low side switch but no lol.
 
 I think I might have added those two via groups to lower switching loop inductance just before producing outputs and didn't run DRC... That was not a very expensive mistake but a very stupid one for sure.
+
+---
+
+# Changes to be made
+
+- [ ] 1. Remove violating via groups
+- [ ] 2. Swap LCSC PN for U1 (XLSEMI XL1509-3.3E1)
+- [ ] 3. Review LED resistor values
+- [ ] 4. Add external fixed voltage reference, maybe even replacing iRef divider
+- [ ] 5. Add EEPROM?
+- [ ] 6. Review RST button behavior, or think of a way to HW reset the MCU
+- [ ] 7. Disconnect U2 (MT3608) output without EN pin, PMOS maybe
+- [ ] 8. Remove JLCJLCJLCJLC
+- [ ] 9. Move power supply section a bit down and leave more clearance with board edge
+- [ ] 10. Move debug/UART connectors and RST button, also turn them DNP
+- [ ] 11. Improve bootstrap layout?
+- [ ] 12. Replace expensive capacitors with something cheaper available as basic JLCPCBA
+- [ ] 13. Find cuter output connector? Maybe even SMD so back side stays clean
+- [ ] 14. Review Rgate, since at 12V V_GS, I_G_pk = 12V/10R = 1.2A which is bigger than XJNG2103 1A
+- [ ] 15. Try to reduce electrolytic cap height? If we have XY space we can have half capacitance, half height but x2 parts
+- [ ] 16. R16/R17 should be a bit bigger if they need to be hand-replaced
+- [ ] 17. Testpoints for gates!!! Even if they're difficult to place
+- [ ] 18. Add revision number in sch and pcb
+
+---
+
+# To be verified w current rev before ordering:
+
+This version already flashes with bootloader and USB communication works. 
+
+- [ ] 1. Current measurement: solder wires around shunt, CC'd supply + DMM for 'real', compare w firmware (analytical conversion first)
+- [ ] 2. Magnetic field measurement: idk lol
+- [ ] 3. USB PD + Voltage measurement: ahh I'll have to be smart about how to test this, since my laptop's usb probably can't do very much. we have LEDs tho, that can be useful
+- [ ] 4. Temperature measurement: cut traces+jump for avoiding issue #3, then thermal cam to verify I guess
+- [ ] 5. Gate driver: cut traces+jump (nasty, 6 nets), then program PWM open loop and use scope, verify bootstrap against SPICE
+- [ ] 6. Power: make em MOSFETs warm

@@ -4,6 +4,10 @@
 #include "pinout.h"
 #include "fsm.h"
 #include "parameters.h"
+#include "control_f16.h"
+#include "tasks.h"
+
+static pid_f16 current_controller = {0}; // Initialized in init_pins_current_control()
 
 /* Convert a Q16.16 duty ratio into timer counts. We keep the helper here so the
  * USB parameter writes can feed it directly without any extra scaling code in the
@@ -31,9 +35,8 @@ uint16_t current_control_duty_to_ticks(fix16_t duty_q16)
     return (uint16_t)tick_count;
 }
 
-void init_pins_current_control(void)
-{
-    /* Timer clock is the MCU system clock. Changing this or the prescaler changes the PWM base frequency. */
+void init_pwm_current_control(void){
+        /* Timer clock is the MCU system clock. Changing this or the prescaler changes the PWM base frequency. */
     const uint32_t timer_clk_hz = FUNCONF_SYSTEM_CORE_CLOCK;
 
     /* Center-aligned PWM traverses ARR on the way up and down, so its frequency is:
@@ -152,18 +155,47 @@ void init_pins_current_control(void)
      * If this is missing, the timer will remain idle even though the pins are configured.
      */
     TIM1->CTLR1 |= TIM_CEN;
+
+}
+
+void init_adc_current_control(void){
+    // Current reading synced to PWM with DMA
+    // Voltage reading can be chill but it'd be nice if it was automatic too
+}
+
+void init_pins_current_control(void)
+{
+    init_pwm_current_control();
+    init_adc_current_control();
+
+    current_controller = (pid_f16){
+
+        // PI tuned with load parameters aiming for a ~1 ms step response time which equates to roughly 300 rad/s
+        .kp = fix16_from_float(0.9f), // bw[rad/s] * L[H] = 300 rad/s * 3 mH = 0.9
+        .ki = fix16_from_float(600.0f), // bw[rad/s] * R[Ohm] = 300 rad/s * 2 Ohm = 600
+
+        .kd = fix16_from_float(0.0f), // PI, no D
+
+        .ts = TASK_CURRENT_CONTROL_S_F16,
+        .lim_p = fix16_from_float(1.0f), // maximum output voltage to be updated with VBUS measurement
+        .lim_n = fix16_from_float(0.0f), // minimum output voltage
+    };
 }
 
 
 void task_current_control(void)
 {
-    uint8_t enable = 0U;
+    /* The bridge is only allowed to output PWM when the FSM says the control loop is active */
+    if (fsm_state() != FSM_CURRENT_CONTROL) {
+        TIM1->CH1CVR = 0;
+        TIM1->CH2CVR = 0;
+        return;
+    }
+
+    // We input raw duty during bring up
     fix16_t duty_a = 0;
     fix16_t duty_b = 0;
 
-    if (parameters_fetch(PARAM_ID_ENABLE, &enable, sizeof(enable)) < 0) {
-        enable = 0U;
-    }
     if (parameters_fetch(PARAM_ID_DUTY_A, &duty_a, sizeof(duty_a)) < 0) {
         duty_a = 0;
     }
@@ -171,16 +203,6 @@ void task_current_control(void)
         duty_b = 0;
     }
 
-    /* The bridge is only allowed to output PWM when the FSM says the control loop is active
-     * and the USB parameter enable bit is latched high.
-     */
-    if (fsm_state() != FSM_CURRENT_CONTROL || enable == 0U) {
-        TIM1->CH1CVR = 0;
-        TIM1->CH2CVR = 0;
-        return;
-    }
-
-    // update only when different from last value to avoid unnecessary writes to the timer registers
     if (TIM1->CH1CVR != current_control_duty_to_ticks(duty_a)) {
         TIM1->CH1CVR = current_control_duty_to_ticks(duty_a);
         LOG("ticks_a=%u ticks_b=%u", (unsigned int)TIM1->CH1CVR, (unsigned int)TIM1->CH2CVR);
@@ -190,5 +212,32 @@ void task_current_control(void)
         TIM1->CH2CVR = current_control_duty_to_ticks(duty_b);
         LOG("ticks_a=%u ticks_b=%u", (unsigned int)TIM1->CH1CVR, (unsigned int)TIM1->CH2CVR);
     }
+
+    return;
+
+    // /* Current loop */
+    // fix16_t i_sp = 0; //TODO: current setpoint, to be fetched from position_control
+
+    // fix16_t i_fb = 0; //TODO: current measurement, to be updated with ADC
+    // fix16_t v_lim = fix16_from_float(20.0f); //TODO: voltage limit, to be updated with ADC
+    
+    // fix16_t mi = 0; // modulation index, -1..1
+
+    // current_controller.sp = i_sp;
+    // current_controller.fb = i_fb;
+
+    // current_controller.lim_p = v_lim; //voltage limit
+
+    // pid_f16_run(&current_controller);
+    
+    // mi = fix16_div(current_controller.out, v_lim);
+
+    // // duty A is mi/2 + 0.5, since duty 0.5 is 0V, duty 0 is -v_lim and duty 1 is +v_lim
+    // // duty B is just 1-duty_a
+    // duty_a = fix16_mul(mi, fix16_from_float(0.5f)) + fix16_from_float(0.5f);
+    // duty_b = fix16_from_float(1.0f) - duty_a;
+
+    // TIM1->CH1CVR = current_control_duty_to_ticks(duty_a);
+    // TIM1->CH2CVR = current_control_duty_to_ticks(duty_b);
 
 }

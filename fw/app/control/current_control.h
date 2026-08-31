@@ -7,9 +7,9 @@
 #define PWM_DEADTIME_NS            200U
 
 #define PWM_AH_POLARITY            0U
-#define PWM_AL_POLARITY            0U
+#define PWM_AL_POLARITY            1U
 #define PWM_BH_POLARITY            0U
-#define PWM_BL_POLARITY            0U
+#define PWM_BL_POLARITY            1U
 
 uint16_t current_control_duty_to_ticks(fix16_t duty_q16);
 

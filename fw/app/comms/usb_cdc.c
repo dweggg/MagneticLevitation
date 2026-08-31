@@ -1,7 +1,7 @@
 #include "usb_cdc.h"
 #include "usb_config.h"
 #include "fsusb.h"
-#include "parameters.h"
+#include "protocol.h"
 #include <string.h>
 
 #define USB_CDC_RX_RING_SIZE 256
@@ -29,6 +29,7 @@ static int usb_cdc_tx_pending(void);
 void init_pins_usb_cdc(void)
 {
 	USBFSSetup();
+	parameters_init();
 }
 
 void task_usb_cdc(void)
@@ -36,7 +37,7 @@ void task_usb_cdc(void)
 	if (usb_cdc_tx_pending() > 0) {
 		USBFS_SendEndpoint(3, 0);
 	}
-	parameters_bridge_poll();
+	protocol_bridge_poll();
 }
 
 int usb_cdc_debug_is_active(void)

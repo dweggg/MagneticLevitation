@@ -18,10 +18,13 @@ CMD_READ = 0x01
 CMD_WRITE = 0x02
 CMD_LIST = 0x03
 CMD_REPLY = 0x80
+LOG_PREFIX = b"[LOG]"
 
 DIR_TX = 0x01
 DIR_RX = 0x02
 DIR_TX_RX = 0x03
+
+_SERIAL_LOG_TAIL = b""
 
 FMT_NAMES = {
     0: "u8",
@@ -268,6 +271,35 @@ def extract_reply_frame(data: bytes) -> bytes | None:
     return best_match
 
 
+def extract_log_messages(raw: bytes, tail: bytes = b"") -> tuple[list[str], bytes]:
+    pending = tail + raw
+    lines: list[str] = []
+
+    while True:
+        start = pending.find(LOG_PREFIX)
+        if start < 0:
+            return lines, pending[-256:] if len(pending) > 256 else pending
+
+        end = pending.find(b"\r", start)
+        if end < 0:
+            end = pending.find(b"\n", start)
+        if end < 0:
+            return lines, pending[start:]
+
+        line = pending[start:end].decode("utf-8", errors="replace")
+        lines.append(line)
+        pending = pending[end + 1:]
+        if pending.startswith(b"\n"):
+            pending = pending[1:]
+
+
+def _print_received_logs(raw: bytes) -> None:
+    global _SERIAL_LOG_TAIL
+    lines, _SERIAL_LOG_TAIL = extract_log_messages(raw, _SERIAL_LOG_TAIL)
+    for line in lines:
+        print(line, flush=True)
+
+
 def request(port: serial.Serial, payload: bytes, expect_reply: bool = True) -> bytes:
     drain_input_buffer(port, timeout=0.05)
     port.write(payload)
@@ -287,6 +319,7 @@ def request(port: serial.Serial, payload: bytes, expect_reply: bool = True) -> b
             chunk = b""
 
         if chunk:
+            _print_received_logs(chunk)
             response.extend(chunk)
             frame = extract_reply_frame(bytes(response))
             if frame is not None:
@@ -467,13 +500,39 @@ def build_parser():
     return parser
 
 
+def _resolve_parameter_name(name: str) -> int:
+    text = name.strip().lower()
+    if not text:
+        raise ValueError("parameter name is required")
+
+    matches = []
+    for obj_id, info in PARAMETER_INFO.items():
+        candidate = str(info.get("name", "")).strip().lower()
+        if candidate == text:
+            return obj_id
+        if candidate.startswith(text):
+            matches.append(obj_id)
+
+    if matches:
+        matches_str = ", ".join(f"0x{obj_id:04x}" for obj_id in matches)
+        raise ValueError(f"Ambiguous parameter name '{name}'; matches: {matches_str}")
+
+    known = ", ".join(sorted(str(info["name"]) for info in PARAMETER_INFO.values()))
+    raise ValueError(f"Unknown parameter '{name}'. Use an ID or one of: {known}")
+
+
 def parse_id(raw: str | None) -> int:
     if raw is None:
         raise ValueError("id is required")
     text = raw.strip()
+    if not text:
+        raise ValueError("id is required")
     if text.lower().startswith("0x"):
         return int(text, 16)
-    return int(text, 0)
+    try:
+        return int(text, 0)
+    except ValueError:
+        return _resolve_parameter_name(text)
 
 
 def _run_read(port: serial.Serial, raw_id: str):

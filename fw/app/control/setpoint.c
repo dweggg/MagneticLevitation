@@ -104,9 +104,9 @@ void init_pins_setpoint(void){
 void task_setpoint(void){
 
     const uint16_t raw = (uint16_t)funAnalogRead(PIN_TEMP_MEAS);
-    parameters_publish_u16(PARAM_ID_TEMP_RAW, raw);
+    parameters_publish(PARAM_ID_TEMP_RAW, &raw);
     
     temp_c_q16 = temp_c_q16_from_raw(raw);
 
-    LOG("TEMP (degC*10): %u", (unsigned int)fix16_to_int(fix16_mul(temp_c_q16, fix16_from_int(10))));
+    //LOG("TEMP (degC*10): %u", (unsigned int)fix16_to_int(fix16_mul(temp_c_q16, fix16_from_int(10))));
 }

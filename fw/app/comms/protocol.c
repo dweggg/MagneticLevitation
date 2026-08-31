@@ -1,6 +1,9 @@
 #include "protocol.h"
 #include "usb_cdc.h"
 #include <stdarg.h>
+#include <string.h>
+
+#define PROTOCOL_MAX_FRAME_BYTES 32
 
 static uint16_t append_text(char *buffer, uint16_t position, uint16_t size,
                             const char *text)
@@ -67,6 +70,84 @@ static uint16_t append_hex(char *buffer, uint16_t position, uint16_t size,
 	return position;
 }
 
+static int protocol_send_frame(const uint8_t *payload, uint8_t length)
+{
+	uint8_t frame[PROTOCOL_MAX_FRAME_BYTES];
+	if (length + 1 > sizeof(frame)) {
+		return 0;
+	}
+
+	frame[0] = PARAM_REPLY;
+	memcpy(&frame[1], payload, length);
+	return usb_cdc_tx_send(frame, (int)length + 1);
+}
+
+static int protocol_send_status_response(uint8_t status)
+{
+	return protocol_send_frame(&status, 1);
+}
+
+static int protocol_send_object_response(uint16_t id, const uint8_t *data, uint8_t length)
+{
+	uint8_t reply[4 + PROTOCOL_MAX_FRAME_BYTES];
+	uint8_t reply_len = 0;
+
+	reply[reply_len++] = (uint8_t)(id & 0xFF);
+	reply[reply_len++] = (uint8_t)((id >> 8) & 0xFF);
+	reply[reply_len++] = length;
+	memcpy(&reply[reply_len], data, length);
+	reply_len += length;
+	return protocol_send_frame(reply, reply_len);
+}
+
+static int protocol_send_list_response(void)
+{
+	size_t count = 0;
+	const parameter_descriptor_t *map = parameters_map(&count);
+	uint8_t frame[1 + 32 * 5];
+	uint8_t index = 0;
+
+	frame[index++] = (uint8_t)count;
+	for (size_t i = 0; i < count; ++i) {
+		const parameter_descriptor_t *desc = &map[i];
+		frame[index++] = (uint8_t)(desc->id & 0xFF);
+		frame[index++] = (uint8_t)((desc->id >> 8) & 0xFF);
+		frame[index++] = desc->direction;
+		frame[index++] = desc->format;
+		frame[index++] = desc->size;
+	}
+	return protocol_send_frame(frame, index);
+}
+
+static int protocol_read_value(uint16_t id, uint8_t *buffer, uint8_t buffer_size)
+{
+	const parameter_descriptor_t *desc = parameters_find(id);
+	if (desc == NULL || buffer == NULL || buffer_size < desc->size) {
+		return -1;
+	}
+	if ((desc->direction & PARAM_DIR_TX) == 0) {
+		return -2;
+	}
+
+	if (parameters_fetch(id, buffer, buffer_size) < 0) {
+		return -3;
+	}
+	return (int)desc->size;
+}
+
+static int protocol_write_value(uint16_t id, const uint8_t *buffer, uint8_t length)
+{
+	const parameter_descriptor_t *desc = parameters_find(id);
+	if (desc == NULL || buffer == NULL || length != desc->size) {
+		return -1;
+	}
+	if ((desc->direction & PARAM_DIR_RX) == 0) {
+		return -2;
+	}
+
+	return parameters_publish(id, buffer);
+}
+
 int protocol_log_write(const uint8_t *buf, uint16_t len)
 {
 	return usb_cdc_tx_send(buf, len);
@@ -74,9 +155,13 @@ int protocol_log_write(const uint8_t *buf, uint16_t len)
 
 int protocol_log_format(const char *format, ...)
 {
-	char log_message[64];
+	char log_message[96];
 	va_list arguments;
 	uint16_t length = 0;
+	static const char log_prefix[] = "[LOG] ";
+
+	memcpy(log_message, log_prefix, sizeof(log_prefix) - 1);
+	length = (uint16_t)(sizeof(log_prefix) - 1);
 
 	va_start(arguments, format);
 	while (*format != '\0' && length < sizeof(log_message) - 3) {
@@ -138,4 +223,64 @@ int protocol_log_format(const char *format, ...)
 	log_message[length++] = '\n';
 
 	return protocol_log_write((const uint8_t *)log_message, (uint16_t)length);
+}
+
+int protocol_bridge_poll(void)
+{
+	uint8_t frame[PROTOCOL_MAX_FRAME_BYTES];
+	int available = usb_cdc_rx_available();
+	if (available <= 0) {
+		return 0;
+	}
+
+	int read_count = usb_cdc_rx_read(frame, available > (int)sizeof(frame) ? (int)sizeof(frame) : available);
+	if (read_count <= 0) {
+		return 0;
+	}
+
+	for (int pos = 0; pos < read_count; ) {
+		uint8_t command = frame[pos++];
+		if (command == PARAM_CMD_LIST) {
+			protocol_send_list_response();
+			continue;
+		}
+		if (pos + 1 >= read_count) {
+			break;
+		}
+
+		uint16_t id = (uint16_t)frame[pos] | ((uint16_t)frame[pos + 1] << 8);
+		pos += 2;
+
+		if (command == PARAM_CMD_READ) {
+			uint8_t value_buffer[4] = {0};
+			int result = protocol_read_value(id, value_buffer, sizeof(value_buffer));
+			if (result >= 0) {
+				protocol_send_object_response(id, value_buffer, (uint8_t)result);
+			} else {
+				protocol_send_status_response(PARAM_STATUS_ERROR);
+			}
+			continue;
+		}
+
+		if (command == PARAM_CMD_WRITE) {
+			if (pos >= read_count) {
+				protocol_send_status_response(PARAM_STATUS_ERROR);
+				break;
+			}
+			uint8_t payload_length = frame[pos++];
+			if (payload_length == 0 || pos + payload_length > read_count) {
+				protocol_send_status_response(PARAM_STATUS_ERROR);
+				break;
+			}
+			int write_result = protocol_write_value(id, &frame[pos], payload_length);
+			if (write_result == 0) {
+				protocol_send_status_response(PARAM_STATUS_OK);
+			} else {
+				protocol_send_status_response(PARAM_STATUS_ERROR);
+			}
+			pos += payload_length;
+		}
+	}
+
+	return read_count;
 }

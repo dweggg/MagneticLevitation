@@ -10,13 +10,18 @@ void init_pins_fsm(void){
 }
 
 void task_fsm(void){
+	uint8_t enable = 0U;
+
 	if (funDigitalRead(PIN_RST_BUTTON) == FUN_LOW) {
 		state = FSM_RESET;
 		NVIC_SystemReset();
 		return;
 	}
 
-	state = (parameters_get_enable() != 0U) ? FSM_CURRENT_CONTROL : FSM_IDLE;
+	if (parameters_fetch(PARAM_ID_ENABLE, &enable, sizeof(enable)) < 0) {
+		enable = 0U;
+	}
+	state = (enable != 0U) ? FSM_CURRENT_CONTROL : FSM_IDLE;
 }
 
 fsm_state_t fsm_state(void){

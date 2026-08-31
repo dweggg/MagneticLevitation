@@ -22,13 +22,24 @@ typedef enum {
 	PARAM_FMT_RAW
 } parameter_format_t;
 
+typedef union {
+	uint8_t u8;
+	int8_t i8;
+	uint16_t u16;
+	int16_t i16;
+	uint32_t u32;
+	int32_t i32;
+	fix16_t f16;
+	uint8_t raw[sizeof(fix16_t)];
+} parameter_value_t;
+
 typedef struct {
 	uint16_t id;
 	const char *name;
 	parameter_direction_t direction;
 	parameter_format_t format;
 	uint8_t size;
-	const void *ptr;
+	parameter_value_t value;
 } parameter_descriptor_t;
 
 enum {
@@ -39,23 +50,10 @@ enum {
 	PARAM_ID_DUTY_B = 0x0005,
 };
 
-#define PARAM_CMD_READ   0x01
-#define PARAM_CMD_WRITE  0x02
-#define PARAM_CMD_LIST   0x03
-#define PARAM_REPLY      0x80
-#define PARAM_STATUS_OK    0x00
-#define PARAM_STATUS_ERROR 0x01
-
 void parameters_init(void);
-const parameter_descriptor_t *parameters_map(size_t *count);
-const parameter_descriptor_t *parameters_find(uint16_t id);
-int parameters_publish_u8(uint16_t id, uint8_t value);
-int parameters_publish_u16(uint16_t id, uint16_t value);
-uint8_t parameters_get_enable(void);
-fix16_t parameters_get_duty_a(void);
-fix16_t parameters_get_duty_b(void);
-int parameters_read_value(uint16_t id, uint8_t *buffer, uint8_t buffer_size);
-int parameters_write_value(uint16_t id, const uint8_t *buffer, uint8_t length);
-int parameters_bridge_poll(void);
+parameter_descriptor_t *parameters_map(size_t *count);
+parameter_descriptor_t *parameters_find(uint16_t id);
+int parameters_publish(uint16_t id, const void *value);
+int parameters_fetch(uint16_t id, void *buffer, uint8_t buffer_size);
 
 #endif // PARAMETERS_H

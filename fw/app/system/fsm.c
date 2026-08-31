@@ -1,6 +1,7 @@
 #include "fsm.h"
 #include "pinout.h"
 #include "parameters.h"
+#include "scheduler.h"
 
 static fsm_state_t state = FSM_INIT;
 
@@ -22,6 +23,13 @@ void task_fsm(void){
 		enable = 0U;
 	}
 	state = (enable != 0U) ? FSM_CURRENT_CONTROL : FSM_IDLE;
+
+	uint8_t cpu_usage = 0U;
+
+	cpu_usage = scheduler_get_cpu();
+	// publish to parameters
+	parameters_publish(PARAM_ID_CPU, &cpu_usage);
+
 }
 
 fsm_state_t fsm_state(void){

@@ -11,17 +11,9 @@ static parameter_descriptor_t parameter_map_table[] = {
 		.value.u16 = 0,
 	},
 	{
-		.id = PARAM_ID_TARGET_CURRENT,
-		.name = "target_current",
-		.direction = PARAM_DIR_RX,
-		.format = PARAM_FMT_U16,
-		.size = sizeof(uint16_t),
-		.value.u16 = 0,
-	},
-	{
 		.id = PARAM_ID_ENABLE,
 		.name = "enable",
-		.direction = PARAM_DIR_TX_RX,
+		.direction = PARAM_DIR_RX,
 		.format = PARAM_FMT_U8,
 		.size = sizeof(uint8_t),
 		.value.u8 = 0,
@@ -29,7 +21,7 @@ static parameter_descriptor_t parameter_map_table[] = {
 	{
 		.id = PARAM_ID_DUTY_A,
 		.name = "duty_a",
-		.direction = PARAM_DIR_TX_RX,
+		.direction = PARAM_DIR_RX,
 		.format = PARAM_FMT_F16,
 		.size = sizeof(fix16_t),
 		.value.f16 = 0,
@@ -37,10 +29,18 @@ static parameter_descriptor_t parameter_map_table[] = {
 	{
 		.id = PARAM_ID_DUTY_B,
 		.name = "duty_b",
-		.direction = PARAM_DIR_TX_RX,
+		.direction = PARAM_DIR_RX,
 		.format = PARAM_FMT_F16,
 		.size = sizeof(fix16_t),
 		.value.f16 = 0,
+	},
+	{
+		.id = PARAM_ID_CPU,
+		.name = "cpu",
+		.direction = PARAM_DIR_TX,
+		.format = PARAM_FMT_U8,
+		.size = sizeof(uint8_t),
+		.value.u8 = 0,
 	},
 };
 

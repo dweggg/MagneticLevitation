@@ -154,6 +154,7 @@ void init_pins_current_control(void)
     TIM1->CTLR1 |= TIM_CEN;
 }
 
+
 void task_current_control(void)
 {
     uint8_t enable = 0U;

@@ -7,7 +7,7 @@
 #include "control_f16.h"
 #include "tasks.h"
 
-static pid_f16 current_controller = {0}; // Initialized in init_pins_current_control()
+static pid_f16_t current_controller = {0}; // Initialized in init_pins_current_control()
 
 /* Convert a Q16.16 duty ratio into timer counts. We keep the helper here so the
  * USB parameter writes can feed it directly without any extra scaling code in the
@@ -168,7 +168,7 @@ void init_pins_current_control(void)
     init_pwm_current_control();
     init_adc_current_control();
 
-    current_controller = (pid_f16){
+    current_controller = (pid_f16_t){
 
         // PI tuned with load parameters aiming for a ~1 ms step response time which equates to roughly 300 rad/s
         .kp = fix16_from_float(0.9f), // bw[rad/s] * L[H] = 300 rad/s * 3 mH = 0.9

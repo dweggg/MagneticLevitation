@@ -22,10 +22,10 @@ typedef struct {
     fix16_t sp;           // Setpoint
     fix16_t fb;           // Feedback
     fix16_t out;          // Output
-} pid_f16;
+} pid_f16_t;
 
 // Run a PID controller
-void pid_f16_run(pid_f16 *pid);
+void pid_f16_run(pid_f16_t *pid);
 
 
 #endif // CONTROL_F16_H

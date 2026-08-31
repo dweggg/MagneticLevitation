@@ -1,9 +1,9 @@
 #include "control_f16.h"
 
-void pid_f16_run(pid_f16 *pid)
+void pid_f16_run(pid_f16_t *pid)
 {
     // Calculate error
-    pid->e_k = pid->sp - pid->fb;
+    pid->e_k = fix16_sub(pid->sp, pid->fb);
 
     // Calculate terms
     fix16_t p_term = fix16_mul(pid->kp, pid->e_k);
@@ -11,7 +11,7 @@ void pid_f16_run(pid_f16 *pid)
     fix16_t d_term = fix16_div(fix16_mul(pid->kd, (pid->e_k - pid->e_k1)), pid->ts);
 
     // Tentative integral accumulation
-    fix16_t i_term_tent = pid->integral_k1 + i_term;
+    fix16_t i_term_tent = fix16_add(pid->integral_k1, i_term);
 
     // Unsaturated output using the tentative integral
     fix16_t out_unsat = p_term + i_term_tent + d_term;

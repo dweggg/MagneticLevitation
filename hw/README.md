@@ -1,11 +1,15 @@
 # Issues
 
-1. U1 (3V3 buck) was ordered with JLC PN C61063 (XLSEMI XL1509-5.0E1), which is 5V output, and it should've been C74193 (XLSEMI XL1509-3.3E1). Regardless, it outputs ~4.38V out with ~5.1V in. MCU can be flashed and all aber das ist nicht richtig.
+[ ] -> open
+[X] -> found
 
-2. U2 and L2 were removed bc that caused L2 to overheat, something might be wrong with gate drivers (chips or bootstrap). No power for now.
+[ ] 1. U1 (3V3 buck) was ordered with JLC PN C61063 (XLSEMI XL1509-5.0E1), which is 5V output, and it should've been C74193 (XLSEMI XL1509-3.3E1). Regardless, it outputs ~4.38V out with ~5.1V in. MCU can be flashed and all aber das ist nicht richtig.
 
-3. NTC reads 0V, so either pin is bad/misconfigured, or C31 is shorted or something (~0Ohm between TP13 and GND)
+[X] 2. U2 and L2 were removed bc that caused L2 to overheat, something might be wrong with gate drivers (chips or bootstrap). No power for now.
 
+[X] 3. NTC reads 0V, so either pin is bad/misconfigured, or C31 is shorted or something (~0Ohm between TP13 and GND)
+
+[ ] 4. Some boards have the inductor rotated 90deg!! That would make the boost not work at all
 
 ---
 

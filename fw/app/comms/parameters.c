@@ -7,6 +7,8 @@
 static uint16_t parameter_temp_raw = 0;
 static uint16_t parameter_target_current = 0;
 static uint8_t parameter_enable = 0;
+static fix16_t parameter_duty_a = 0;
+static fix16_t parameter_duty_b = 0;
 
 static const parameter_descriptor_t parameter_map_table[] = {
 	{
@@ -32,6 +34,22 @@ static const parameter_descriptor_t parameter_map_table[] = {
 		.format = PARAM_FMT_U8,
 		.size = sizeof(uint8_t),
 		.ptr = &parameter_enable,
+	},
+	{
+		.id = PARAM_ID_DUTY_A,
+		.name = "duty_a",
+		.direction = PARAM_DIR_TX_RX,
+		.format = PARAM_FMT_F16,
+		.size = sizeof(fix16_t),
+		.ptr = &parameter_duty_a,
+	},
+	{
+		.id = PARAM_ID_DUTY_B,
+		.name = "duty_b",
+		.direction = PARAM_DIR_TX_RX,
+		.format = PARAM_FMT_F16,
+		.size = sizeof(fix16_t),
+		.ptr = &parameter_duty_b,
 	},
 };
 
@@ -97,6 +115,20 @@ static int parameters_set_u16_value(uint16_t id, uint16_t value)
 	}
 }
 
+static int parameters_set_f16_value(uint16_t id, fix16_t value)
+{
+	switch (id) {
+	case PARAM_ID_DUTY_A:
+		parameter_duty_a = value;
+		return 0;
+	case PARAM_ID_DUTY_B:
+		parameter_duty_b = value;
+		return 0;
+	default:
+		return -1;
+	}
+}
+
 static int parameters_set_u8_value(uint16_t id, uint8_t value)
 {
 	switch (id) {
@@ -113,6 +145,8 @@ void parameters_init(void)
 	parameter_temp_raw = 0;
 	parameter_enable = 0;
 	parameter_target_current = 0;
+	parameter_duty_a = 0;
+	parameter_duty_b = 0;
 }
 
 int parameters_publish_u8(uint16_t id, uint8_t value)
@@ -123,6 +157,21 @@ int parameters_publish_u8(uint16_t id, uint8_t value)
 int parameters_publish_u16(uint16_t id, uint16_t value)
 {
 	return parameters_set_u16_value(id, value);
+}
+
+uint8_t parameters_get_enable(void)
+{
+	return parameter_enable;
+}
+
+fix16_t parameters_get_duty_a(void)
+{
+	return parameter_duty_a;
+}
+
+fix16_t parameters_get_duty_b(void)
+{
+	return parameter_duty_b;
 }
 
 const parameter_descriptor_t *parameters_map(size_t *count)
@@ -172,6 +221,16 @@ int parameters_read_value(uint16_t id, uint8_t *buffer, uint8_t buffer_size)
 		buffer[1] = (uint8_t)((value >> 8) & 0xFF);
 		return (int)desc->size;
 	}
+	case PARAM_FMT_F16:
+	{
+		fix16_t value = 0;
+		if (desc->ptr == NULL) {
+			return -3;
+		}
+		value = *(fix16_t *)desc->ptr;
+		memcpy(buffer, &value, sizeof(value));
+		return (int)desc->size;
+	}
 	default:
 		return -4;
 	}
@@ -194,6 +253,12 @@ int parameters_write_value(uint16_t id, const uint8_t *buffer, uint8_t length)
 	{
 		uint16_t value = (uint16_t)buffer[0] | ((uint16_t)buffer[1] << 8);
 		return parameters_set_u16_value(id, value);
+	}
+	case PARAM_FMT_F16:
+	{
+		fix16_t value = 0;
+		memcpy(&value, buffer, sizeof(value));
+		return parameters_set_f16_value(id, value);
 	}
 	default:
 		return -3;

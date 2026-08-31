@@ -1,7 +1,7 @@
 #include "tasks.h"
 #include "scheduler.h"
 #include "protocol.h"
-
+#include "parameters.h"
 
 #include "fsm.h"
 #include "leds.h"
@@ -12,6 +12,7 @@
 #include "setpoint.h"
 
 void init_pins(void){
+	parameters_init();
 	init_pins_current_control();
 	init_pins_position_control();
 	init_pins_setpoint();

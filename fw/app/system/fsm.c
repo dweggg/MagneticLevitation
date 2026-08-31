@@ -1,5 +1,6 @@
 #include "fsm.h"
 #include "pinout.h"
+#include "parameters.h"
 
 static fsm_state_t state = FSM_INIT;
 
@@ -12,9 +13,10 @@ void task_fsm(void){
 	if (funDigitalRead(PIN_RST_BUTTON) == FUN_LOW) {
 		state = FSM_RESET;
 		NVIC_SystemReset();
-	} else {
-		state = FSM_IDLE;
+		return;
 	}
+
+	state = (parameters_get_enable() != 0U) ? FSM_CURRENT_CONTROL : FSM_IDLE;
 }
 
 fsm_state_t fsm_state(void){

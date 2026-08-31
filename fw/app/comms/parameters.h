@@ -3,6 +3,7 @@
 
 #include <stddef.h>
 #include <stdint.h>
+#include <fix16.h>
 
 typedef enum {
 	PARAM_DIR_TX = 0x01,
@@ -34,6 +35,8 @@ enum {
 	PARAM_ID_TEMP_RAW = 0x0001,
 	PARAM_ID_TARGET_CURRENT = 0x0002,
 	PARAM_ID_ENABLE = 0x0003,
+	PARAM_ID_DUTY_A = 0x0004,
+	PARAM_ID_DUTY_B = 0x0005,
 };
 
 #define PARAM_CMD_READ   0x01
@@ -48,6 +51,9 @@ const parameter_descriptor_t *parameters_map(size_t *count);
 const parameter_descriptor_t *parameters_find(uint16_t id);
 int parameters_publish_u8(uint16_t id, uint8_t value);
 int parameters_publish_u16(uint16_t id, uint16_t value);
+uint8_t parameters_get_enable(void);
+fix16_t parameters_get_duty_a(void);
+fix16_t parameters_get_duty_b(void);
 int parameters_read_value(uint16_t id, uint8_t *buffer, uint8_t buffer_size);
 int parameters_write_value(uint16_t id, const uint8_t *buffer, uint8_t length);
 int parameters_bridge_poll(void);

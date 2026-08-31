@@ -2,6 +2,34 @@
 #include "protocol.h"
 #include "ch32fun.h"
 #include "pinout.h"
+#include "fsm.h"
+#include "parameters.h"
+
+static uint16_t current_pwm_period_ticks = 0U;
+
+/* Convert a Q16.16 duty ratio into timer counts. We keep the helper here so the
+ * USB parameter writes can feed it directly without any extra scaling code in the
+ * task loop.
+ */
+uint16_t current_control_duty_to_ticks(fix16_t duty_q16)
+{
+    if (current_pwm_period_ticks == 0U) {
+        return 0U;
+    }
+
+    uint32_t tick_count = (uint32_t)fix16_to_int(
+        fix16_mul(
+            fix16_clamp(duty_q16, 0, fix16_one),
+            fix16_from_int((int32_t)current_pwm_period_ticks)
+        )
+    );
+
+    if (tick_count > current_pwm_period_ticks) {
+        tick_count = current_pwm_period_ticks;
+    }
+
+    return (uint16_t)tick_count;
+}
 
 void init_pins_current_control(void)
 {
@@ -9,10 +37,11 @@ void init_pins_current_control(void)
     const uint32_t timer_clk_hz = FUNCONF_SYSTEM_CORE_CLOCK;
 
     /* PWM period in timer ticks: f_pwm = timer_clk_hz / (PSC + 1) / (ARR + 1).
-     * Here PSC = 0, so the PWM frequency is simply timer_clk_hz / (ARR + 1).
-     * Raising PWM_SWITCHING_FREQUENCY_HZ increases the timer rate and reduces ARR, so the bridge switches faster.
+     * This timer is kept in a center-aligned up/down mode, so the effective cycle is still
+     * based on the same ARR formula while the counter swings up and back down across the period.
      */
     const uint32_t pwm_period_ticks = (timer_clk_hz / PWM_SWITCHING_FREQUENCY_HZ) - 1U;
+    current_pwm_period_ticks = (uint16_t)pwm_period_ticks;
 
     /* Convert deadtime from nanoseconds to timer ticks.
      * This is a coarse approximation and is mainly used for the BDTR dead-time generator.
@@ -21,6 +50,9 @@ void init_pins_current_control(void)
      */
     const uint64_t deadtime_ticks_raw = ((uint64_t)timer_clk_hz * (uint64_t)PWM_DEADTIME_NS + 500000000ULL) / 1000000000ULL;
     uint32_t deadtime_ticks = (uint32_t)deadtime_ticks_raw;
+
+    /* Keep the startup values visible in the USB log so we can tune the timer without extra tooling. */
+    LOG("period_ticks=%u deadtime_ticks=%u", (unsigned int)current_pwm_period_ticks, (unsigned int)deadtime_ticks);
 
     /* Enable TIM1 clock in APB2 bus domain. Without this, the peripheral is held in reset/disabled
      * and all TIM1 registers read back as zero even though the code writes to them.
@@ -105,10 +137,16 @@ void init_pins_current_control(void)
      */
     TIM1->SWEVGR = TIM_UG;
 
-    /* ARPE enables preload on ARR, delaying updates until the next update event.
-     * This keeps the PWM frequency stable when changing duty cycles mid-run.
+    /* Center-aligned up/down counter mode matches the STM32 style centered PWM pattern.
+     * The timer counts up to ARR and then back down, which is convenient for half-bridge drive.
      */
-    TIM1->CTLR1 = TIM_ARPE;
+    TIM1->CTLR1 = TIM_ARPE | TIM_CMS_1;
+
+    /* TRGO is left selectable here: the 0-event and ARR-event are both valid startup trials.
+     * Try one and comment the other out as needed to find the cleanest trigger behavior.
+     */
+    TIM1->CTLR2 = TIM_MMS_0;   // TRGO on zero/reset event
+    // TIM1->CTLR2 = TIM_MMS_1; // TRGO on update/ARR event
 
     /* Start the timer.
      * Once CEN is set, the PWM outputs begin toggling according to their compare values and polarity settings.
@@ -119,7 +157,24 @@ void init_pins_current_control(void)
 
 void task_current_control(void)
 {
-    /* Safe default: keep the bridge disabled until the control loop updates duty cycles. */
-    TIM1->CH1CVR = 0;
-    TIM1->CH2CVR = 0;
+    /* The bridge is only allowed to output PWM when the FSM says the control loop is active
+     * and the USB parameter enable bit is latched high.
+     */
+    if (fsm_state() != FSM_CURRENT_CONTROL || parameters_get_enable() == 0U) {
+        TIM1->CH1CVR = 0;
+        TIM1->CH2CVR = 0;
+        return;
+    }
+
+    // update only when different from last value to avoid unnecessary writes to the timer registers
+    if (TIM1->CH1CVR != current_control_duty_to_ticks(parameters_get_duty_a())) {
+        TIM1->CH1CVR = current_control_duty_to_ticks(parameters_get_duty_a());
+        LOG("ticks_a=%u ticks_b=%u", (unsigned int)TIM1->CH1CVR, (unsigned int)TIM1->CH2CVR);
+
+    }
+    if (TIM1->CH2CVR != current_control_duty_to_ticks(parameters_get_duty_b())) {
+        TIM1->CH2CVR = current_control_duty_to_ticks(parameters_get_duty_b());
+        LOG("ticks_a=%u ticks_b=%u", (unsigned int)TIM1->CH1CVR, (unsigned int)TIM1->CH2CVR);
+    }
+
 }

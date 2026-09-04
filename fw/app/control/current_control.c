@@ -44,7 +44,9 @@ static fix16_t i_fb;
  * Gains and limits are configured in init_current_controller().
  */
 static pid_f16_t current_controller = {0};
-
+static fix16_t current_kp;
+static fix16_t current_ki;
+static uint32_t pwm_switching_frequency_hz;
 
 /* ============================================================================
  * Forward declarations
@@ -53,7 +55,8 @@ static pid_f16_t current_controller = {0};
 static void init_adc_current_control(void);
 static void drain_adc_dma(void);
 static void init_current_controller(void);
-
+static void update_current_controller_parameters(void);
+static void apply_pwm_switching_frequency(uint32_t frequency_hz);
 
 /* ============================================================================
  * Control loop
@@ -76,6 +79,9 @@ void task_current_control(void)
      * Always process ADC data, even when PWM output is disabled.
      */
     drain_adc_dma();
+
+    /* Fetch parameter updates from comms */
+    update_current_controller_parameters();
 
     /*
      * PWM is only allowed while the FSM is in the current-control state.
@@ -180,6 +186,52 @@ static void init_current_controller(void)
         .lim_p = fix16_from_float(1.0f),
         .lim_n = fix16_from_float(0.0f),
     };
+}
+
+static void update_current_controller_parameters(void)
+{
+    fix16_t kp;
+    fix16_t ki;
+    uint32_t switching_frequency_hz;
+
+    if (parameters_fetch(
+            PARAM_ID_CURRENT_KP,
+            &kp,
+            sizeof(kp)) >= 0) {
+
+        if (kp != current_kp) {
+            current_kp = kp;
+            current_controller.kp = kp;
+        }
+    }
+
+    if (parameters_fetch(
+            PARAM_ID_CURRENT_KI,
+            &ki,
+            sizeof(ki)) >= 0) {
+
+        if (ki != current_ki) {
+            current_ki = ki;
+            current_controller.ki = ki;
+        }
+    }
+
+    if (parameters_fetch(
+            PARAM_ID_PWM_SWITCHING_FREQUENCY,
+            &switching_frequency_hz,
+            sizeof(switching_frequency_hz)) >= 0) {
+        
+        if (switching_frequency_hz != pwm_switching_frequency_hz) {
+            apply_pwm_switching_frequency(
+                switching_frequency_hz
+            );
+
+            pwm_switching_frequency_hz =
+                switching_frequency_hz;
+
+            LOG("PWM switching frequency updated to %u Hz", (unsigned int)pwm_switching_frequency_hz);
+        }
+    }
 }
 
 
@@ -430,19 +482,61 @@ uint16_t current_control_duty_to_ticks(fix16_t duty_q16)
     return (uint16_t)tick_count;
 }
 
-
-void init_pwm_current_control(void)
+/*
+ * Convert a uint32 frequency into TIM1 ticks.
+ */
+static uint32_t pwm_frequency_to_period_ticks(uint32_t frequency_hz)
 {
-    const uint32_t timer_clk_hz = FUNCONF_SYSTEM_CORE_CLOCK;
-
+    if (frequency_hz == 0U) {
+        return 0U;
+    }
 
     /*
      * Center-aligned PWM:
      *
      *     f_pwm = timer_clk / ((PSC + 1) * 2 * (ARR + 1))
      */
-    const uint32_t pwm_period_ticks =
-        (timer_clk_hz / (2U * PWM_SWITCHING_FREQUENCY_HZ)) - 1U;
+    return (
+        FUNCONF_SYSTEM_CORE_CLOCK /
+        (2U * frequency_hz)
+    ) - 1U;
+}
+
+/*
+ * Safely update switching frequency
+ */
+static void apply_pwm_switching_frequency(uint32_t frequency_hz)
+{
+    const uint32_t period_ticks =
+        pwm_frequency_to_period_ticks(frequency_hz);
+
+    if (period_ticks == 0U) {
+        return;
+    }
+
+    /*
+     * Stop timer while changing its period.
+     */
+    TIM1->CTLR1 &= ~TIM_CEN;
+
+    TIM1->ATRLR = period_ticks;
+
+    /*
+     * Force ARR shadow register update.
+     */
+    TIM1->SWEVGR = TIM_UG;
+
+    /*
+     * Restart PWM.
+     */
+    TIM1->CTLR1 |= TIM_CEN;
+}
+
+void init_pwm_current_control(void)
+{
+    const uint32_t timer_clk_hz = FUNCONF_SYSTEM_CORE_CLOCK;
+
+    const uint32_t pwm_period_ticks = pwm_frequency_to_period_ticks(PWM_SWITCHING_FREQUENCY_HZ);
 
 
     /*

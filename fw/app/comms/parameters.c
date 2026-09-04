@@ -82,6 +82,30 @@ static parameter_descriptor_t parameter_map_table[] = {
 		.size = sizeof(fix16_t),
 		.value.f16 = 0,
 	},
+	{
+        .id = PARAM_ID_PWM_SWITCHING_FREQUENCY,
+        .name = "pwm_switching_frequency",
+        .direction = PARAM_DIR_TX_RX,
+        .format = PARAM_FMT_U32,
+        .size = sizeof(uint32_t),
+        .value.u32 = 20000U,
+    },
+    {
+        .id = PARAM_ID_CURRENT_KP,
+        .name = "current_kp",
+        .direction = PARAM_DIR_TX_RX,
+        .format = PARAM_FMT_F16,
+        .size = sizeof(fix16_t),
+        .value.f16 = 0,
+    },
+    {
+        .id = PARAM_ID_CURRENT_KI,
+        .name = "current_ki",
+        .direction = PARAM_DIR_TX_RX,
+        .format = PARAM_FMT_F16,
+        .size = sizeof(fix16_t),
+        .value.f16 = 0,
+    },
 };
 
 void parameters_init(void)
@@ -123,6 +147,9 @@ int parameters_publish(uint16_t id, const void *value)
 	case PARAM_FMT_U16:
 		desc->value.u16 = *(const uint16_t *)value;
 		return 0;
+    case PARAM_FMT_U32:
+        desc->value.u32 = *(const uint32_t *)value;
+        return 0;
 	case PARAM_FMT_F16:
 	{
 		const fix16_t incoming = *(const fix16_t *)value;
@@ -148,6 +175,9 @@ int parameters_fetch(uint16_t id, void *buffer, uint8_t buffer_size)
 	case PARAM_FMT_U16:
 		*(uint16_t *)buffer = desc->value.u16;
 		return (int)desc->size;
+	case PARAM_FMT_U32:
+        *(uint32_t *)buffer = desc->value.u32;
+        return (int)desc->size;
 	case PARAM_FMT_F16:
 		memcpy(buffer, &desc->value.f16, sizeof(fix16_t));
 		return (int)desc->size;

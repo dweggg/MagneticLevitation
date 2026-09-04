@@ -1307,7 +1307,7 @@
         "uuid": "fdb537e3-598b-439b-adb3-5b03aa38dd63"
       }
     ],
-    "used_designators": "Q1-4,U1-9,D1-10,C1-34,S1-2,FID1-3,L1-2,FB1,#PWR1-67,PN1,SWD1,R1-35,TP1-65,H1-6,LED1-3,UART1,J1-2,CN1",
+    "used_designators": "TP1-65,R1-35,SWD1,PN1,#PWR1-67,S1-2,CN1,J1-2,UART1,LED1-3,H1-6,Q1-4,U1-9,D1-10,C1-34,FID1-3,FB1,L1-2",
     "variants": []
   },
   "sheets": [

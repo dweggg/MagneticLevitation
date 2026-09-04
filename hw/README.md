@@ -38,16 +38,16 @@ I think I might have added those two via groups to lower switching loop inductan
 
 - [X] 1. Remove violating via groups
 - [S] 2. Swap LCSC PN for U1 (XLSEMI XL1509-3.3E1)
-- [P] 3. Review LED resistor values
-- [P] 4. Add external fixed voltage reference, maybe even replacing iRef divider? -> adjusting acq window seems 
-- [ ] 5. Add EEPROM?
+- [X] 3. Review LED resistor values: by lowering VCC to the correct 3.3V all LEDs should have a more reasonable brightness
+- [ ] 4. Add external fixed voltage reference, maybe even replacing iRef divider? -> adjusting acq window seems to fix current. Pending tests with real current (verification #1)
+- [P] 5. Add EEPROM?: I don't think we'd need it, and if we really needed it there's a ch32 eeprom emulation using flash, but will give it some thought
 - [ ] 6. Review RST button behavior, or think of a way to hw reset the MCU, without firmware
 - [ ] 7. Disconnect U2 (MT3608) output without EN pin, PMOS maybe
 - [S] 8. Remove JLCJLCJLCJLC
 - [ ] 9. Move power supply section a bit down and leave more clearance with board edge
-- [ ] 10. Move debug/UART connectors and RST button, also turn them DNP
+- [S] 10. Move debug/UART connectors and RST button, also turn them DNP
 - [ ] 11. Improve bootstrap layout?
-- [P] 12. Replace expensive capacitors with something cheaper available as basic JLCPCBA
+- [P] 12. Replace expensive capacitors with something cheaper available as basic JLCPCBA: So far replaced all 22uF with 10uF. Pending proper review
 - [ ] 13. Find cuter output connector? Maybe even SMD so back side stays clean
 - [ ] 14. Review Rgate, since at 12V V_GS, I_G_pk = 12V/10R = 1.2A which is bigger than XJNG2103 1A
 - [ ] 15. Try to reduce electrolytic cap height? If we have XY space we can have half capacitance, half height but x2 parts

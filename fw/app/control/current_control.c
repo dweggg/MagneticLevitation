@@ -9,6 +9,116 @@
 
 static pid_f16_t current_controller = {0}; // Initialized in init_pins_current_control()
 
+#define ADC_SEQUENCE_LENGTH 5U
+#define ADC_DMA_FRAME_COUNT 32U
+#define ADC_DMA_SAMPLE_COUNT (ADC_SEQUENCE_LENGTH * ADC_DMA_FRAME_COUNT)
+
+static volatile uint16_t adc_dma_buffer[ADC_DMA_SAMPLE_COUNT];
+static uint16_t adc_dma_read_frame;
+static uint16_t adc_mag_raw;
+static uint16_t adc_temp_raw;
+
+static fix16_t v_meas;
+static fix16_t i_fb;
+
+static void init_adc_current_control(void)
+{
+    RCC->APB2PCENR |= RCC_APB2Periph_ADC1;
+    RCC->APB2PRSTR |= RCC_ADC1RST;
+    RCC->APB2PRSTR &= ~RCC_ADC1RST;
+
+    /* Keep the ADC clock at 6 MHz and use one scan frame per TIM1 update. */
+    RCC->CFGR0 = (RCC->CFGR0 & ~RCC_ADCPRE) | RCC_ADCPRE_DIV8;
+    
+    /*
+    * ADC sample-time codes (SAMPTR field, 3 bits, values 0-7).
+    * Table is fixed by hardware — this doesn't change with your settings below,
+    * it's just what each code means. ADC clock here is 6 MHz.
+    *
+    *   code | ADC_SMPx bits set          | sample cycles | sample time @ 6 MHz
+    *   -----|-----------------------------|---------------|---------------------
+    *     0  | (none)                      |      3        |   0.50 us
+    *     1  | SMP0_0                      |      9        |   1.50 us
+    *     2  | SMP0_1                      |     15        |   2.50 us
+    *     3  | SMP0_0 | SMP0_1             |     30        |   5.00 us
+    *     4  | SMP0_2                      |     43        |   7.17 us
+    *     5  | SMP0_2 | SMP0_0             |     57        |   9.50 us
+    *     6  | SMP0_2 | SMP0_1             |     73        |  12.17 us
+    *     7  | SMP0_2 | SMP0_1 | SMP0_0    |    241        |  40.17 us
+    */
+    ADC1->SAMPTR2 = ((ADC_SMP0_1)  << (3U * 2U)) |                              // MAG   
+                    ((ADC_SMP0_1)  << (3U * 3U)) |                              // V_MEAS
+                    ((ADC_SMP0_0 | ADC_SMP0_2)  << (3U * 4U)) |                 // I_REF 
+                    ((ADC_SMP0_1 | ADC_SMP0_2)  << (3U * 5U)) |                 // I_MEAS
+                    ((ADC_SMP0_1)  << (3U * 6U));                               // TEMP  
+    ADC1->SAMPTR1 = 0;
+    ADC1->CTLR1 = ADC_SCAN;
+    ADC1->RSQR1 = ((ADC_SEQUENCE_LENGTH - 1U) << 20U);
+    ADC1->RSQR2 = 0;
+    ADC1->RSQR3 = (3U << 0U) | (4U << 5U) | (5U << 10U) |
+                  (2U << 15U) | (6U << 20U);
+    ADC1->CTLR2 = ADC_ADON;
+
+    ADC1->CTLR2 |= CTLR2_RSTCAL_Set;
+    while (ADC1->CTLR2 & CTLR2_RSTCAL_Set) {}
+    ADC1->CTLR2 |= CTLR2_CAL_Set;
+    while (ADC1->CTLR2 & CTLR2_CAL_Set) {}
+
+    RCC->AHBPCENR |= RCC_DMA1EN;
+    DMA1_Channel1->CFGR = 0;
+    DMA1_Channel1->PADDR = (uintptr_t)&ADC1->RDATAR;
+    DMA1_Channel1->MADDR = (uintptr_t)adc_dma_buffer;
+    DMA1_Channel1->CNTR = ADC_DMA_SAMPLE_COUNT;
+    DMA1_Channel1->CFGR = DMA_CFGR1_CIRC | DMA_CFGR1_MINC |
+                          DMA_CFGR1_PSIZE_0 | DMA_CFGR1_MSIZE_0 |
+                          DMA_CFGR1_PL_1 | DMA_CFGR1_EN;
+
+    /* EXTSEL=0 is TIM1_TRGO on CH32X035; TIM1 update is the trigger. */
+    ADC1->CTLR2 |= ADC_DMA | ADC_EXTTRIG;
+}
+
+static void drain_adc_dma(void)
+{
+    uint32_t voltage_sum = 0;
+    uint32_t current_ref_sum = 0;
+    uint32_t current_meas_sum = 0;
+    uint32_t mag_sum = 0;
+    uint32_t temp_sum = 0;
+    uint16_t frame_count = 0;
+    const uint16_t write_sample =
+        (uint16_t)((ADC_DMA_SAMPLE_COUNT - DMA1_Channel1->CNTR) % ADC_DMA_SAMPLE_COUNT);
+    const uint16_t write_frame = (uint16_t)(write_sample / ADC_SEQUENCE_LENGTH);
+
+    while (adc_dma_read_frame != write_frame && frame_count < ADC_DMA_FRAME_COUNT) {
+        const uint16_t offset = adc_dma_read_frame * ADC_SEQUENCE_LENGTH;
+        voltage_sum += adc_dma_buffer[offset + 0U];
+        current_ref_sum += adc_dma_buffer[offset + 1U];
+        current_meas_sum += adc_dma_buffer[offset + 2U];
+        mag_sum += adc_dma_buffer[offset + 3U];
+        temp_sum += adc_dma_buffer[offset + 4U];
+        adc_dma_read_frame = (uint16_t)((adc_dma_read_frame + 1U) % ADC_DMA_FRAME_COUNT);
+        ++frame_count;
+    }
+
+    if (frame_count == 0U) {
+        return;
+    }
+
+    const uint16_t voltage_raw = (uint16_t)(voltage_sum / frame_count);
+    const uint16_t current_ref_raw = (uint16_t)(current_ref_sum / frame_count);
+    const uint16_t current_meas_raw = (uint16_t)(current_meas_sum / frame_count);
+    adc_mag_raw = (uint16_t)(mag_sum / frame_count);
+    adc_temp_raw = (uint16_t)(temp_sum / frame_count);
+
+    v_meas = fix16_mul(fix16_from_int(voltage_raw), ADC_V_MEAS_GAIN);
+    i_fb = fix16_mul(fix16_from_int((int32_t)current_meas_raw - (int32_t)current_ref_raw), ADC_I_MEAS_GAIN);
+
+    parameters_publish(PARAM_ID_V_MEAS, &v_meas);
+    parameters_publish(PARAM_ID_I_REF, &current_ref_raw);
+    parameters_publish(PARAM_ID_I_MEAS, &current_meas_raw);
+    parameters_publish(PARAM_ID_I_FB, &i_fb);
+}
+
 /* Convert a Q16.16 duty ratio into timer counts. We keep the helper here so the
  * USB parameter writes can feed it directly without any extra scaling code in the
  * task loop.
@@ -147,8 +257,8 @@ void init_pwm_current_control(void){
     /* TRGO is left selectable here: the 0-event and ARR-event are both valid startup trials.
      * Try one and comment the other out as needed to find the cleanest trigger behavior.
      */
-    TIM1->CTLR2 = TIM_MMS_0;   // TRGO on zero/reset event
-    // TIM1->CTLR2 = TIM_MMS_1; // TRGO on update/ARR event
+    //TIM1->CTLR2 = TIM_MMS_0;   // TRGO on zero/reset event
+    TIM1->CTLR2 = TIM_MMS_1; // TRGO on update/ARR event
 
     /* Start the timer.
      * Once CEN is set, the PWM outputs begin toggling according to their compare values and polarity settings.
@@ -158,15 +268,15 @@ void init_pwm_current_control(void){
 
 }
 
-void init_adc_current_control(void){
-    // Current reading synced to PWM with DMA
-    // Voltage reading can be chill but it'd be nice if it was automatic too
-}
-
 void init_pins_current_control(void)
 {
-    init_pwm_current_control();
+    funPinMode(PIN_V_MEAS, GPIO_CFGLR_IN_ANALOG);
+    funPinMode(PIN_I_REF, GPIO_CFGLR_IN_ANALOG);
+    funPinMode(PIN_I_MEAS, GPIO_CFGLR_IN_ANALOG);
+    funPinMode(PIN_MAG_MEAS, GPIO_CFGLR_IN_ANALOG);
+    funPinMode(PIN_TEMP_MEAS, GPIO_CFGLR_IN_ANALOG);
     init_adc_current_control();
+    init_pwm_current_control();
 
     current_controller = (pid_f16_t){
 
@@ -185,6 +295,8 @@ void init_pins_current_control(void)
 
 void task_current_control(void)
 {
+    drain_adc_dma();
+
     /* The bridge is only allowed to output PWM when the FSM says the control loop is active */
     if (fsm_state() != FSM_CURRENT_CONTROL) {
         TIM1->CH1CVR = 0;
@@ -240,4 +352,14 @@ void task_current_control(void)
     // TIM1->CH1CVR = current_control_duty_to_ticks(duty_a);
     // TIM1->CH2CVR = current_control_duty_to_ticks(duty_b);
 
+}
+
+uint16_t get_mag_meas_raw(void)
+{
+    return adc_mag_raw;
+}
+
+uint16_t get_temp_meas_raw(void)
+{
+    return adc_temp_raw;
 }

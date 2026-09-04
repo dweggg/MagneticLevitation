@@ -1,4 +1,5 @@
 #include "setpoint.h"
+#include "current_control.h"
 #include "protocol.h"
 #include "parameters.h"
 #include "ch32fun.h"
@@ -97,13 +98,11 @@ static fix16_t temp_c_q16_from_raw(uint16_t raw)
 static volatile fix16_t temp_c_q16;
 
 void init_pins_setpoint(void){
-    funPinMode(PIN_TEMP_MEAS, GPIO_CFGLR_IN_ANALOG);
-    funAnalogInit();
 }
 
 void task_setpoint(void){
 
-    const uint16_t raw = (uint16_t)funAnalogRead(PIN_TEMP_MEAS);
+    const uint16_t raw = get_temp_meas_raw();
     parameters_publish(PARAM_ID_TEMP_RAW, &raw);
     
     temp_c_q16 = temp_c_q16_from_raw(raw);

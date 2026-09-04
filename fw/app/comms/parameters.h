@@ -48,6 +48,11 @@ enum {
 	PARAM_ID_DUTY_A = 0x0003,
 	PARAM_ID_DUTY_B = 0x0004,
 	PARAM_ID_CPU = 0x0005,
+	PARAM_ID_MAG_RAW = 0x0006,
+	PARAM_ID_V_MEAS = 0x0007,
+	PARAM_ID_I_REF = 0x0008,
+	PARAM_ID_I_MEAS = 0x0009,
+	PARAM_ID_I_FB = 0x000A,
 };
 
 void parameters_init(void);

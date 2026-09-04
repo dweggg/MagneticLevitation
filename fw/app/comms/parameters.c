@@ -42,6 +42,46 @@ static parameter_descriptor_t parameter_map_table[] = {
 		.size = sizeof(uint8_t),
 		.value.u8 = 0,
 	},
+	{
+		.id = PARAM_ID_MAG_RAW,
+		.name = "mag_raw",
+		.direction = PARAM_DIR_TX,
+		.format = PARAM_FMT_U16,
+		.size = sizeof(uint16_t),
+		.value.u16 = 0,
+	},
+	{
+		.id = PARAM_ID_V_MEAS,
+		.name = "v_meas",
+		.direction = PARAM_DIR_TX,
+		.format = PARAM_FMT_F16,
+		.size = sizeof(fix16_t),
+		.value.f16 = 0,
+	},
+	{
+		.id = PARAM_ID_I_REF,
+		.name = "i_ref",
+		.direction = PARAM_DIR_TX,
+		.format = PARAM_FMT_U16,
+		.size = sizeof(uint16_t),
+		.value.u16 = 0,
+	},
+	{
+		.id = PARAM_ID_I_MEAS,
+		.name = "i_meas",
+		.direction = PARAM_DIR_TX,
+		.format = PARAM_FMT_U16,
+		.size = sizeof(uint16_t),
+		.value.u16 = 0,
+	},
+	{
+		.id = PARAM_ID_I_FB,
+		.name = "i_fb",
+		.direction = PARAM_DIR_TX,
+		.format = PARAM_FMT_F16,
+		.size = sizeof(fix16_t),
+		.value.f16 = 0,
+	},
 };
 
 void parameters_init(void)

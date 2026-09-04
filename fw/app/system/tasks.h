@@ -4,7 +4,7 @@
 #include <fix16.h>
 
 /* Task frequencies in Hertz. */
-#define TASK_CURRENT_CONTROL_HZ 10000
+#define TASK_CURRENT_CONTROL_HZ  5000
 #define TASK_POSITION_CONTROL_HZ 100
 #define TASK_SETPOINT_HZ         100
 #define TASK_USB_PD_HZ           1000

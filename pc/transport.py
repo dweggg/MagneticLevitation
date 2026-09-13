@@ -205,7 +205,20 @@ def format_value(value: int | float | bytes, fmt: int | str) -> str:
     return str(value)
 
 
-def drain_input_buffer(port: serial.Serial, timeout: float = 0.05) -> None:
+def drain_input_buffer(port: serial.Serial, timeout: float = 0.05, sniff=None) -> None:
+    """Consume whatever is already sitting in the OS input buffer.
+
+    This used to loop for the full ``timeout`` even when nothing was
+    waiting (sleeping 5ms at a time until the deadline), which stalled
+    every read/write by tens of milliseconds for no reason. It now drains
+    only bytes that are actually buffered right now and returns as soon as
+    the buffer is empty.
+
+    If ``sniff`` is given, every drained chunk is also handed to it (e.g. a
+    live telemetry plot's ``feed``/``discard``) instead of being silently
+    discarded, so bytes that happen to arrive around a parameter read/write
+    aren't lost.
+    """
     end = time.monotonic() + timeout
     while True:
         try:
@@ -213,14 +226,13 @@ def drain_input_buffer(port: serial.Serial, timeout: float = 0.05) -> None:
         except AttributeError:
             waiting = 0
         if waiting <= 0:
-            if time.monotonic() >= end:
-                break
-            time.sleep(0.005)
-            continue
+            break
         try:
-            port.read(waiting)
+            chunk = port.read(waiting)
         except Exception:
             break
+        if sniff is not None and chunk:
+            sniff(chunk)
         if time.monotonic() >= end:
             break
     try:
@@ -366,8 +378,17 @@ def _print_received_logs(raw: bytes) -> None:
         print(line, flush=True)
 
 
-def request(port: serial.Serial, payload: bytes, expect_reply: bool = True) -> bytes:
-    drain_input_buffer(port, timeout=0.05)
+def request(port: serial.Serial, payload: bytes, expect_reply: bool = True, sniff=None) -> bytes:
+    """Send a command frame and wait for its reply.
+
+    ``sniff``, when given, receives every raw chunk read off the wire
+    (including bytes drained before sending and bytes read while waiting for
+    the reply). Pass a live telemetry plot's ``feed``/``discard`` here so
+    telemetry frames that arrive during a parameter read/write keep flowing
+    into the plot instead of being dropped, which is what caused the plot to
+    visibly pause on every read/write.
+    """
+    drain_input_buffer(port, timeout=0.05, sniff=sniff)
     port.write(payload)
     port.flush()
     if not expect_reply:
@@ -388,16 +409,18 @@ def request(port: serial.Serial, payload: bytes, expect_reply: bool = True) -> b
 
         if chunk:
             _print_received_logs(chunk)
+            if sniff is not None:
+                sniff(chunk)
             response.extend(chunk)
             frame = extract_reply_frame(
                 bytes(response), expected_id=expected_id,
                 expect_list=command == CMD_LIST, expect_status=command == CMD_WRITE,
             )
             if frame is not None:
-                drain_input_buffer(port, timeout=0.05)
+                drain_input_buffer(port, timeout=0.05, sniff=sniff)
                 return frame
         else:
-            time.sleep(0.01)
+            time.sleep(0.002)
 
     if not response:
         raise TimeoutError("Timed out waiting for reply")
@@ -406,7 +429,7 @@ def request(port: serial.Serial, payload: bytes, expect_reply: bool = True) -> b
         expect_list=command == CMD_LIST, expect_status=command == CMD_WRITE,
     )
     if frame is not None:
-        drain_input_buffer(port, timeout=0.05)
+        drain_input_buffer(port, timeout=0.05, sniff=sniff)
         return frame
     raise ValueError("No valid reply packet received from device")
 
@@ -455,9 +478,9 @@ def list_params(port: serial.Serial) -> list[dict]:
     return items
 
 
-def read_param(port: serial.Serial, obj_id: int, catalog=None) -> dict:
+def read_param(port: serial.Serial, obj_id: int, catalog=None, sniff=None) -> dict:
     frame = bytes([CMD_READ]) + pack_u16(obj_id)
-    resp = request(port, frame)
+    resp = request(port, frame, sniff=sniff)
     if resp[0] != CMD_REPLY:
         raise ValueError(f"Unexpected response prefix: 0x{resp[0]:02x}")
 
@@ -493,7 +516,7 @@ def read_param(port: serial.Serial, obj_id: int, catalog=None) -> dict:
     }
 
 
-def write_param(port: serial.Serial, obj_id: int, value: int | float | bytes, fmt: int | str | None = None, catalog=None) -> int:
+def write_param(port: serial.Serial, obj_id: int, value: int | float | bytes, fmt: int | str | None = None, catalog=None, sniff=None) -> int:
     info = catalog.get(obj_id) if catalog is not None else {}
     format_name = fmt if fmt is not None else info.get("format") or info.get("fmt_name") or "u16"
     if isinstance(value, str):
@@ -503,7 +526,7 @@ def write_param(port: serial.Serial, obj_id: int, value: int | float | bytes, fm
     value_bytes = encode_value(value, format_name)
 
     frame = bytes([CMD_WRITE]) + pack_u16(obj_id) + bytes([len(value_bytes)]) + value_bytes
-    resp = request(port, frame)
+    resp = request(port, frame, sniff=sniff)
     if resp[0] != CMD_REPLY:
         raise ValueError(f"Unexpected response prefix: 0x{resp[0]:02x}")
     if len(resp) < 2:

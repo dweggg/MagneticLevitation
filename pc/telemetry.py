@@ -11,7 +11,7 @@ from typing import Iterable
 
 TELEMETRY_SYNC = b"\xa5\x5a"
 TELEMETRY_FRAME_SIZE = 20
-TELEMETRY_CHANNELS = ("i_fb", "v_meas", "duty_a", "duty_b")
+TELEMETRY_CHANNEL_COUNT = 4
 
 
 @dataclass(frozen=True)
@@ -57,14 +57,15 @@ class TelemetryDecoder:
         return frames
 
 
-def selected_channels(names: Iterable[str]) -> tuple[int, ...]:
+def selected_channels(names: Iterable[str], available_channels: Iterable[str]) -> tuple[int, ...]:
     """Return channel indices, rejecting unknown names and duplicates."""
+    available = tuple(available_channels)
     result: list[int] = []
     for name in names:
         try:
-            index = TELEMETRY_CHANNELS.index(name)
+            index = available.index(name)
         except ValueError as exc:
-            choices = ", ".join(TELEMETRY_CHANNELS)
+            choices = ", ".join(available)
             raise ValueError(f"Unknown telemetry variable '{name}'. Choose from: {choices}") from exc
         if index not in result:
             result.append(index)
@@ -74,7 +75,7 @@ def selected_channels(names: Iterable[str]) -> tuple[int, ...]:
 class LiveTelemetryPlot:
     """Non-blocking matplotlib telemetry view owned by the caller's event loop."""
 
-    def __init__(self, channel_names: Iterable[str], rate_hz: int, window_seconds: float = 5.0) -> None:
+    def __init__(self, available_channels: Iterable[str], channel_names: Iterable[str], rate_hz: int, window_seconds: float = 5.0) -> None:
         try:
             import matplotlib.pyplot as plt
         except ImportError as exc:  # pragma: no cover - depends on local environment
@@ -87,10 +88,13 @@ class LiveTelemetryPlot:
         self._plt = plt
         self.rate_hz = rate_hz
         self.window_seconds = window_seconds
-        self._indices = list(selected_channels(channel_names) or range(len(TELEMETRY_CHANNELS)))
+        self._available_channels = tuple(available_channels)
+        if len(self._available_channels) != TELEMETRY_CHANNEL_COUNT:
+            raise ValueError(f"Unsupported telemetry layout: expected {TELEMETRY_CHANNEL_COUNT} channels, got {len(self._available_channels)}")
+        self._indices = list(selected_channels(channel_names, self._available_channels) or range(len(self._available_channels)))
         max_samples = max(2, int(rate_hz * window_seconds))
         self._samples = deque(maxlen=max_samples)
-        self._values = [deque(maxlen=max_samples) for _ in TELEMETRY_CHANNELS]
+        self._values = [deque(maxlen=max_samples) for _ in self._available_channels]
         self._decoder = TelemetryDecoder()
         self._last_sequence: int | None = None
         self._sample_number = 0
@@ -106,7 +110,7 @@ class LiveTelemetryPlot:
 
     @property
     def channel_names(self) -> tuple[str, ...]:
-        return tuple(TELEMETRY_CHANNELS[index] for index in self._indices)
+        return tuple(self._available_channels[index] for index in self._indices)
 
     @property
     def is_open(self) -> bool:
@@ -118,7 +122,7 @@ class LiveTelemetryPlot:
         self._lines = []
         for axis, index in zip(self._axes, self._indices):
             (line,) = axis.plot([], [], lw=0.8)
-            axis.set_ylabel(TELEMETRY_CHANNELS[index])
+            axis.set_ylabel(self._available_channels[index])
             axis.grid(True, alpha=0.3)
             self._lines.append(line)
         self._axes[-1].set_xlabel("time (s)")
@@ -128,7 +132,7 @@ class LiveTelemetryPlot:
         self._dirty = True
 
     def set_channels(self, channel_names: Iterable[str]) -> None:
-        indices = list(selected_channels(channel_names))
+        indices = list(selected_channels(channel_names, self._available_channels))
         if not indices:
             raise ValueError("Select at least one telemetry variable")
         if indices == self._indices:
@@ -138,12 +142,12 @@ class LiveTelemetryPlot:
         self._create_figure()
 
     def add_channels(self, channel_names: Iterable[str]) -> None:
-        additions = selected_channels(channel_names)
-        self.set_channels([*self.channel_names, *(TELEMETRY_CHANNELS[index] for index in additions)])
+        additions = selected_channels(channel_names, self._available_channels)
+        self.set_channels([*self.channel_names, *(self._available_channels[index] for index in additions)])
 
     def remove_channels(self, channel_names: Iterable[str]) -> None:
-        unwanted = set(selected_channels(channel_names))
-        self.set_channels(TELEMETRY_CHANNELS[index] for index in self._indices if index not in unwanted)
+        unwanted = set(selected_channels(channel_names, self._available_channels))
+        self.set_channels(self._available_channels[index] for index in self._indices if index not in unwanted)
 
     def feed(self, data: bytes) -> None:
         for frame in self._decoder.feed(data):
@@ -203,9 +207,9 @@ class LiveTelemetryPlot:
             self._figure = None
 
 
-def plot_live(port, channel_names: Iterable[str], rate_hz: int, window_seconds: float = 5.0) -> None:
+def plot_live(port, available_channels: Iterable[str], channel_names: Iterable[str], rate_hz: int, window_seconds: float = 5.0) -> None:
     """Run a standalone live plot outside the interactive REPL."""
-    plot = LiveTelemetryPlot(channel_names, rate_hz, window_seconds)
+    plot = LiveTelemetryPlot(available_channels, channel_names, rate_hz, window_seconds)
     print("Telemetry plot is open; close its window or press Ctrl-C to stop.")
     try:
         while plot.is_open:

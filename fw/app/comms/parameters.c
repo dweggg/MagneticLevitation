@@ -130,6 +130,13 @@ static parameter_descriptor_t parameter_map_table[] = {
         .size = sizeof(uint32_t),
         .value.u32 = 0,
     },
+    {
+        .id = PARAM_ID_STREAM_VARIABLE_NAMES,
+        .name = "stream_variable_names",
+        .direction = PARAM_DIR_TX,
+        .format = PARAM_FMT_RAW,
+        .size = 0,
+    },
 };
 
 void parameters_init(void)
@@ -180,6 +187,12 @@ int parameters_publish(uint16_t id, const void *value)
 		desc->value.f16 = incoming;
 		return 0;
 	}
+	case PARAM_FMT_RAW:
+		if (desc->size > PARAM_RAW_MAX_BYTES) {
+			return -2;
+		}
+		memcpy(desc->value.raw, value, desc->size);
+		return 0;
 	default:
 		return -2;
 	}
@@ -204,6 +217,12 @@ int parameters_fetch(uint16_t id, void *buffer, uint8_t buffer_size)
         return (int)desc->size;
 	case PARAM_FMT_F16:
 		memcpy(buffer, &desc->value.f16, sizeof(fix16_t));
+		return (int)desc->size;
+	case PARAM_FMT_RAW:
+		if (desc->size > PARAM_RAW_MAX_BYTES) {
+			return -2;
+		}
+		memcpy(buffer, desc->value.raw, desc->size);
 		return (int)desc->size;
 	default:
 		return -2;

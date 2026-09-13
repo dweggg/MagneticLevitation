@@ -9,6 +9,7 @@
 
 static uint8_t telemetry_sequence;
 static uint32_t telemetry_dropped_frames;
+static const char telemetry_variable_names[] = "i_fb,v_meas,duty_a,duty_b";
 
 static void put_u32_le(uint8_t *buffer, uint32_t value)
 {
@@ -28,6 +29,11 @@ void telemetry_init(void)
     parameters_publish(PARAM_ID_STREAM_CHANNELS, &channel_count);
     parameters_publish(PARAM_ID_STREAM_RATE_HZ, &rate_hz);
     parameters_publish(PARAM_ID_STREAM_DROPPED, &telemetry_dropped_frames);
+    parameter_descriptor_t *name_descriptor = parameters_find(PARAM_ID_STREAM_VARIABLE_NAMES);
+    if (name_descriptor != NULL) {
+        name_descriptor->size = (uint8_t)(sizeof(telemetry_variable_names) - 1U);
+        parameters_publish(PARAM_ID_STREAM_VARIABLE_NAMES, telemetry_variable_names);
+    }
 }
 
 void telemetry_capture(const fix16_t *values, uint8_t count)

@@ -22,6 +22,8 @@ typedef enum {
 	PARAM_FMT_RAW
 } parameter_format_t;
 
+#define PARAM_RAW_MAX_BYTES 32U
+
 typedef union {
 	uint8_t u8;
 	int8_t i8;
@@ -30,7 +32,7 @@ typedef union {
 	uint32_t u32;
 	int32_t i32;
 	fix16_t f16;
-	uint8_t raw[sizeof(fix16_t)];
+	uint8_t raw[PARAM_RAW_MAX_BYTES];
 } parameter_value_t;
 
 typedef struct {
@@ -59,6 +61,7 @@ enum {
     PARAM_ID_STREAM_CHANNELS = 0x000E,
     PARAM_ID_STREAM_RATE_HZ = 0x000F,
     PARAM_ID_STREAM_DROPPED = 0x0010,
+    PARAM_ID_STREAM_VARIABLE_NAMES = 0x0011,
 };
 
 void parameters_init(void);

@@ -261,7 +261,7 @@ int protocol_bridge_poll(void)
 		pos += 2;
 
 		if (command == PARAM_CMD_READ) {
-			uint8_t value_buffer[4] = {0};
+	uint8_t value_buffer[PARAM_RAW_MAX_BYTES] = {0};
 			int result = protocol_read_value(id, value_buffer, sizeof(value_buffer));
 			if (result >= 0) {
 				protocol_send_object_response(id, value_buffer, (uint8_t)result);

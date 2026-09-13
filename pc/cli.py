@@ -36,10 +36,10 @@ from pc.transport import (
 from pc.telemetry import LiveTelemetryPlot, TELEMETRY_CHANNEL_COUNT, plot_live
 
 
-STREAM_CHANNELS_ID = 0x000E
-STREAM_RATE_HZ_ID = 0x000F
-STREAM_DROPPED_ID = 0x0010
-STREAM_VARIABLE_NAMES_ID = 0x0011
+STREAM_CHANNELS_ID = 0x1000
+STREAM_RATE_HZ_ID = 0x1001
+STREAM_DROPPED_ID = 0x1002
+STREAM_VARIABLE_NAMES_ID = 0x1003
 STREAM_METADATA_PARAMETERS = (
     {"id": STREAM_CHANNELS_ID, "name": "stream_channels", "format": "u8", "size": 1},
     {"id": STREAM_RATE_HZ_ID, "name": "stream_rate_hz", "format": "u32", "size": 4},

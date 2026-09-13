@@ -3,7 +3,7 @@
 #include <stdarg.h>
 #include <string.h>
 
-#define PROTOCOL_MAX_FRAME_BYTES 256
+#define PROTOCOL_MAX_FRAME_BYTES 512
 
 static uint16_t append_text(char *buffer, uint16_t position, uint16_t size,
                             const char *text)
@@ -70,7 +70,7 @@ static uint16_t append_hex(char *buffer, uint16_t position, uint16_t size,
 	return position;
 }
 
-static int protocol_send_frame(const uint8_t *payload, uint8_t length)
+static int protocol_send_frame(const uint8_t *payload, uint16_t length)
 {
 	uint8_t frame[PROTOCOL_MAX_FRAME_BYTES];
 	if (length + 1 > sizeof(frame)) {
@@ -90,10 +90,10 @@ static int protocol_send_status_response(uint8_t status)
 static int protocol_send_object_response(uint16_t id, const uint8_t *data, uint8_t length)
 {
 	uint8_t reply[4 + PROTOCOL_MAX_FRAME_BYTES];
-	uint8_t reply_len = 0;
+	uint16_t reply_len = 0;
 
-	reply[reply_len++] = (uint8_t)(id & 0xFF);
-	reply[reply_len++] = (uint8_t)((id >> 8) & 0xFF);
+	reply[reply_len++] = (uint16_t)(id & 0xFF);
+	reply[reply_len++] = (uint16_t)((id >> 8) & 0xFF);
 	reply[reply_len++] = length;
 	memcpy(&reply[reply_len], data, length);
 	reply_len += length;
@@ -105,9 +105,9 @@ static int protocol_send_list_response(void)
 	size_t count = 0;
 	const parameter_descriptor_t *map = parameters_map(&count);
 	uint8_t frame[1 + 32 * 32];
-	uint8_t index = 0;
+	uint16_t index = 0;
 
-	frame[index++] = (uint8_t)count;
+	frame[index++] = (uint16_t)count;
 	for (size_t i = 0; i < count; ++i) {
 		const parameter_descriptor_t *desc = &map[i];
 		const char *name = desc->name != NULL ? desc->name : "";
@@ -116,14 +116,14 @@ static int protocol_send_list_response(void)
 			name_length = 31U;
 		}
 
-		frame[index++] = (uint8_t)(desc->id & 0xFF);
-		frame[index++] = (uint8_t)((desc->id >> 8) & 0xFF);
+		frame[index++] = (uint16_t)(desc->id & 0xFF);
+		frame[index++] = (uint16_t)((desc->id >> 8) & 0xFF);
 		frame[index++] = desc->direction;
 		frame[index++] = desc->format;
 		frame[index++] = desc->size;
-		frame[index++] = (uint8_t)name_length;
+		frame[index++] = (uint16_t)name_length;
 		memcpy(&frame[index], name, name_length);
-		index += (uint8_t)name_length;
+		index += (uint16_t)name_length;
 	}
 	return protocol_send_frame(frame, index);
 }

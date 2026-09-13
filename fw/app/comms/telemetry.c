@@ -9,7 +9,7 @@
 
 static uint8_t telemetry_sequence;
 static uint32_t telemetry_dropped_frames;
-static const char telemetry_variable_names[] = "i_fb,v_meas,duty_a,duty_b";
+static const char telemetry_variable_names[] = "i_fb,i_sp,v_out,duty_a";
 
 static void put_u32_le(uint8_t *buffer, uint32_t value)
 {

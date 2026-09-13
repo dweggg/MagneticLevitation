@@ -39,6 +39,7 @@ static uint16_t adc_temp_raw;
 
 static fix16_t v_meas;
 static fix16_t i_fb;
+static fix16_t i_sp;
 
 
 /* Current controller.
@@ -90,10 +91,20 @@ void task_current_control(void)
      * Any other state forces both bridge outputs off.
      */
     if (fsm_state() != FSM_CURRENT_CONTROL) {
+
+        // Kill current controller
+        current_controller.sp = 0;
+        current_controller.integral_k = 0;
+        current_controller.integral_k1 = 0;
+        current_controller.out = 0;
+        
+        // Kill PWM outputs        
         TIM1->CH1CVR = 0;
         TIM1->CH2CVR = 0;
+
+        // It's good to always measure current, the rest is actually forced to 0
         telemetry_values[0] = i_fb;
-        telemetry_values[1] = v_meas;
+        telemetry_values[1] = 0;
         telemetry_values[2] = 0;
         telemetry_values[3] = 0;
         telemetry_capture(telemetry_values, TELEMETRY_CHANNEL_COUNT);
@@ -101,76 +112,40 @@ void task_current_control(void)
     }
 
     /*
-     * For now we accept raw duty-cycle commands from the parameter system.
-     * duty_a and duty_b are Q16.16 values in the range [0.0, 1.0].
-     */
-    #define DUTY_A_MIN  F16(0.4)
-    #define DUTY_A_MAX  F16(0.6)
-
-    fix16_t duty_a = 0;
-
-    if (parameters_fetch(PARAM_ID_DUTY_A, &duty_a, sizeof(duty_a)) < 0) {
-        duty_a = 0;
-    }
-
-    if (duty_a < DUTY_A_MIN) {
-        duty_a = DUTY_A_MIN;
-    } else if (duty_a > DUTY_A_MAX) {
-        duty_a = DUTY_A_MAX;
-    }
-
-    const fix16_t duty_b = fix16_sub(F16(1.0), duty_a);
-
-    const uint16_t ticks_a = current_control_duty_to_ticks(duty_a);
-    const uint16_t ticks_b = current_control_duty_to_ticks(duty_b);
-    
-    /*
-     * Only write the timer registers when the duty actually changes.
-     */
-    if (TIM1->CH1CVR != ticks_a || TIM1->CH2CVR != ticks_b) {
-        TIM1->CH1CVR = ticks_a;
-        TIM1->CH2CVR = ticks_b;
-
-        LOG("ticks_a=%u ticks_b=%u",
-            (unsigned int)ticks_a,
-            (unsigned int)ticks_b);
-    }
-
-    /* Stream measured current, bus voltage, and the complementary duties. */
-    telemetry_values[0] = i_fb;
-    telemetry_values[1] = v_meas;
-    telemetry_values[2] = duty_a;
-    telemetry_values[3] = duty_b;
-    telemetry_capture(telemetry_values, TELEMETRY_CHANNEL_COUNT);
-
-
-    /*
      * ------------------------------------------------------------------------
      * Closed-loop current control (TODO)
      * ------------------------------------------------------------------------
-     *
-     *     fix16_t i_sp = 0;       // TODO: fetch current setpoint
-     *     fix16_t modulation_index = 0;
-     *
-     *     current_controller.sp = i_sp;
-     *     current_controller.fb = i_fb;
-     *     current_controller.lim_p = v_meas;
-     *     current_controller.lim_n = -v_meas;
-     *
-     *     pid_f16_run(&current_controller);
-     *
-     *     modulation_index = fix16_div(current_controller.out, v_meas);
-     *
-     *     // duty = 0.5 gives zero output voltage.
-     *     // duty = 0.0 gives -v_meas.
-     *     // duty = 1.0 gives +v_meas.
-     *     duty_a = fix16_mul(modulation_index, fix16_from_float(0.5f))
-     *            + fix16_from_float(0.5f);
-     *     duty_b = fix16_one - duty_a;
-     *
-     *     TIM1->CH1CVR = current_control_duty_to_ticks(duty_a);
-     *     TIM1->CH2CVR = current_control_duty_to_ticks(duty_b);
      */
+
+    fix16_t duty_a = 0;
+    fix16_t duty_b = 0;
+
+    fix16_t modulation_index = 0;
+
+    current_controller.sp = i_sp;
+    current_controller.fb = i_fb;
+    current_controller.lim_p = v_meas;
+    current_controller.lim_n = -v_meas;
+
+    pid_f16_run(&current_controller);
+    modulation_index = fix16_div(current_controller.out, v_meas);
+
+    // duty = 0.5 gives zero output voltage.
+    // duty = 0.0 gives -v_meas.
+    // duty = 1.0 gives +v_meas.
+    duty_a = fix16_mul(modulation_index, fix16_from_float(0.5f)) + fix16_from_float(0.5f);
+    duty_b = fix16_one - duty_a;
+
+    TIM1->CH1CVR = current_control_duty_to_ticks(duty_a);
+    TIM1->CH2CVR = current_control_duty_to_ticks(duty_b);
+
+    // Stream variables
+    telemetry_values[0] = current_controller.fb;
+    telemetry_values[1] = current_controller.sp;
+    telemetry_values[2] = current_controller.out;
+    telemetry_values[3] = duty_a;
+    telemetry_capture(telemetry_values, TELEMETRY_CHANNEL_COUNT);
+
 }
 
 
@@ -212,6 +187,7 @@ static void update_current_controller_parameters(void)
 {
     fix16_t kp;
     fix16_t ki;
+    fix16_t setpoint;
     uint32_t switching_frequency_hz;
 
     if (parameters_fetch(
@@ -234,6 +210,14 @@ static void update_current_controller_parameters(void)
             current_ki = ki;
             current_controller.ki = ki;
         }
+    }
+
+    if (parameters_fetch(
+            PARAM_ID_I_SP,
+            &setpoint,
+            sizeof(setpoint)) >= 0) {
+
+        i_sp = setpoint; // comment when getting the setpoint from position_control
     }
 
     if (parameters_fetch(
@@ -301,7 +285,7 @@ static void init_adc_current_control(void)
         ((ADC_SMP0_1)            << (3U * 2U)) |  /* CH2: I_REF */
         ((ADC_SMP0_1)            << (3U * 3U)) |  /* CH3: MAG */
         ((ADC_SMP0_0 | ADC_SMP0_2) << (3U * 4U)) | /* CH4: V_MEAS */
-        ((ADC_SMP0_1 | ADC_SMP0_2) << (3U * 5U)) | /* CH5: I_MEAS */
+        ((ADC_SMP0_1) << (3U * 5U)) | /* CH5: I_MEAS */
         ((ADC_SMP0_1)            << (3U * 6U));   /* CH6: TEMP */
 
     ADC1->SAMPTR1 = 0;

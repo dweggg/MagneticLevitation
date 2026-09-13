@@ -107,6 +107,14 @@ static parameter_descriptor_t parameter_map_table[] = {
         .value.f16 = 0,
     },
     {
+        .id = PARAM_ID_I_SP,
+        .name = "i_sp",
+        .direction = PARAM_DIR_TX_RX,
+        .format = PARAM_FMT_F16,
+        .size = sizeof(fix16_t),
+        .value.f16 = 0,
+    },
+    {
         .id = PARAM_ID_STREAM_CHANNELS,
         .name = "stream_channels",
         .direction = PARAM_DIR_TX,

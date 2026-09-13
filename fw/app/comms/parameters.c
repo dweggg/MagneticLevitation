@@ -83,8 +83,8 @@ static parameter_descriptor_t parameter_map_table[] = {
 		.value.f16 = 0,
 	},
 	{
-        .id = PARAM_ID_PWM_SWITCHING_FREQUENCY,
-        .name = "pwm_switching_frequency",
+        .id = PARAM_ID_FSW,
+        .name = "fsw",
         .direction = PARAM_DIR_TX_RX,
         .format = PARAM_FMT_U32,
         .size = sizeof(uint32_t),

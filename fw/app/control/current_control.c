@@ -97,20 +97,26 @@ void task_current_control(void)
      * For now we accept raw duty-cycle commands from the parameter system.
      * duty_a and duty_b are Q16.16 values in the range [0.0, 1.0].
      */
+    #define DUTY_A_MIN  F16(0.4)
+    #define DUTY_A_MAX  F16(0.6)
+
     fix16_t duty_a = 0;
-    fix16_t duty_b = 0;
 
     if (parameters_fetch(PARAM_ID_DUTY_A, &duty_a, sizeof(duty_a)) < 0) {
         duty_a = 0;
     }
 
-    if (parameters_fetch(PARAM_ID_DUTY_B, &duty_b, sizeof(duty_b)) < 0) {
-        duty_b = 0;
+    if (duty_a < DUTY_A_MIN) {
+        duty_a = DUTY_A_MIN;
+    } else if (duty_a > DUTY_A_MAX) {
+        duty_a = DUTY_A_MAX;
     }
+
+    const fix16_t duty_b = fix16_sub(F16(1.0), duty_a);
 
     const uint16_t ticks_a = current_control_duty_to_ticks(duty_a);
     const uint16_t ticks_b = current_control_duty_to_ticks(duty_b);
-
+    
     /*
      * Only write the timer registers when the duty actually changes.
      */
@@ -217,7 +223,7 @@ static void update_current_controller_parameters(void)
     }
 
     if (parameters_fetch(
-            PARAM_ID_PWM_SWITCHING_FREQUENCY,
+            PARAM_ID_FSW,
             &switching_frequency_hz,
             sizeof(switching_frequency_hz)) >= 0) {
         

@@ -95,7 +95,7 @@ static fix16_t temp_c_q16_from_raw(uint16_t raw)
 }
 
 
-static volatile fix16_t temp_c_q16;
+static fix16_t temp_c_q16;
 
 void init_pins_setpoint(void){
 }
@@ -103,9 +103,9 @@ void init_pins_setpoint(void){
 void task_setpoint(void){
 
     const uint16_t raw = get_temp_meas_raw();
-    parameters_publish(PARAM_ID_TEMP_RAW, &raw);
-    
     temp_c_q16 = temp_c_q16_from_raw(raw);
 
-    //LOG("TEMP (degC*10): %u", (unsigned int)fix16_to_int(fix16_mul(temp_c_q16, fix16_from_int(10))));
+    parameters_publish(PARAM_ID_TEMP, &temp_c_q16);
+
+
 }

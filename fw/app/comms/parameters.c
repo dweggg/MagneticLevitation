@@ -3,12 +3,12 @@
 
 static parameter_descriptor_t parameter_map_table[] = {
 	{
-		.id = PARAM_ID_TEMP_RAW,
-		.name = "temp_raw",
+		.id = PARAM_ID_TEMP,
+		.name = "temp",
 		.direction = PARAM_DIR_TX,
-		.format = PARAM_FMT_U16,
-		.size = sizeof(uint16_t),
-		.value.u16 = 0,
+		.format = PARAM_FMT_F16,
+		.size = sizeof(fix16_t),
+		.value.f16 = 0,
 	},
 	{
 		.id = PARAM_ID_ENABLE,

@@ -46,8 +46,10 @@ static fix16_t i_sp;
  * Gains and limits are configured in init_current_controller().
  */
 static pid_f16_t current_controller = {0};
-static fix16_t current_kp;
-static fix16_t current_ki;
+
+/* Last-applied gains, kept only to detect changes from comms. */
+static fix16_t cached_kp;
+static fix16_t cached_ki;
 static uint32_t pwm_switching_frequency_hz;
 
 /* ============================================================================
@@ -62,17 +64,6 @@ static void apply_pwm_switching_frequency(uint32_t frequency_hz);
 
 /* ============================================================================
  * Control loop
- *
- * This is the main entry point for the current-control task.
- *
- * Current bring-up behavior:
- *   1. Process the latest ADC samples.
- *   2. Make sure the FSM allows PWM output.
- *   3. Fetch raw duty-cycle commands.
- *   4. Apply the duty cycles to TIM1.
- *
- * TODO:
- *   Replace the raw duty commands with the closed-loop PI controller.
  * ========================================================================== */
 
 void task_current_control(void)
@@ -92,17 +83,17 @@ void task_current_control(void)
      */
     if (fsm_state() != FSM_CURRENT_CONTROL) {
 
-        // Kill current controller
+        // Reset the current controller so it doesn't wind up while idle.
         current_controller.sp = 0;
         current_controller.integral_k = 0;
         current_controller.integral_k1 = 0;
         current_controller.out = 0;
-        
-        // Kill PWM outputs        
+
+        // Force PWM outputs off.
         TIM1->CH1CVR = 0;
         TIM1->CH2CVR = 0;
 
-        // It's good to always measure current, the rest is actually forced to 0
+        // Current is still worth measuring; everything else reports as 0.
         telemetry_values[0] = i_fb;
         telemetry_values[1] = 0;
         telemetry_values[2] = 0;
@@ -113,7 +104,7 @@ void task_current_control(void)
 
     /*
      * ------------------------------------------------------------------------
-     * Closed-loop current control (TODO)
+     * Closed-loop current control
      * ------------------------------------------------------------------------
      */
 
@@ -185,53 +176,52 @@ static void init_current_controller(void)
 
 static void update_current_controller_parameters(void)
 {
-    fix16_t kp;
-    fix16_t ki;
-    fix16_t setpoint;
-    uint32_t switching_frequency_hz;
+    fix16_t fetched_kp;
+    fix16_t fetched_ki;
+    fix16_t fetched_i_sp;
+    uint32_t fetched_fsw_hz;
 
     if (parameters_fetch(
             PARAM_ID_CURRENT_KP,
-            &kp,
-            sizeof(kp)) >= 0) {
+            &fetched_kp,
+            sizeof(fetched_kp)) >= 0) {
 
-        if (kp != current_kp) {
-            current_kp = kp;
-            current_controller.kp = kp;
+        if (fetched_kp != cached_kp) {
+            cached_kp = fetched_kp;
+            current_controller.kp = fetched_kp;
         }
     }
 
     if (parameters_fetch(
             PARAM_ID_CURRENT_KI,
-            &ki,
-            sizeof(ki)) >= 0) {
+            &fetched_ki,
+            sizeof(fetched_ki)) >= 0) {
 
-        if (ki != current_ki) {
-            current_ki = ki;
-            current_controller.ki = ki;
+        if (fetched_ki != cached_ki) {
+            cached_ki = fetched_ki;
+            current_controller.ki = fetched_ki;
         }
     }
 
     if (parameters_fetch(
             PARAM_ID_I_SP,
-            &setpoint,
-            sizeof(setpoint)) >= 0) {
+            &fetched_i_sp,
+            sizeof(fetched_i_sp)) >= 0) {
 
-        i_sp = setpoint; // comment when getting the setpoint from position_control
+        /* TODO: drop this once the setpoint comes from position_control
+         * instead of directly from comms. */
+        i_sp = fetched_i_sp;
     }
 
     if (parameters_fetch(
             PARAM_ID_FSW,
-            &switching_frequency_hz,
-            sizeof(switching_frequency_hz)) >= 0) {
-        
-        if (switching_frequency_hz != pwm_switching_frequency_hz) {
-            apply_pwm_switching_frequency(
-                switching_frequency_hz
-            );
+            &fetched_fsw_hz,
+            sizeof(fetched_fsw_hz)) >= 0) {
 
-            pwm_switching_frequency_hz =
-                switching_frequency_hz;
+        if (fetched_fsw_hz != pwm_switching_frequency_hz) {
+            apply_pwm_switching_frequency(fetched_fsw_hz);
+
+            pwm_switching_frequency_hz = fetched_fsw_hz;
 
             LOG("PWM switching frequency updated to %u Hz", (unsigned int)pwm_switching_frequency_hz);
         }

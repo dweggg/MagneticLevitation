@@ -45,7 +45,7 @@ typedef struct {
 } parameter_descriptor_t;
 
 enum {
-	PARAM_ID_TEMP_RAW = 0x0001,
+	PARAM_ID_TEMP = 0x0001,
 	PARAM_ID_ENABLE = 0x0002,
 	PARAM_ID_DUTY_A = 0x0003,
 	PARAM_ID_DUTY_B = 0x0004,

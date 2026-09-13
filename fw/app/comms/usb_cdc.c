@@ -1,11 +1,12 @@
 #include "usb_cdc.h"
 #include "usb_config.h"
 #include "fsusb.h"
-#include "parameters.h"
+#include "protocol.h"
+#include "telemetry.h"
 #include <string.h>
 
 #define USB_CDC_RX_RING_SIZE 256
-#define USB_CDC_TX_RING_SIZE 256
+#define USB_CDC_TX_RING_SIZE 2048
 
 static volatile uint8_t usb_cdc_dtr;
 
@@ -29,6 +30,8 @@ static int usb_cdc_tx_pending(void);
 void init_pins_usb_cdc(void)
 {
 	USBFSSetup();
+	parameters_init();
+	telemetry_init();
 }
 
 void task_usb_cdc(void)
@@ -36,7 +39,7 @@ void task_usb_cdc(void)
 	if (usb_cdc_tx_pending() > 0) {
 		USBFS_SendEndpoint(3, 0);
 	}
-	parameters_bridge_poll();
+	protocol_bridge_poll();
 }
 
 int usb_cdc_debug_is_active(void)
@@ -98,6 +101,11 @@ int usb_cdc_tx_send(const uint8_t *buf, int len)
 static int usb_cdc_tx_pending(void)
 {
 	return (usb_cdc_tx_head - usb_cdc_tx_tail) & (USB_CDC_TX_RING_SIZE - 1);
+}
+
+int usb_cdc_tx_free(void)
+{
+	return (USB_CDC_TX_RING_SIZE - 1) - usb_cdc_tx_pending();
 }
 
 int usb_cdc_rx_available(void)

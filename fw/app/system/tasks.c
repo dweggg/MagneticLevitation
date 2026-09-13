@@ -1,7 +1,7 @@
 #include "tasks.h"
 #include "scheduler.h"
 #include "protocol.h"
-
+#include "parameters.h"
 
 #include "fsm.h"
 #include "leds.h"

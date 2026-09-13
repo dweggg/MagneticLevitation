@@ -3,6 +3,7 @@
 
 #include <stddef.h>
 #include <stdint.h>
+#include <fix16.h>
 
 typedef enum {
 	PARAM_DIR_TX = 0x01,
@@ -21,35 +22,55 @@ typedef enum {
 	PARAM_FMT_RAW
 } parameter_format_t;
 
+#define PARAM_RAW_MAX_BYTES 32U
+
+typedef union {
+	uint8_t u8;
+	int8_t i8;
+	uint16_t u16;
+	int16_t i16;
+	uint32_t u32;
+	int32_t i32;
+	fix16_t f16;
+	uint8_t raw[PARAM_RAW_MAX_BYTES];
+} parameter_value_t;
+
 typedef struct {
 	uint16_t id;
 	const char *name;
 	parameter_direction_t direction;
 	parameter_format_t format;
 	uint8_t size;
-	const void *ptr;
+	parameter_value_t value;
 } parameter_descriptor_t;
 
 enum {
-	PARAM_ID_TEMP_RAW = 0x0001,
-	PARAM_ID_TARGET_CURRENT = 0x0002,
-	PARAM_ID_ENABLE = 0x0003,
+	PARAM_ID_TEMP = 0x0001,
+	PARAM_ID_ENABLE = 0x0002,
+	PARAM_ID_DUTY_A = 0x0003,
+	PARAM_ID_DUTY_B = 0x0004,
+	PARAM_ID_CPU = 0x0005,
+	PARAM_ID_MAG_RAW = 0x0006,
+	PARAM_ID_V_MEAS = 0x0007,
+	PARAM_ID_I_REF = 0x0008,
+	PARAM_ID_I_MEAS = 0x0009,
+	PARAM_ID_I_FB = 0x000A,
+	PARAM_ID_FSW = 0x000B,
+    PARAM_ID_CURRENT_KP = 0x000C,
+    PARAM_ID_CURRENT_KI = 0x000D,
+    PARAM_ID_I_SP = 0x000E,
+
+
+    PARAM_ID_STREAM_CHANNELS = 0x1000,
+    PARAM_ID_STREAM_RATE_HZ = 0x1001,
+    PARAM_ID_STREAM_DROPPED = 0x1002,
+    PARAM_ID_STREAM_VARIABLE_NAMES = 0x1003,
 };
 
-#define PARAM_CMD_READ   0x01
-#define PARAM_CMD_WRITE  0x02
-#define PARAM_CMD_LIST   0x03
-#define PARAM_REPLY      0x80
-#define PARAM_STATUS_OK    0x00
-#define PARAM_STATUS_ERROR 0x01
-
 void parameters_init(void);
-const parameter_descriptor_t *parameters_map(size_t *count);
-const parameter_descriptor_t *parameters_find(uint16_t id);
-int parameters_publish_u8(uint16_t id, uint8_t value);
-int parameters_publish_u16(uint16_t id, uint16_t value);
-int parameters_read_value(uint16_t id, uint8_t *buffer, uint8_t buffer_size);
-int parameters_write_value(uint16_t id, const uint8_t *buffer, uint8_t length);
-int parameters_bridge_poll(void);
+parameter_descriptor_t *parameters_map(size_t *count);
+parameter_descriptor_t *parameters_find(uint16_t id);
+int parameters_publish(uint16_t id, const void *value);
+int parameters_fetch(uint16_t id, void *buffer, uint8_t buffer_size);
 
 #endif // PARAMETERS_H

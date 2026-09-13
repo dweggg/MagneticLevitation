@@ -106,6 +106,30 @@ static parameter_descriptor_t parameter_map_table[] = {
         .size = sizeof(fix16_t),
         .value.f16 = 0,
     },
+    {
+        .id = PARAM_ID_STREAM_CHANNELS,
+        .name = "stream_channels",
+        .direction = PARAM_DIR_TX,
+        .format = PARAM_FMT_U8,
+        .size = sizeof(uint8_t),
+        .value.u8 = 0,
+    },
+    {
+        .id = PARAM_ID_STREAM_RATE_HZ,
+        .name = "stream_rate_hz",
+        .direction = PARAM_DIR_TX,
+        .format = PARAM_FMT_U32,
+        .size = sizeof(uint32_t),
+        .value.u32 = 0,
+    },
+    {
+        .id = PARAM_ID_STREAM_DROPPED,
+        .name = "stream_dropped",
+        .direction = PARAM_DIR_TX,
+        .format = PARAM_FMT_U32,
+        .size = sizeof(uint32_t),
+        .value.u32 = 0,
+    },
 };
 
 void parameters_init(void)

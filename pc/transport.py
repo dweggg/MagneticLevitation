@@ -19,6 +19,8 @@ CMD_WRITE = 0x02
 CMD_LIST = 0x03
 CMD_REPLY = 0x80
 LOG_PREFIX = b"[LOG]"
+TELEMETRY_SYNC = b"\xa5\x5a"
+TELEMETRY_FRAME_SIZE = 20
 
 DIR_TX = 0x01
 DIR_RX = 0x02
@@ -263,8 +265,11 @@ def _parse_list_payload(payload: bytes) -> int | None:
     return pos
 
 
-def extract_reply_frame(data: bytes) -> bytes | None:
+def extract_reply_frame(data: bytes, expected_id: int | None = None, expect_list: bool = False, expect_status: bool = False) -> bytes | None:
     raw = bytes(data)
+    if expect_status:
+        return _extract_status_reply(raw)
+
     best_match = None
     best_len = -1
     for start in range(len(raw)):
@@ -273,33 +278,53 @@ def extract_reply_frame(data: bytes) -> bytes | None:
 
         payload = raw[start + 1:]
 
-        if len(payload) == 1 and payload[0] in (0x00, 0x01):
-            candidate = raw[start:start + 2]
-            if len(candidate) > best_len:
-                best_match = candidate
-                best_len = len(candidate)
-            continue
-
-        if len(payload) >= 1:
+        if expect_list and len(payload) >= 1:
             list_end = _parse_list_payload(payload)
-            if list_end is not None and list_end == len(payload):
+            if list_end is not None:
                 candidate = raw[start:start + 1 + list_end]
                 if len(candidate) > best_len:
                     best_match = candidate
                     best_len = len(candidate)
                 continue
 
-        if len(payload) >= 3:
+        if expected_id is not None and len(payload) >= 3:
             length = payload[2]
             if length <= 32:
                 read_total = 2 + 1 + length
-                if len(payload) == read_total:
+                if len(payload) >= read_total and unpack_u16(payload[0:2]) == expected_id:
                     candidate = raw[start:start + 1 + read_total]
                     if len(candidate) > best_len:
                         best_match = candidate
                         best_len = len(candidate)
 
     return best_match
+
+
+def _is_telemetry_frame(data: bytes, start: int) -> bool:
+    if data[start:start + 2] != TELEMETRY_SYNC or start + TELEMETRY_FRAME_SIZE > len(data):
+        return False
+    checksum = 0
+    for byte in data[start:start + TELEMETRY_FRAME_SIZE - 1]:
+        checksum ^= byte
+    return checksum == data[start + TELEMETRY_FRAME_SIZE - 1]
+
+
+def _extract_status_reply(data: bytes) -> bytes | None:
+    """Find a write status reply while skipping checksum-valid telemetry frames.
+
+    A write reply has no ID, but a valid telemetry frame is self-delimiting.
+    Ignoring complete telemetry frames prevents their payload from being
+    misidentified as a two-byte ``0x80, status`` acknowledgement.
+    """
+    position = 0
+    while position + 1 < len(data):
+        if _is_telemetry_frame(data, position):
+            position += TELEMETRY_FRAME_SIZE
+            continue
+        if data[position] == CMD_REPLY and data[position + 1] in (0x00, 0x01):
+            return data[position:position + 2]
+        position += 1
+    return None
 
 
 def extract_log_messages(raw: bytes, tail: bytes = b"") -> tuple[list[str], bytes]:
@@ -315,10 +340,17 @@ def extract_log_messages(raw: bytes, tail: bytes = b"") -> tuple[list[str], byte
         if end < 0:
             end = pending.find(b"\n", start)
         if end < 0:
-            return lines, pending[start:]
+            candidate = pending[start:]
+            if any(byte < 32 or byte > 126 for byte in candidate):
+                pending = pending[start + len(LOG_PREFIX):]
+                continue
+            return lines, candidate
 
-        line = pending[start:end].decode("utf-8", errors="replace")
-        lines.append(line)
+        line_bytes = pending[start:end]
+        # Binary telemetry can contain the text marker or a carriage return by
+        # chance. Only emit complete printable ASCII log records.
+        if all(32 <= byte <= 126 or byte == 9 for byte in line_bytes):
+            lines.append(line_bytes.decode("ascii"))
         pending = pending[end + 1:]
         if pending.startswith(b"\n"):
             pending = pending[1:]
@@ -342,6 +374,8 @@ def request(port: serial.Serial, payload: bytes, expect_reply: bool = True) -> b
         return b""
 
     response = bytearray()
+    command = payload[0] if payload else None
+    expected_id = unpack_u16(payload[1:3]) if command == CMD_READ and len(payload) >= 3 else None
     start = time.monotonic()
     while time.monotonic() - start < 1.0:
         try:
@@ -355,7 +389,10 @@ def request(port: serial.Serial, payload: bytes, expect_reply: bool = True) -> b
         if chunk:
             _print_received_logs(chunk)
             response.extend(chunk)
-            frame = extract_reply_frame(bytes(response))
+            frame = extract_reply_frame(
+                bytes(response), expected_id=expected_id,
+                expect_list=command == CMD_LIST, expect_status=command == CMD_WRITE,
+            )
             if frame is not None:
                 drain_input_buffer(port, timeout=0.05)
                 return frame
@@ -364,7 +401,10 @@ def request(port: serial.Serial, payload: bytes, expect_reply: bool = True) -> b
 
     if not response:
         raise TimeoutError("Timed out waiting for reply")
-    frame = extract_reply_frame(bytes(response))
+    frame = extract_reply_frame(
+        bytes(response), expected_id=expected_id,
+        expect_list=command == CMD_LIST, expect_status=command == CMD_WRITE,
+    )
     if frame is not None:
         drain_input_buffer(port, timeout=0.05)
         return frame

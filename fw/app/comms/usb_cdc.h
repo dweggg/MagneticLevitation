@@ -31,6 +31,13 @@ int usb_cdc_debug_is_active(void);
 int usb_cdc_tx_send(const uint8_t *buf, int len);
 
 /**
+ * Return the number of bytes that can be queued in the transmit ring.
+ *
+ * One ring slot is reserved to distinguish a full ring from an empty one.
+ */
+int usb_cdc_tx_free(void);
+
+/**
  * Return how many bytes are waiting in the receive ring buffer.
  */
 int usb_cdc_rx_available(void);

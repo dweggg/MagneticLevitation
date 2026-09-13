@@ -6,6 +6,7 @@
 #include "parameters.h"
 #include "control_f16.h"
 #include "tasks.h"
+#include "telemetry.h"
 
 
 /* ============================================================================
@@ -75,6 +76,7 @@ static void apply_pwm_switching_frequency(uint32_t frequency_hz);
 
 void task_current_control(void)
 {
+    fix16_t telemetry_values[TELEMETRY_CHANNEL_COUNT];
     /*
      * Always process ADC data, even when PWM output is disabled.
      */
@@ -90,6 +92,11 @@ void task_current_control(void)
     if (fsm_state() != FSM_CURRENT_CONTROL) {
         TIM1->CH1CVR = 0;
         TIM1->CH2CVR = 0;
+        telemetry_values[0] = i_fb;
+        telemetry_values[1] = v_meas;
+        telemetry_values[2] = 0;
+        telemetry_values[3] = 0;
+        telemetry_capture(telemetry_values, TELEMETRY_CHANNEL_COUNT);
         return;
     }
 
@@ -128,6 +135,13 @@ void task_current_control(void)
             (unsigned int)ticks_a,
             (unsigned int)ticks_b);
     }
+
+    /* Stream measured current, bus voltage, and the complementary duties. */
+    telemetry_values[0] = i_fb;
+    telemetry_values[1] = v_meas;
+    telemetry_values[2] = duty_a;
+    telemetry_values[3] = duty_b;
+    telemetry_capture(telemetry_values, TELEMETRY_CHANNEL_COUNT);
 
 
     /*

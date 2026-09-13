@@ -56,16 +56,19 @@ I think I might have added those two via groups to lower switching loop inductan
 - [ ] 18. Add revision number in sch and pcb
 - [ ] 19. Automatic bootloader entry with a MOSFET or similar instead of button (or parallel to button)
 - [ ] 20. Add potentiometer for setpoint percentage of power
+- [ ] 21. Add sillkscreen for board ID
 
 ---
 
 # To be verified w current rev before ordering:
 
-This version already flashes with bootloader and USB communication works. 
+[ ] -> Pending
+[P] -> Partially done
+[X] -> Complete
 
-- [ ] 1. Current measurement: solder wires around shunt, CC'd supply + DMM for 'real', compare w firmware (analytical conversion first)
+- [P] 1. Current measurement: solder wires around shunt, CC'd supply + DMM for 'real', compare w firmware (analytical conversion first)
 - [ ] 2. Magnetic field measurement: idk lol
-- [ ] 3. USB PD + Voltage measurement: ahh I'll have to be smart about how to test this, since my laptop's usb probably can't do very much. we have LEDs tho, that can be useful
-- [ ] 4. Temperature measurement: cut traces+jump for avoiding issue #3, then thermal cam to verify I guess
-- [ ] 5. Gate driver: cut traces+jump (nasty, 6 nets), then program PWM open loop and use scope, verify bootstrap against SPICE
-- [ ] 6. Power: make em MOSFETs warm
+- [ ] 3. USB PD + Voltage measurement: ahh I'll have to be smart about how to test this, since my laptop's usb probably can't do very much. we have LEDs tho, that can be useful.
+- [P] 4. Temperature measurement: cut traces+jump for avoiding issue #3, then thermal cam to verify I guess. So far the measurement seems reasonable with reality, but to be checked against a better measurement. coil gets hot too.
+- [P] 5. Gate driver: cut traces+jump (nasty, 6 nets), then program PWM open loop and use scope, verify bootstrap against SPICE -> after i reworked the board i didnt give a fuck and tested power directly without checking gate driver, i have no waveforms but the board is able to control current pretty well. 5W no problem! next up is 100W from USB PD.
+- [P] 6. Power: make em MOSFETs warm. Yeah so 5W so far. More to come after USB PD

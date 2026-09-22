@@ -1,7 +1,7 @@
 #include "setpoint.h"
 #include "current_control.h"
 #include "protocol.h"
-#include "parameters.h"
+#include "vars.h"
 #include "ch32fun.h"
 #include "pinout.h"
 #include "fix16.h"
@@ -98,14 +98,12 @@ static fix16_t temp_c_q16_from_raw(uint16_t raw)
 static fix16_t temp_c_q16;
 
 void init_pins_setpoint(void){
+    var_monitor("temp", VAR_F16, &temp_c_q16, STREAM_NONE);
 }
 
 void task_setpoint(void){
 
     const uint16_t raw = get_temp_meas_raw();
     temp_c_q16 = temp_c_q16_from_raw(raw);
-
-    parameters_publish(PARAM_ID_TEMP, &temp_c_q16);
-
 
 }

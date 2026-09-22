@@ -3,10 +3,10 @@
 #include "ch32fun.h"
 #include "pinout.h"
 #include "fsm.h"
-#include "parameters.h"
+#include "vars.h"
 #include "control_f16.h"
 #include "tasks.h"
-#include "telemetry.h"
+#include "scheduler.h"
 
 
 /* ============================================================================
@@ -37,9 +37,14 @@ static uint16_t adc_dma_read_frame;
 static uint16_t adc_mag_raw;
 static uint16_t adc_temp_raw;
 
+static uint16_t i_ref_raw;
+static uint16_t i_meas_raw;
 static fix16_t v_meas;
 static fix16_t i_fb;
 static fix16_t i_sp;
+static fix16_t duty_a;
+
+static stream_id_t current_stream = STREAM_NONE;
 
 
 /* Current controller.
@@ -47,10 +52,9 @@ static fix16_t i_sp;
  */
 static pid_f16_t current_controller = {0};
 
-/* Last-applied gains, kept only to detect changes from comms. */
-static fix16_t cached_kp;
-static fix16_t cached_ki;
-static uint32_t pwm_switching_frequency_hz;
+/* Host-writable switching frequency and the value last applied to TIM1. */
+static uint32_t fsw_hz = PWM_SWITCHING_FREQUENCY_HZ;
+static uint32_t applied_fsw_hz = PWM_SWITCHING_FREQUENCY_HZ;
 
 /* ============================================================================
  * Forward declarations
@@ -59,7 +63,7 @@ static uint32_t pwm_switching_frequency_hz;
 static void init_adc_current_control(void);
 static void drain_adc_dma(void);
 static void init_current_controller(void);
-static void update_current_controller_parameters(void);
+static void update_switching_frequency(void);
 static void apply_pwm_switching_frequency(uint32_t frequency_hz);
 
 /* ============================================================================
@@ -68,14 +72,14 @@ static void apply_pwm_switching_frequency(uint32_t frequency_hz);
 
 void task_current_control(void)
 {
-    fix16_t telemetry_values[TELEMETRY_CHANNEL_COUNT];
     /*
      * Always process ADC data, even when PWM output is disabled.
      */
+    const uint32_t tick = scheduler_get_tick();
     drain_adc_dma();
 
-    /* Fetch parameter updates from comms */
-    update_current_controller_parameters();
+    /* Apply switching-frequency changes written from comms */
+    update_switching_frequency();
 
     /*
      * PWM is only allowed while the FSM is in the current-control state.
@@ -94,11 +98,8 @@ void task_current_control(void)
         TIM1->CH2CVR = 0;
 
         // Current is still worth measuring; everything else reports as 0.
-        telemetry_values[0] = i_fb;
-        telemetry_values[1] = 0;
-        telemetry_values[2] = 0;
-        telemetry_values[3] = 0;
-        telemetry_capture(telemetry_values, TELEMETRY_CHANNEL_COUNT);
+        duty_a = 0;
+        stream_emit_at(current_stream, tick);
         return;
     }
 
@@ -108,7 +109,6 @@ void task_current_control(void)
      * ------------------------------------------------------------------------
      */
 
-    fix16_t duty_a = 0;
     fix16_t duty_b = 0;
 
     fix16_t modulation_index = 0;
@@ -130,12 +130,7 @@ void task_current_control(void)
     TIM1->CH1CVR = current_control_duty_to_ticks(duty_a);
     TIM1->CH2CVR = current_control_duty_to_ticks(duty_b);
 
-    // Stream variables
-    telemetry_values[0] = current_controller.fb;
-    telemetry_values[1] = current_controller.sp;
-    telemetry_values[2] = current_controller.out;
-    telemetry_values[3] = duty_a;
-    telemetry_capture(telemetry_values, TELEMETRY_CHANNEL_COUNT);
+    stream_emit_at(current_stream, tick);
 
 }
 
@@ -174,57 +169,14 @@ static void init_current_controller(void)
     };
 }
 
-static void update_current_controller_parameters(void)
+static void update_switching_frequency(void)
 {
-    fix16_t fetched_kp;
-    fix16_t fetched_ki;
-    fix16_t fetched_i_sp;
-    uint32_t fetched_fsw_hz;
+    const uint32_t requested_hz = fsw_hz;
 
-    if (parameters_fetch(
-            PARAM_ID_CURRENT_KP,
-            &fetched_kp,
-            sizeof(fetched_kp)) >= 0) {
-
-        if (fetched_kp != cached_kp) {
-            cached_kp = fetched_kp;
-            current_controller.kp = fetched_kp;
-        }
-    }
-
-    if (parameters_fetch(
-            PARAM_ID_CURRENT_KI,
-            &fetched_ki,
-            sizeof(fetched_ki)) >= 0) {
-
-        if (fetched_ki != cached_ki) {
-            cached_ki = fetched_ki;
-            current_controller.ki = fetched_ki;
-        }
-    }
-
-    if (parameters_fetch(
-            PARAM_ID_I_SP,
-            &fetched_i_sp,
-            sizeof(fetched_i_sp)) >= 0) {
-
-        /* TODO: drop this once the setpoint comes from position_control
-         * instead of directly from comms. */
-        i_sp = fetched_i_sp;
-    }
-
-    if (parameters_fetch(
-            PARAM_ID_FSW,
-            &fetched_fsw_hz,
-            sizeof(fetched_fsw_hz)) >= 0) {
-
-        if (fetched_fsw_hz != pwm_switching_frequency_hz) {
-            apply_pwm_switching_frequency(fetched_fsw_hz);
-
-            pwm_switching_frequency_hz = fetched_fsw_hz;
-
-            LOG("PWM switching frequency updated to %u Hz", (unsigned int)pwm_switching_frequency_hz);
-        }
+    if (requested_hz != applied_fsw_hz) {
+        applied_fsw_hz = requested_hz;
+        apply_pwm_switching_frequency(requested_hz);
+        LOG("PWM switching frequency updated to %u Hz", (unsigned int)requested_hz);
     }
 }
 
@@ -401,11 +353,8 @@ static void drain_adc_dma(void)
     const uint16_t voltage_raw =
         (uint16_t)(voltage_sum / frame_count);
 
-    const uint16_t current_ref_raw =
-        (uint16_t)(current_ref_sum / frame_count);
-
-    const uint16_t current_meas_raw =
-        (uint16_t)(current_meas_sum / frame_count);
+    i_ref_raw = (uint16_t)(current_ref_sum / frame_count);
+    i_meas_raw = (uint16_t)(current_meas_sum / frame_count);
 
     adc_mag_raw =
         (uint16_t)(mag_sum / frame_count);
@@ -426,18 +375,11 @@ static void drain_adc_dma(void)
 
     i_fb = fix16_mul(
         fix16_from_int(
-            (int32_t)current_meas_raw -
-            (int32_t)current_ref_raw
+            (int32_t)i_meas_raw -
+            (int32_t)i_ref_raw
         ),
         ADC_I_MEAS_GAIN
     );
-
-
-    // Publish measurements to comms. TODO: make some sort of high speed stream for these
-    parameters_publish(PARAM_ID_V_MEAS, &v_meas);
-    parameters_publish(PARAM_ID_I_REF, &current_ref_raw);
-    parameters_publish(PARAM_ID_I_MEAS, &current_meas_raw);
-    parameters_publish(PARAM_ID_I_FB, &i_fb);
 }
 
 
@@ -691,6 +633,22 @@ void init_pins_current_control(void)
 
     /* Control loop configuration. */
     init_current_controller();
+
+    /* Host-visible variables. Gains point straight into the controller. */
+    current_stream = stream_create("current", TASK_CURRENT_CONTROL_HZ);
+
+    var_param("current_kp", VAR_F16, &current_controller.kp);
+    var_param("current_ki", VAR_F16, &current_controller.ki);
+    var_param("fsw", VAR_U32, &fsw_hz);
+    var_monitor("v_meas", VAR_F16, &v_meas, STREAM_NONE);
+    var_monitor("i_ref", VAR_U16, &i_ref_raw, STREAM_NONE);
+    var_monitor("i_meas", VAR_U16, &i_meas_raw, STREAM_NONE);
+
+    /* Sampled every control period (in stream order). */
+    var_monitor("i_fb", VAR_F16, &i_fb, current_stream);
+    var_register("i_sp", VAR_F16, VAR_DIR_TX_RX, &i_sp, current_stream);
+    var_monitor("v_out", VAR_F16, &current_controller.out, current_stream);
+    var_monitor("duty_a", VAR_F16, &duty_a, current_stream);
 }
 
 

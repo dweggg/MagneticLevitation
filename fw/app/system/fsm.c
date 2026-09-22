@@ -1,11 +1,16 @@
 #include "fsm.h"
 #include "pinout.h"
-#include "parameters.h"
+#include "vars.h"
 #include "scheduler.h"
 
 static fsm_state_t state = FSM_INIT;
+static uint8_t enable;      /* host-writable */
+static uint8_t cpu_usage;   /* host-readable */
 
 void init_pins_fsm(void){
+	var_param("enable", VAR_U8, &enable);
+	var_monitor("cpu", VAR_U8, &cpu_usage, STREAM_NONE);
+
 	funPinMode(PIN_RST_BUTTON, GPIO_CFGLR_IN_PUPD);   // input with pull-up
 	funDigitalWrite(PIN_RST_BUTTON, FUN_HIGH);        // enable pull-up even though we have hardware pull-up
 
@@ -17,8 +22,7 @@ void init_pins_fsm(void){
 void task_fsm(void)
 {
     /* runs every tick regardless of state */
-    uint8_t cpu_usage = scheduler_get_cpu();
-    parameters_publish(PARAM_ID_CPU, &cpu_usage);
+    cpu_usage = scheduler_get_cpu();
 
     /* global override: reset button works from any state */
     if (funDigitalRead(PIN_RST_BUTTON) == FUN_LOW) {
@@ -39,11 +43,6 @@ void task_fsm(void)
     case FSM_IDLE: {
         funDigitalWrite(PIN_GD_EN, FUN_LOW);
 
-        uint8_t enable = 0U;
-        if (parameters_fetch(PARAM_ID_ENABLE, &enable, sizeof(enable)) < 0) {
-            enable = 0U;
-        }
-
         if (enable != 0U) {
             state = FSM_CURRENT_CONTROL;
         }
@@ -51,12 +50,6 @@ void task_fsm(void)
     }
 
     case FSM_CURRENT_CONTROL: {
-        uint8_t enable = 0U;
-        if (parameters_fetch(PARAM_ID_ENABLE, &enable, sizeof(enable)) < 0) {
-            state = FSM_FAULT;
-            break;
-        }
-
         if (enable == 0U) {
             state = FSM_IDLE;
             break;

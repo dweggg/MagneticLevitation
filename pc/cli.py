@@ -19,33 +19,18 @@ except ImportError:  # pragma: no cover
 
 from pc.metadata import ParameterCatalog
 from pc.transport import (
-    CMD_READ,
-    CMD_REPLY,
-    CMD_WRITE,
     DIR_TX,
     DIR_TX_RX,
     DIR_RX,
     find_port,
-    format_value,
     list_params,
+    list_streams,
     open_port,
     parse_scalar_raw,
     read_param,
     write_param,
 )
-from pc.telemetry import LiveTelemetryPlot, TELEMETRY_CHANNEL_COUNT, plot_live
-
-
-STREAM_CHANNELS_ID = 0x1000
-STREAM_RATE_HZ_ID = 0x1001
-STREAM_DROPPED_ID = 0x1002
-STREAM_VARIABLE_NAMES_ID = 0x1003
-STREAM_METADATA_PARAMETERS = (
-    {"id": STREAM_CHANNELS_ID, "name": "stream_channels", "format": "u8", "size": 1},
-    {"id": STREAM_RATE_HZ_ID, "name": "stream_rate_hz", "format": "u32", "size": 4},
-    {"id": STREAM_DROPPED_ID, "name": "stream_dropped", "format": "u32", "size": 4},
-    {"id": STREAM_VARIABLE_NAMES_ID, "name": "stream_variable_names", "format": "raw", "size": 32},
-)
+from pc.telemetry import LiveTelemetryPlot, plot_live
 
 
 class _ReplLineEditor:
@@ -154,64 +139,42 @@ class _ReplLineEditor:
 
 
 def _print_param_list(items: Iterable[dict]):
-    print("ID      NAME         DIR  FMT  SIZE")
+    print("ID      NAME             DIR    FMT  SIZE STREAM")
     for item in items:
-        dir_name = {
-            DIR_TX: "TX",
-            DIR_RX: "RX",
-            DIR_TX_RX: "TX/RX",
-        }.get(item["direction"], f"0x{item['direction']:02x}")
+        dir_name = {DIR_TX: "TX", DIR_RX: "RX", DIR_TX_RX: "TX/RX"}.get(item["direction"], f"0x{item['direction']:02x}")
         name = item.get("name") or f"0x{item['id']:04x}"
-        print(f"0x{item['id']:04x}  {name:<12} {dir_name:<5} {item['fmt_name']:<4} {item['size']}")
-
-
-def _load_catalog(port) -> ParameterCatalog:
-    catalog = ParameterCatalog()
-    try:
-        catalog.update(list_params(port))
-    except (TimeoutError, ValueError):
-        pass
-    return catalog
+        stream = "-" if item["stream"] == 0xFF else str(item["stream"])
+        print(f"0x{item['id']:04x}  {name:<16} {dir_name:<6} {item['fmt_name']:<4} {item['size']:<4} {stream}")
 
 
 def _refresh_catalog(port, catalog: ParameterCatalog) -> bool:
     catalog.clear()
     try:
         catalog.update(list_params(port))
+        catalog.update_streams(list_streams(port))
         return bool(catalog.items())
     except (TimeoutError, ValueError):
         return False
 
 
-def _plot_sniffer(state: dict | None):
-    """Return a callback that keeps a live telemetry plot fed while a
-    read/write request is in flight, or None if no plot is open.
-
-    Without this, bytes that arrive on the wire during a parameter
-    read/write are consumed (and discarded) by the request/response code in
-    transport.py instead of by the REPL's normal polling loop, which is what
-    made the plot visibly pause on every read/write.
-    """
-    if not state:
-        return None
-    plot = state.get("plot")
-    if plot is None or not plot.is_open:
-        return None
-    return plot.discard if plot.paused else plot.feed
+def _tick_hz(port, catalog: ParameterCatalog) -> int:
+    if not catalog.streams and not _refresh_catalog(port, catalog):
+        raise ValueError("Could not discover the device's variables and streams")
+    return int(read_param(port, catalog.resolve("tick_hz"), catalog=catalog)["value"])
 
 
-def _run_read(port, raw_id: str, catalog: ParameterCatalog, state: dict | None = None):
+def _run_read(port, raw_id: str, catalog: ParameterCatalog):
     obj_id = catalog.resolve(raw_id)
-    value = read_param(port, obj_id, catalog=catalog, sniff=_plot_sniffer(state))
+    value = read_param(port, obj_id, catalog=catalog)
     print(f"id=0x{value['id']:04x} name={value['name']} fmt={value['fmt_name']} value={value['formatted']} raw={value['raw'].hex()}")
 
 
-def _run_write(port, raw_id: str, raw_value: str, catalog: ParameterCatalog, state: dict | None = None):
+def _run_write(port, raw_id: str, raw_value: str, catalog: ParameterCatalog):
     obj_id = catalog.resolve(raw_id)
     info = catalog.get(obj_id)
     fmt_name = info.get("format") or info.get("fmt_name") or "u16"
     value = parse_scalar_raw(raw_value, fmt_name)
-    status = write_param(port, obj_id, value, fmt=fmt_name, catalog=catalog, sniff=_plot_sniffer(state))
+    status = write_param(port, obj_id, value, fmt=fmt_name, catalog=catalog)
     print(f"write id=0x{obj_id:04x} name={catalog.get(obj_id).get('name', 'unknown')} value={raw_value} status={status}")
 
 
@@ -256,7 +219,7 @@ def build_parser() -> argparse.ArgumentParser:
     return parser
 
 
-def monitor(port, catalog: ParameterCatalog, obj_id: str | None, interval: float = 0.5, count: int | None = None, timeout: float | None = None, state: dict | None = None):
+def monitor(port, catalog: ParameterCatalog, obj_id: str | None, interval: float = 0.5, count: int | None = None, timeout: float | None = None):
     reads = 0
     deadline = None if timeout is None else time.monotonic() + timeout
     while True:
@@ -272,14 +235,14 @@ def monitor(port, catalog: ParameterCatalog, obj_id: str | None, interval: float
             for item in items:
                 if item["direction"] & DIR_TX:
                     try:
-                        value = read_param(port, item["id"], catalog=catalog, sniff=_plot_sniffer(state))
+                        value = read_param(port, item["id"], catalog=catalog)
                         print(f"0x{item['id']:04x}: {value['name']} = {value['formatted']}")
                     except Exception as exc:  # pragma: no cover
                         print(f"0x{item['id']:04x}: error: {exc}")
         else:
             try:
                 resolved = catalog.resolve(obj_id)
-                value = read_param(port, resolved, catalog=catalog, sniff=_plot_sniffer(state))
+                value = read_param(port, resolved, catalog=catalog)
                 print(f"0x{resolved:04x}: {value['name']} = {value['formatted']}")
             except Exception as exc:
                 print(f"0x{catalog.resolve(obj_id):04x}: error: {exc}")
@@ -313,7 +276,7 @@ def _handle_repl_command(port, catalog: ParameterCatalog, line: str, state: dict
                 return True
             if not catalog.items():
                 _refresh_catalog(port, catalog)
-            _run_read(port, tokens[1], catalog, state)
+            _run_read(port, tokens[1], catalog)
             return True
         if cmd in {"write", "w"}:
             if len(tokens) != 3:
@@ -321,7 +284,7 @@ def _handle_repl_command(port, catalog: ParameterCatalog, line: str, state: dict
                 return True
             if not catalog.items():
                 _refresh_catalog(port, catalog)
-            _run_write(port, tokens[1], tokens[2], catalog, state)
+            _run_write(port, tokens[1], tokens[2], catalog)
             return True
         if cmd in {"monitor", "m"}:
             if not catalog.items():
@@ -331,7 +294,7 @@ def _handle_repl_command(port, catalog: ParameterCatalog, line: str, state: dict
             if len(tokens) > 2:
                 state["interval"] = float(tokens[2])
             interval = state["interval"]
-            monitor(port, catalog, obj_id, interval, timeout=5.0, state=state)
+            monitor(port, catalog, obj_id, interval, timeout=5.0)
             return True
         if cmd in {"plot", "p"}:
             return _handle_repl_plot_command(port, catalog, tokens[1:], state)
@@ -363,17 +326,14 @@ def _handle_repl_plot_command(port, catalog: ParameterCatalog, arguments: list[s
         if plot is not None:
             plot.close()
             state["plot"] = None
+            port.stream_sink = None
         print("Telemetry plot closed")
         return True
     if action == "open":
         if plot is not None:
             plot.close()
-        metadata = _stream_metadata(port, catalog)
-        channel_names = _stream_channel_names(port, catalog, metadata["channels"])
-        if metadata["channels"] != TELEMETRY_CHANNEL_COUNT:
-            raise ValueError(f"Unsupported telemetry layout: device reports {metadata['channels']} channels")
-        port.reset_input_buffer()
-        state["plot"] = LiveTelemetryPlot(channel_names, arguments[1:], metadata["rate_hz"], state.get("plot_window", 5.0))
+        state["plot"] = LiveTelemetryPlot(catalog, _tick_hz(port, catalog), arguments[1:], state.get("plot_window", 5.0))
+        port.stream_sink = state["plot"].on_sample
         print("Telemetry plot opened: " + ", ".join(state["plot"].channel_names))
         return True
     if plot is None or not plot.is_open:
@@ -418,18 +378,13 @@ def run_repl(port, catalog: ParameterCatalog):
     editor.start()
     try:
         while True:
+            port.pump()
             plot = state["plot"]
             if plot is not None:
                 if not plot.is_open:
                     state["plot"] = None
+                    port.stream_sink = None
                 else:
-                    waiting = getattr(port, "in_waiting", 0)
-                    if waiting:
-                        chunk = port.read(waiting)
-                        if plot.paused:
-                            plot.discard(chunk)
-                        else:
-                            plot.feed(chunk)
                     plot.refresh()
             try:
                 readable, _, _ = select.select([sys.stdin], [], [], 0.02)
@@ -453,46 +408,18 @@ def run_repl(port, catalog: ParameterCatalog):
             plot.close()
 
 
-def _stream_metadata(port, catalog: ParameterCatalog) -> dict[str, int]:
-    # These IDs and formats are part of the CDC telemetry protocol, so reads do
-    # not depend on the optional parameter-list request succeeding first.
-    catalog.update(item for item in STREAM_METADATA_PARAMETERS if not catalog.has(item["id"]))
-    metadata: dict[str, int] = {}
-    for obj_id, key in ((STREAM_CHANNELS_ID, "channels"), (STREAM_RATE_HZ_ID, "rate_hz"), (STREAM_DROPPED_ID, "dropped")):
-        metadata[key] = int(read_param(port, obj_id, catalog=catalog)["value"])
-    return metadata
-
-
-def _stream_channel_names(port, catalog: ParameterCatalog, channel_count: int) -> tuple[str, ...]:
-    raw = read_param(port, STREAM_VARIABLE_NAMES_ID, catalog=catalog)["value"]
-    if not isinstance(raw, bytes):
-        raise ValueError("stream_variable_names has an unexpected format")
-    try:
-        names = tuple(name.strip() for name in raw.decode("ascii").split(","))
-    except UnicodeDecodeError as exc:
-        raise ValueError("stream_variable_names is not ASCII") from exc
-    if len(names) != channel_count or not all(names) or len(set(names)) != len(names):
-        raise ValueError(f"Invalid stream_variable_names registry: {raw!r}")
-    return names
-
-
 def _run_telemetry_list(port, catalog: ParameterCatalog) -> None:
-    metadata = _stream_metadata(port, catalog)
-    channel_names = _stream_channel_names(port, catalog, metadata["channels"])
-    print("Telemetry variables:")
-    for index, name in enumerate(channel_names):
-        print(f"  {index}: {name} (Q16.16)")
-    print(f"Stream: {metadata['channels']} channels, {metadata['rate_hz']} Hz, device drops: {metadata['dropped']}")
+    tick_hz = _tick_hz(port, catalog)
+    dropped = int(read_param(port, catalog.resolve("stream_dropped"), catalog=catalog)["value"])
+    for stream in sorted(catalog.streams.values(), key=lambda item: item["id"]):
+        print(f"Stream {stream['id']} '{stream['name']}': {stream['rate_hz']} Hz, {stream['count']} variables, {stream['bytes']} B/sample")
+        for var in catalog.stream_vars(stream["id"]):
+            print(f"  +{var['offset']:<3} {var['name']} ({var['fmt_name']})")
+    print(f"Firmware tick: {tick_hz} Hz, device drops: {dropped}")
 
 
 def _run_telemetry_plot(port, catalog: ParameterCatalog, variables: list[str], window: float) -> None:
-    metadata = _stream_metadata(port, catalog)
-    channel_names = _stream_channel_names(port, catalog, metadata["channels"])
-    if metadata["channels"] != TELEMETRY_CHANNEL_COUNT:
-        raise ValueError(f"Unsupported telemetry layout: device reports {metadata['channels']} channels; this CLI supports {TELEMETRY_CHANNEL_COUNT}")
-    # Do not let replies or partially received frames contaminate the plot decoder.
-    port.reset_input_buffer()
-    plot_live(port, channel_names, variables, metadata["rate_hz"], window)
+    plot_live(port, catalog, _tick_hz(port, catalog), variables, window)
 
 
 def main(argv: list[str] | None = None) -> int:
@@ -503,8 +430,7 @@ def main(argv: list[str] | None = None) -> int:
     try:
         with open_port(port_name, baud=args.baud) as port:
             catalog = ParameterCatalog()
-            if args.command in {"list", "repl", "telemetry"} or args.list_at_startup:
-                _refresh_catalog(port, catalog)
+            _refresh_catalog(port, catalog)   # ids are dynamic: always discover first
 
             if args.command == "list":
                 _print_param_list(catalog.items())

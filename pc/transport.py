@@ -4,6 +4,8 @@ import glob
 import os
 import struct
 import time
+from collections import deque, namedtuple
+from typing import Callable
 
 from pc.metadata import normalize_format_name
 
@@ -16,18 +18,19 @@ except ImportError as exc:  # pragma: no cover
 
 CMD_READ = 0x01
 CMD_WRITE = 0x02
-CMD_LIST = 0x03
-CMD_REPLY = 0x80
-LOG_PREFIX = b"[LOG]"
-TELEMETRY_SYNC = b"\xa5\x5a"
-TELEMETRY_FRAME_SIZE = 20
+CMD_LIST_VARS = 0x03
+CMD_LIST_STREAMS = 0x04
+STATUS_OK = 0x00
+
+FRAME_SYNC = 0xA5
+FRAME_LOG = 0x01
+FRAME_REPLY = 0x02
+FRAME_STREAM = 0x03
+STREAM_NONE = 0xFF
 
 DIR_TX = 0x01
 DIR_RX = 0x02
 DIR_TX_RX = 0x03
-
-_SERIAL_LOG_TAIL = b""
-
 
 def find_port(preferred: str | None = None) -> str:
     if preferred:
@@ -91,25 +94,8 @@ class PortLogger:
         return False
 
 
-def open_port(port: str, baud: int = 115200, timeout: float = 0.25, log_path: str | None = None):
-    serial_port = serial.Serial(port, baud, timeout=timeout)
-    return PortLogger(serial_port, log_path=log_path)
-
-
-def read_exact(port: serial.Serial, length: int, deadline: float = 1.0) -> bytes:
-    end = time.monotonic() + deadline
-    chunks = []
-    total = 0
-    while total < length:
-        if time.monotonic() >= end:
-            raise TimeoutError(f"Timed out waiting for {length} bytes")
-        chunk = port.read(length - total)
-        if not chunk:
-            time.sleep(0.01)
-            continue
-        chunks.append(chunk)
-        total += len(chunk)
-    return b"".join(chunks)
+def open_port(port: str, baud: int = 115200, timeout: float = 0.25, log_path: str | None = None) -> "Link":
+    return Link(PortLogger(serial.Serial(port, baud, timeout=timeout), log_path=log_path))
 
 
 def fix16_to_float(value: int) -> float:
@@ -205,308 +191,148 @@ def format_value(value: int | float | bytes, fmt: int | str) -> str:
     return str(value)
 
 
-def drain_input_buffer(port: serial.Serial, timeout: float = 0.05, sniff=None) -> None:
-    """Consume whatever is already sitting in the OS input buffer.
-
-    This used to loop for the full ``timeout`` even when nothing was
-    waiting (sleeping 5ms at a time until the deadline), which stalled
-    every read/write by tens of milliseconds for no reason. It now drains
-    only bytes that are actually buffered right now and returns as soon as
-    the buffer is empty.
-
-    If ``sniff`` is given, every drained chunk is also handed to it (e.g. a
-    live telemetry plot's ``feed``/``discard``) instead of being silently
-    discarded, so bytes that happen to arrive around a parameter read/write
-    aren't lost.
-    """
-    end = time.monotonic() + timeout
-    while True:
-        try:
-            waiting = port.in_waiting
-        except AttributeError:
-            waiting = 0
-        if waiting <= 0:
-            break
-        try:
-            chunk = port.read(waiting)
-        except Exception:
-            break
-        if sniff is not None and chunk:
-            sniff(chunk)
-        if time.monotonic() >= end:
-            break
-    try:
-        port.reset_input_buffer()
-    except Exception:
-        pass
+StreamSample = namedtuple("StreamSample", "stream tick data")
 
 
-def _parse_list_payload(payload: bytes) -> int | None:
-    if len(payload) < 1:
-        return None
+class FrameDecoder:
+    """Resynchronising decoder for [A5][type][len][payload][xor] frames."""
 
-    count = payload[0]
-    if not 0 <= count <= 32:
-        return None
+    def __init__(self) -> None:
+        self._buf = bytearray()
 
-    pos = 1
-    for _ in range(count):
-        if pos + 6 > len(payload):
-            return None
-
-        obj_id = unpack_u16(payload[pos:pos + 2])
-        pos += 2
-        direction = payload[pos]
-        pos += 1
-        fmt = payload[pos]
-        pos += 1
-        size = payload[pos]
-        pos += 1
-        name_len = payload[pos]
-        pos += 1
-
-        if pos + name_len > len(payload):
-            return None
-        name_bytes = payload[pos:pos + name_len]
-        if len(name_bytes) != name_len:
-            return None
-        if not all(32 <= byte < 127 or byte in (9, 10, 13) for byte in name_bytes):
-            return None
-        pos += name_len
-
-    return pos
-
-
-def extract_reply_frame(data: bytes, expected_id: int | None = None, expect_list: bool = False, expect_status: bool = False) -> bytes | None:
-    raw = bytes(data)
-    if expect_status:
-        return _extract_status_reply(raw)
-
-    best_match = None
-    best_len = -1
-    for start in range(len(raw)):
-        if raw[start] != CMD_REPLY:
-            continue
-
-        payload = raw[start + 1:]
-
-        if expect_list and len(payload) >= 1:
-            list_end = _parse_list_payload(payload)
-            if list_end is not None:
-                candidate = raw[start:start + 1 + list_end]
-                if len(candidate) > best_len:
-                    best_match = candidate
-                    best_len = len(candidate)
+    def feed(self, data: bytes) -> list[tuple[int, bytes]]:
+        self._buf.extend(data)
+        frames: list[tuple[int, bytes]] = []
+        buf = self._buf
+        while True:
+            start = buf.find(bytes([FRAME_SYNC]))
+            if start < 0:
+                buf.clear()
+                break
+            del buf[:start]
+            if len(buf) < 3:
+                break
+            total = buf[2] + 4
+            if len(buf) < total:
+                break
+            check = 0
+            for byte in buf[:total - 1]:
+                check ^= byte
+            if check != buf[total - 1]:
+                del buf[0]
                 continue
-
-        if expected_id is not None and len(payload) >= 3:
-            length = payload[2]
-            if length <= 32:
-                read_total = 2 + 1 + length
-                if len(payload) >= read_total and unpack_u16(payload[0:2]) == expected_id:
-                    candidate = raw[start:start + 1 + read_total]
-                    if len(candidate) > best_len:
-                        best_match = candidate
-                        best_len = len(candidate)
-
-    return best_match
+            frames.append((buf[1], bytes(buf[3:total - 1])))
+            del buf[:total]
+        return frames
 
 
-def _is_telemetry_frame(data: bytes, start: int) -> bool:
-    if data[start:start + 2] != TELEMETRY_SYNC or start + TELEMETRY_FRAME_SIZE > len(data):
+class Link:
+    """Framed connection to the device.
+
+    Log frames are printed, stream frames go to ``stream_sink`` (a callable
+    taking a StreamSample) and replies are queued for ``request``. Because one
+    decoder owns the byte stream, telemetry keeps flowing while commands run.
+    """
+
+    def __init__(self, port) -> None:
+        self.port = port
+        self.decoder = FrameDecoder()
+        self.stream_sink: Callable[[StreamSample], None] | None = None
+        self._replies: deque[bytes] = deque()
+
+    def close(self) -> None:
+        self.port.close()
+
+    def __enter__(self):
+        return self
+
+    def __exit__(self, *exc):
+        self.close()
         return False
-    checksum = 0
-    for byte in data[start:start + TELEMETRY_FRAME_SIZE - 1]:
-        checksum ^= byte
-    return checksum == data[start + TELEMETRY_FRAME_SIZE - 1]
 
+    def pump(self) -> None:
+        """Read whatever is waiting and dispatch every complete frame."""
+        waiting = self.port.in_waiting
+        if not waiting:
+            return
+        for kind, payload in self.decoder.feed(self.port.read(waiting)):
+            if kind == FRAME_LOG:
+                print("[LOG] " + payload.decode("ascii", errors="replace"), flush=True)
+            elif kind == FRAME_STREAM and len(payload) >= 5 and self.stream_sink is not None:
+                self.stream_sink(StreamSample(payload[0], struct.unpack_from("<I", payload, 1)[0], payload[5:]))
+            elif kind == FRAME_REPLY and payload:
+                self._replies.append(payload)
 
-def _extract_status_reply(data: bytes) -> bytes | None:
-    """Find a write status reply while skipping checksum-valid telemetry frames.
+    def _send(self, payload: bytes) -> None:
+        self._replies.clear()
+        self.port.write(payload)
+        self.port.flush()
 
-    A write reply has no ID, but a valid telemetry frame is self-delimiting.
-    Ignoring complete telemetry frames prevents their payload from being
-    misidentified as a two-byte ``0x80, status`` acknowledgement.
-    """
-    position = 0
-    while position + 1 < len(data):
-        if _is_telemetry_frame(data, position):
-            position += TELEMETRY_FRAME_SIZE
-            continue
-        if data[position] == CMD_REPLY and data[position + 1] in (0x00, 0x01):
-            return data[position:position + 2]
-        position += 1
-    return None
-
-
-def extract_log_messages(raw: bytes, tail: bytes = b"") -> tuple[list[str], bytes]:
-    pending = tail + raw
-    lines: list[str] = []
-
-    while True:
-        start = pending.find(LOG_PREFIX)
-        if start < 0:
-            return lines, pending[-256:] if len(pending) > 256 else pending
-
-        end = pending.find(b"\r", start)
-        if end < 0:
-            end = pending.find(b"\n", start)
-        if end < 0:
-            candidate = pending[start:]
-            if any(byte < 32 or byte > 126 for byte in candidate):
-                pending = pending[start + len(LOG_PREFIX):]
-                continue
-            return lines, candidate
-
-        line_bytes = pending[start:end]
-        # Binary telemetry can contain the text marker or a carriage return by
-        # chance. Only emit complete printable ASCII log records.
-        if all(32 <= byte <= 126 or byte == 9 for byte in line_bytes):
-            lines.append(line_bytes.decode("ascii"))
-        pending = pending[end + 1:]
-        if pending.startswith(b"\n"):
-            pending = pending[1:]
-
-
-_SERIAL_LOG_TAIL = b""
-
-
-def _print_received_logs(raw: bytes) -> None:
-    global _SERIAL_LOG_TAIL
-    lines, _SERIAL_LOG_TAIL = extract_log_messages(raw, _SERIAL_LOG_TAIL)
-    for line in lines:
-        print(line, flush=True)
-
-
-def request(port: serial.Serial, payload: bytes, expect_reply: bool = True, sniff=None) -> bytes:
-    """Send a command frame and wait for its reply.
-
-    ``sniff``, when given, receives every raw chunk read off the wire
-    (including bytes drained before sending and bytes read while waiting for
-    the reply). Pass a live telemetry plot's ``feed``/``discard`` here so
-    telemetry frames that arrive during a parameter read/write keep flowing
-    into the plot instead of being dropped, which is what caused the plot to
-    visibly pause on every read/write.
-    """
-    drain_input_buffer(port, timeout=0.05, sniff=sniff)
-    port.write(payload)
-    port.flush()
-    if not expect_reply:
-        return b""
-
-    response = bytearray()
-    command = payload[0] if payload else None
-    expected_id = unpack_u16(payload[1:3]) if command == CMD_READ and len(payload) >= 3 else None
-    start = time.monotonic()
-    while time.monotonic() - start < 1.0:
-        try:
-            if hasattr(port, "in_waiting") and port.in_waiting > 0:
-                chunk = port.read(port.in_waiting)
-            else:
-                chunk = port.read(64)
-        except serial.SerialException:
-            chunk = b""
-
-        if chunk:
-            _print_received_logs(chunk)
-            if sniff is not None:
-                sniff(chunk)
-            response.extend(chunk)
-            frame = extract_reply_frame(
-                bytes(response), expected_id=expected_id,
-                expect_list=command == CMD_LIST, expect_status=command == CMD_WRITE,
-            )
-            if frame is not None:
-                drain_input_buffer(port, timeout=0.05, sniff=sniff)
-                return frame
-        else:
-            time.sleep(0.002)
-
-    if not response:
+    def _wait(self, accept, timeout: float) -> bytes:
+        end = time.monotonic() + timeout
+        while time.monotonic() < end:
+            self.pump()
+            for reply in list(self._replies):
+                if accept(reply):
+                    self._replies.remove(reply)
+                    return reply
+            time.sleep(0.001)
         raise TimeoutError("Timed out waiting for reply")
-    frame = extract_reply_frame(
-        bytes(response), expected_id=expected_id,
-        expect_list=command == CMD_LIST, expect_status=command == CMD_WRITE,
-    )
-    if frame is not None:
-        drain_input_buffer(port, timeout=0.05, sniff=sniff)
-        return frame
-    raise ValueError("No valid reply packet received from device")
+
+    def request(self, payload: bytes, match=None, timeout: float = 1.0) -> bytes:
+        self._send(payload)
+        return self._wait(lambda r: r[0] == payload[0] and (match is None or match(r)), timeout)
+
+    def request_list(self, cmd: int, timeout: float = 1.0) -> list[bytes]:
+        """Collect one reply frame per entry: [cmd][status][index][total]..."""
+        self._send(bytes([cmd]))
+        entries: dict[int, bytes] = {}
+        total = None
+        while total is None or len(entries) < total:
+            reply = self._wait(lambda r: r[0] == cmd and len(r) >= 4, timeout)
+            entries[reply[2]] = reply
+            total = reply[3]
+        return [entries[i] for i in sorted(entries)]
 
 
-def list_params(port: serial.Serial) -> list[dict]:
-    resp = request(port, bytes([CMD_LIST]))
-    if resp[0] != CMD_REPLY:
-        raise ValueError(f"Unexpected response prefix: 0x{resp[0]:02x}")
-
-    payload = resp[1:]
-    if len(payload) < 1:
-        return []
-
-    count = payload[0]
-    pos = 1
+def list_params(link: Link) -> list[dict]:
+    """Discover every registered variable (parameters, monitors, streamed)."""
     items = []
-    for _ in range(count):
-        if pos + 6 > len(payload):
-            raise ValueError(f"Truncated list response: {resp!r}")
-        obj_id = unpack_u16(payload[pos:pos + 2])
-        pos += 2
-        direction = payload[pos]
-        pos += 1
-        fmt = payload[pos]
-        pos += 1
-        size = payload[pos]
-        pos += 1
-        name_len = payload[pos]
-        pos += 1
-
-        if pos + name_len > len(payload):
-            raise ValueError(f"Truncated name field in list response: {resp!r}")
-        name = payload[pos:pos + name_len].decode("ascii", errors="replace")
-        pos += name_len
-
-        items.append(
-            {
-                "id": obj_id,
-                "name": name,
-                "direction": direction,
-                "format": normalize_format_name(fmt),
-                "size": size,
-                "fmt_name": normalize_format_name(fmt),
-            }
-        )
+    for r in link.request_list(CMD_LIST_VARS):
+        name_len = r[11]
+        fmt = normalize_format_name(r[7])
+        items.append({
+            "id": unpack_u16(r[4:6]), "direction": r[6], "format": fmt, "fmt_name": fmt,
+            "size": r[8], "stream": r[9], "offset": r[10],
+            "name": r[12:12 + name_len].decode("ascii", errors="replace"),
+        })
     return items
 
 
-def read_param(port: serial.Serial, obj_id: int, catalog=None, sniff=None) -> dict:
-    frame = bytes([CMD_READ]) + pack_u16(obj_id)
-    resp = request(port, frame, sniff=sniff)
-    if resp[0] != CMD_REPLY:
-        raise ValueError(f"Unexpected response prefix: 0x{resp[0]:02x}")
+def list_streams(link: Link) -> list[dict]:
+    """Discover the telemetry streams: id, nominal rate, variable count, bytes."""
+    items = []
+    for r in link.request_list(CMD_LIST_STREAMS):
+        name_len = r[11]
+        items.append({
+            "id": r[4], "rate_hz": struct.unpack_from("<I", r, 5)[0], "count": r[9], "bytes": r[10],
+            "name": r[12:12 + name_len].decode("ascii", errors="replace"),
+        })
+    return items
 
-    payload = resp[1:]
-    if len(payload) == 1:
-        if payload[0] == 0x00:
-            raise ValueError(f"Read for id 0x{obj_id:04x} unexpectedly returned success status with no payload")
-        raise ValueError(f"Read for id 0x{obj_id:04x} failed with status=0x{payload[0]:02x}")
-    if len(payload) < 3:
-        raise ValueError(f"Malformed read response: {resp!r}")
 
-    reply_id = unpack_u16(payload[0:2])
-    length = payload[2]
-    raw = payload[3:3 + length]
-    if len(raw) != length:
-        raise ValueError(f"Read payload truncated: expected {length}, got {len(raw)}")
-
-    info = {}
-    if catalog is not None:
-        info = catalog.get(reply_id)
-    info = {**{"name": f"param_{reply_id:04x}", "format": "raw", "fmt_name": "raw"}, **info}
+def read_param(link: Link, obj_id: int, catalog=None) -> dict:
+    resp = link.request(bytes([CMD_READ]) + pack_u16(obj_id), match=lambda r: len(r) < 4 or unpack_u16(r[2:4]) == obj_id)
+    if resp[1] != STATUS_OK or len(resp) < 4:
+        raise ValueError(f"Read for id 0x{obj_id:04x} failed with status=0x{resp[1]:02x}")
+    raw = resp[4:]
+    info = catalog.get(obj_id) if catalog is not None else {}
+    info = {**{"name": f"param_{obj_id:04x}", "format": "raw", "fmt_name": "raw"}, **info}
     fmt_name = info.get("format", info.get("fmt_name", "raw"))
     value = decode_value(raw, fmt_name)
     return {
-        "id": reply_id,
-        "length": length,
+        "id": obj_id,
+        "length": len(raw),
         "raw": raw,
         "name": info["name"],
         "format": fmt_name,
@@ -516,22 +342,11 @@ def read_param(port: serial.Serial, obj_id: int, catalog=None, sniff=None) -> di
     }
 
 
-def write_param(port: serial.Serial, obj_id: int, value: int | float | bytes, fmt: int | str | None = None, catalog=None, sniff=None) -> int:
+def write_param(link: Link, obj_id: int, value: int | float | bytes, fmt: int | str | None = None, catalog=None) -> int:
     info = catalog.get(obj_id) if catalog is not None else {}
     format_name = fmt if fmt is not None else info.get("format") or info.get("fmt_name") or "u16"
     if isinstance(value, str):
         value = parse_scalar_raw(value, format_name)
-    if format_name is None:
-        raise TypeError("format is required when writing a raw byte sequence")
     value_bytes = encode_value(value, format_name)
-
-    frame = bytes([CMD_WRITE]) + pack_u16(obj_id) + bytes([len(value_bytes)]) + value_bytes
-    resp = request(port, frame, sniff=sniff)
-    if resp[0] != CMD_REPLY:
-        raise ValueError(f"Unexpected response prefix: 0x{resp[0]:02x}")
-    if len(resp) < 2:
-        raise ValueError(f"Malformed write response: {resp!r}")
-    status = resp[1]
-    if status not in (0x00, 0x01):
-        raise ValueError(f"Unknown write status: 0x{status:02x}")
-    return status
+    resp = link.request(bytes([CMD_WRITE]) + pack_u16(obj_id) + bytes([len(value_bytes)]) + value_bytes)
+    return resp[1]

@@ -15,6 +15,11 @@ void init_pins_usb_cdc(void);
 void task_usb_cdc(void);
 
 /**
+ * Prime the USB CDC bulk IN endpoint when transmit data is queued.
+ */
+void usb_cdc_tx_kick(void);
+
+/**
  * Return whether the USB CDC data terminal ready (DTR) signal is asserted.
  *
  * Returns 1 when DTR is active, otherwise 0.

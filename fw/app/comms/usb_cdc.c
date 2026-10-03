@@ -5,7 +5,7 @@
 #include <string.h>
 
 #define USB_CDC_RX_RING_SIZE 1024
-#define USB_CDC_TX_RING_SIZE 1024
+#define USB_CDC_TX_RING_SIZE 4096
 
 static volatile uint8_t usb_cdc_dtr;
 

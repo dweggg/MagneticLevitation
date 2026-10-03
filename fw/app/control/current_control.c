@@ -217,16 +217,16 @@ static void init_adc_current_control(void)
      *   code 7: 241 cycles  = 40.17 us
      *
      * Channel mapping:
-     *   CH2 = I_REF
-     *   CH3 = MAG
-     *   CH4 = V_MEAS
+     *   CH2 = MAG
+     *   CH3 = V_MEAS
+     *   CH4 = I_REF
      *   CH5 = I_MEAS
      *   CH6 = TEMP
      */
     ADC1->SAMPTR2 =
-        ((ADC_SMP0_1)            << (3U * 2U)) |  /* CH2: I_REF */
-        ((ADC_SMP0_1)            << (3U * 3U)) |  /* CH3: MAG */
-        ((ADC_SMP0_0 | ADC_SMP0_2) << (3U * 4U)) | /* CH4: V_MEAS */
+        ((ADC_SMP0_1)            << (3U * 2U)) |  /* CH2: MAG */
+        ((ADC_SMP0_1)            << (3U * 3U)) |  /* CH3: V_MEAS */
+        ((ADC_SMP0_0 | ADC_SMP0_2) << (3U * 4U)) | /* CH4: I_REF */
         ((ADC_SMP0_1) << (3U * 5U)) | /* CH5: I_MEAS */
         ((ADC_SMP0_1)            << (3U * 6U));   /* CH6: TEMP */
 
@@ -240,10 +240,10 @@ static void init_adc_current_control(void)
     ADC1->RSQR2 = 0;
 
     ADC1->RSQR3 =
-        (3U << 0U)  |   /* CH3: MAG */
-        (4U << 5U)  |   /* CH4: V_MEAS */
-        (5U << 10U) |   /* CH5: I_REF */
-        (2U << 15U) |   /* CH2: I_MEAS */
+        (3U << 0U)  |   /* CH3: V_MEAS */
+        (4U << 5U)  |   /* CH4: I_REF */
+        (5U << 10U) |   /* CH5: I_MEAS */
+        (2U << 15U) |   /* CH2: MAG */
         (6U << 20U);    /* CH6: TEMP */
 
     ADC1->CTLR2 = ADC_ADON;

@@ -11,12 +11,12 @@ static uint8_t cpu_usage;   /* host-readable */
 static uint8_t state_monitor;
 static uint8_t fault_reasons;
 
-void init_pins_fsm(void){
-	var_param("enable", VAR_U8, &enable);
-    var_param("control_mode", VAR_U8, &control_mode);
-	var_monitor("cpu", VAR_U8, &cpu_usage, STREAM_NONE);
-    var_monitor("fsm_state", VAR_U8, &state_monitor, STREAM_NONE);
-    var_monitor("fault_reasons", VAR_U8, &fault_reasons, STREAM_NONE);
+void fsm_init(void){
+	VARS_PARAM("enable", VAR_U8, &enable);
+    VARS_PARAM("control_mode", VAR_U8, &control_mode);
+	VARS_MONITOR("cpu", VAR_U8, &cpu_usage, VARS_STREAM_NONE);
+    VARS_MONITOR("fsm_state", VAR_U8, &state_monitor, VARS_STREAM_NONE);
+    VARS_MONITOR("fault_reasons", VAR_U8, &fault_reasons, VARS_STREAM_NONE);
 
 	funPinMode(PIN_RST_BUTTON, GPIO_CFGLR_IN_PUPD);   // input with pull-up
 	funDigitalWrite(PIN_RST_BUTTON, FUN_HIGH);        // enable pull-up even though we have hardware pull-up
@@ -26,7 +26,7 @@ void init_pins_fsm(void){
 
 }
 
-void task_fsm(void)
+void fsm_task(void)
 {
     /* runs every tick regardless of state */
     cpu_usage = scheduler_get_cpu();

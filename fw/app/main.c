@@ -30,8 +30,8 @@ int main(void)
 	    FUNCONF_SYSTEM_CORE_CLOCK
 	);
 
-    init_pins();
-    scheduler_init_tasks();
+    tasks_init_modules();
+    tasks_init_scheduler();
 
     scheduler_run();
     

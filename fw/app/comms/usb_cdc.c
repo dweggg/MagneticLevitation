@@ -4,8 +4,8 @@
 #include "protocol.h"
 #include <string.h>
 
-#define USB_CDC_RX_RING_SIZE 1024
-#define USB_CDC_TX_RING_SIZE 4096
+#define USB_CDC_RX_RING_SIZE_BYTES 1024U
+#define USB_CDC_TX_RING_SIZE_BYTES 4096U
 
 static volatile uint8_t usb_cdc_dtr;
 
@@ -16,17 +16,17 @@ static uint8_t usb_cdc_line_coding[7] = {
 	0x08
 };
 
-static volatile uint8_t usb_cdc_rx_ring[USB_CDC_RX_RING_SIZE];
+static volatile uint8_t usb_cdc_rx_ring[USB_CDC_RX_RING_SIZE_BYTES];
 static volatile uint16_t usb_cdc_rx_head = 0;
 static volatile uint16_t usb_cdc_rx_tail = 0;
 
-static volatile uint8_t usb_cdc_tx_ring[USB_CDC_TX_RING_SIZE];
+static volatile uint8_t usb_cdc_tx_ring[USB_CDC_TX_RING_SIZE_BYTES];
 static volatile uint16_t usb_cdc_tx_head = 0;
 static volatile uint16_t usb_cdc_tx_tail = 0;
 
 static int usb_cdc_tx_pending(void);
 
-void init_pins_usb_cdc(void)
+void usb_cdc_init(void)
 {
 	USBFSSetup();
 }
@@ -38,7 +38,7 @@ void usb_cdc_tx_kick(void)
 	}
 }
 
-void task_usb_cdc(void)
+void usb_cdc_task(void)
 {
 	protocol_bridge_poll();
 	usb_cdc_tx_kick();
@@ -72,7 +72,7 @@ void HandleDataOut(struct _USBState *ctx, int endp, uint8_t *data, int len)
 	}
 
 	for (int i = 0; i < len; i++) {
-		uint16_t next = (usb_cdc_rx_head + 1) & (USB_CDC_RX_RING_SIZE - 1);
+		uint16_t next = (usb_cdc_rx_head + 1) & (USB_CDC_RX_RING_SIZE_BYTES - 1U);
 		if (next == usb_cdc_rx_tail) {
 			break;
 		}
@@ -88,7 +88,7 @@ int usb_cdc_tx_send(const uint8_t *buf, int len)
 	int queued = 0;
 
 	for (int i = 0; i < len; i++) {
-		uint16_t next = (usb_cdc_tx_head + 1) & (USB_CDC_TX_RING_SIZE - 1);
+		uint16_t next = (usb_cdc_tx_head + 1) & (USB_CDC_TX_RING_SIZE_BYTES - 1U);
 		if (next == usb_cdc_tx_tail) {
 			break;
 		}
@@ -102,17 +102,17 @@ int usb_cdc_tx_send(const uint8_t *buf, int len)
 
 static int usb_cdc_tx_pending(void)
 {
-	return (usb_cdc_tx_head - usb_cdc_tx_tail) & (USB_CDC_TX_RING_SIZE - 1);
+	return (usb_cdc_tx_head - usb_cdc_tx_tail) & (USB_CDC_TX_RING_SIZE_BYTES - 1U);
 }
 
 int usb_cdc_tx_free(void)
 {
-	return (USB_CDC_TX_RING_SIZE - 1) - usb_cdc_tx_pending();
+	return (USB_CDC_TX_RING_SIZE_BYTES - 1U) - usb_cdc_tx_pending();
 }
 
 int usb_cdc_rx_available(void)
 {
-	return (usb_cdc_rx_head - usb_cdc_rx_tail) & (USB_CDC_RX_RING_SIZE - 1);
+	return (usb_cdc_rx_head - usb_cdc_rx_tail) & (USB_CDC_RX_RING_SIZE_BYTES - 1U);
 }
 
 int usb_cdc_rx_read(uint8_t *buf, int max_len)
@@ -124,7 +124,7 @@ int usb_cdc_rx_read(uint8_t *buf, int max_len)
 
 	while (read_count < max_len && usb_cdc_rx_tail != usb_cdc_rx_head) {
 		buf[read_count++] = usb_cdc_rx_ring[usb_cdc_rx_tail];
-		usb_cdc_rx_tail = (usb_cdc_rx_tail + 1) & (USB_CDC_RX_RING_SIZE - 1);
+		usb_cdc_rx_tail = (usb_cdc_rx_tail + 1) & (USB_CDC_RX_RING_SIZE_BYTES - 1U);
 	}
 
 	return read_count;
@@ -139,7 +139,7 @@ int HandleInRequest(struct _USBState *ctx, int endp, uint8_t *data, int len)
 	int count = 0;
 	while (count < USBFS_PACKET_SIZE && usb_cdc_tx_tail != usb_cdc_tx_head) {
 		data[count++] = usb_cdc_tx_ring[usb_cdc_tx_tail];
-		usb_cdc_tx_tail = (usb_cdc_tx_tail + 1) & (USB_CDC_TX_RING_SIZE - 1);
+		usb_cdc_tx_tail = (usb_cdc_tx_tail + 1) & (USB_CDC_TX_RING_SIZE_BYTES - 1U);
 	}
 	return count;
 }

@@ -143,7 +143,7 @@ static int usb_pd_select_max_power_pdo(void)
 	return 1;
 }
 
-void init_pins_usb_pd(void)
+void usb_pd_init(void)
 {
 	/*
 	 * The name is kept for consistency with the other application modules.
@@ -151,11 +151,11 @@ void init_pins_usb_pd(void)
 	 */
 	USBPD_Init(FUNCONF_USE_5V_VDD ? eUSBPD_VCC_5V0 : eUSBPD_VCC_3V3);
 
-	usb_pd_available_power_w = 0;
+	usb_pd_available_power_w = 5; // We can always rely on 5V 1A
 	usb_pd_has_selected_power = 0;
 }
 
-void task_usb_pd(void)
+void usb_pd_task(void)
 {
 	const USBPD_Result_e result = USBPD_SinkNegotiate();
 
@@ -171,7 +171,7 @@ void task_usb_pd(void)
 		 * Reset it so the next task invocation can start a fresh negotiation.
 		 */
 		USBPD_Reset();
-		usb_pd_available_power_w = 0;
+		usb_pd_available_power_w = 5; // We can always rely on 5V 1A
 		usb_pd_has_selected_power = 0;
 		return;
 	}

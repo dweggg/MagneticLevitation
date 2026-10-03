@@ -30,9 +30,9 @@ typedef enum
 	FAULT_INVALID_MODE = 1U << 3,
 } fsm_fault_t;
 
-void task_fsm(void);
+void fsm_task(void);
 
-void init_pins_fsm(void);
+void fsm_init(void);
 
 fsm_state_t fsm_state(void);
 fsm_control_mode_t fsm_control_mode(void);

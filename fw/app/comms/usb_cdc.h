@@ -6,14 +6,12 @@
 /**
  * Initialize the USB CDC pins and underlying USB stack.
  */
-void init_pins_usb_cdc(void);
-
+void usb_cdc_init(void);
 /**
  * Service the USB CDC task and flush any queued transmit data when the host
  * is ready to receive the next bulk packet.
  */
-void task_usb_cdc(void);
-
+void usb_cdc_task(void);
 /**
  * Prime the USB CDC bulk IN endpoint when transmit data is queued.
  */

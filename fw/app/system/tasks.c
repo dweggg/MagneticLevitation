@@ -11,25 +11,25 @@
 #include "position_control.h"
 #include "setpoint.h"
 
-void init_pins(void){
+void tasks_init_modules(void){
 	vars_init();   /* registry must exist before any module registers variables */
-	init_pins_current_control();
-	init_pins_position_control();
-	init_pins_setpoint();
-	init_pins_usb_pd();
-	init_pins_usb_cdc();
-	init_pins_fsm();
-	init_pins_leds();
+	current_control_init();
+	position_control_init();
+	setpoint_init();
+	usb_pd_init();
+	usb_cdc_init();
+	fsm_init();
+	leds_init();
 
 }
 
-void scheduler_init_tasks(void){
-    scheduler_add_task(task_current_control, TASK_CURRENT_CONTROL_HZ);
-	scheduler_add_task(task_position_control, TASK_POSITION_CONTROL_HZ);
-	scheduler_add_task(task_setpoint, TASK_SETPOINT_HZ);
-	scheduler_add_task(task_usb_pd, TASK_USB_PD_HZ);
-	scheduler_add_task(task_usb_cdc, TASK_USB_CDC_HZ);
-	scheduler_add_task(task_fsm, TASK_FSM_HZ);
-	scheduler_add_task(task_leds, TASK_LEDS_HZ);
-	LOG("Initialization complete");
+void tasks_init_scheduler(void){
+	scheduler_add_task(current_control_task, TASK_CURRENT_CONTROL_HZ);
+	scheduler_add_task(position_control_task, TASK_POSITION_CONTROL_HZ);
+	scheduler_add_task(setpoint_task, TASK_SETPOINT_HZ);
+	scheduler_add_task(usb_pd_task, TASK_USB_PD_HZ);
+	scheduler_add_task(usb_cdc_task, TASK_USB_CDC_HZ);
+	scheduler_add_task(fsm_task, TASK_FSM_HZ);
+	scheduler_add_task(leds_task, TASK_LEDS_HZ);
+	PROTOCOL_LOG("Initialization complete");
 }

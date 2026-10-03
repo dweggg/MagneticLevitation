@@ -54,10 +54,6 @@ static stream_id_t current_control_stream = VARS_STREAM_NONE;
  */
 static pid_f16_t current_control_pid = {0};
 
-/* Host-writable switching frequency and the value last applied to TIM1. */
-static uint32_t pwm_switching_frequency_hz = CURRENT_CONTROL_PWM_SWITCHING_FREQUENCY_HZ;
-static uint32_t applied_pwm_switching_frequency_hz = CURRENT_CONTROL_PWM_SWITCHING_FREQUENCY_HZ;
-
 /* ============================================================================
  * Forward declarations
  * ========================================================================== */
@@ -65,8 +61,6 @@ static uint32_t applied_pwm_switching_frequency_hz = CURRENT_CONTROL_PWM_SWITCHI
 static void current_control_adc_init(void);
 static void current_control_adc_drain_dma(void);
 static void current_control_controller_init(void);
-static void current_control_update_switching_frequency(void);
-static void current_control_apply_pwm_switching_frequency(uint32_t frequency_hz);
 
 /* ============================================================================
  * Control loop
@@ -87,9 +81,6 @@ void current_control_task(void)
     if (v_fb >= FAULT_OVERVOLTAGE_LIMIT_V_Q16) {
         fsm_raise_fault(FAULT_OVERVOLTAGE);
     }
-
-    /* Apply switching-frequency changes written from comms */
-    current_control_update_switching_frequency();
 
     /*
      * PWM is only allowed while the FSM is in the current-control state.
@@ -179,18 +170,6 @@ static void current_control_controller_init(void)
         .lim_n = fix16_from_float(0.0f),
     };
 }
-
-static void current_control_update_switching_frequency(void)
-{
-    const uint32_t requested_hz = pwm_switching_frequency_hz;
-
-    if (requested_hz != applied_pwm_switching_frequency_hz) {
-        applied_pwm_switching_frequency_hz = requested_hz;
-        current_control_apply_pwm_switching_frequency(requested_hz);
-        PROTOCOL_LOG("PWM switching frequency updated to %u Hz", (unsigned int)requested_hz);
-    }
-}
-
 
 /* ============================================================================
  * ADC
@@ -448,36 +427,6 @@ static uint32_t current_control_pwm_frequency_to_period_ticks(uint32_t frequency
     ) - 1U;
 }
 
-/*
- * Safely update switching frequency
- */
-static void current_control_apply_pwm_switching_frequency(uint32_t frequency_hz)
-{
-    const uint32_t period_ticks =
-        current_control_pwm_frequency_to_period_ticks(frequency_hz);
-
-    if (period_ticks == 0U) {
-        return;
-    }
-
-    /*
-     * Stop timer while changing its period.
-     */
-    TIM1->CTLR1 &= ~TIM_CEN;
-
-    TIM1->ATRLR = period_ticks;
-
-    /*
-     * Force ARR shadow register update.
-     */
-    TIM1->SWEVGR = TIM_UG;
-
-    /*
-     * Restart PWM.
-     */
-    TIM1->CTLR1 |= TIM_CEN;
-}
-
 static void current_control_pwm_init(void)
 {
     const uint32_t timer_clk_hz = FUNCONF_SYSTEM_CORE_CLOCK;
@@ -503,14 +452,6 @@ static void current_control_pwm_init(void)
 
     uint32_t deadtime_ticks =
         (uint32_t)deadtime_ticks_raw;
-
-
-    PROTOCOL_LOG(
-        "period_ticks=%u deadtime_ticks=%u",
-        (unsigned int)pwm_period_ticks,
-        (unsigned int)deadtime_ticks
-    );
-
 
     /* Enable TIM1. */
     RCC->APB2PCENR |= RCC_APB2Periph_TIM1;
@@ -649,7 +590,6 @@ void current_control_init(void)
 
     VARS_PARAM("i_kp", VAR_F16, &current_control_pid.kp);
     VARS_PARAM("i_ki", VAR_F16, &current_control_pid.ki);
-    VARS_PARAM("pwm_switching_frequency_hz", VAR_U32, &pwm_switching_frequency_hz);
     VARS_MONITOR("v_fb", VAR_F16, &v_fb, VARS_STREAM_NONE);
     VARS_MONITOR("i_ref_adc_raw", VAR_U16, &i_ref_adc_raw, VARS_STREAM_NONE);
     VARS_MONITOR("i_meas_adc_raw", VAR_U16, &i_meas_adc_raw, VARS_STREAM_NONE);

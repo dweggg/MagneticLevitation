@@ -1,5 +1,6 @@
 #include "setpoint.h"
 #include "current_control.h"
+#include "position_control.h"
 #include "vars.h"
 #include "fsm.h"
 #include "fault_limits.h"
@@ -97,6 +98,7 @@ static fix16_t setpoint_temp_c_q16_from_adc_raw(uint16_t adc_raw)
 
 static fix16_t temp_c_q16;
 static fix16_t i_sp_manual;
+static fix16_t i_sp_position_control;
 static fix16_t x_sp_manual;
 static fix16_t i_sp_active;
 static fix16_t x_sp_active;
@@ -134,10 +136,12 @@ void setpoint_task(void)
         fix16_div(fix16_from_int(power_budget_pct), fix16_from_int(100))
     );
 
+    i_sp_position_control = position_control_get_i_sp();
+    
     i_sp_active = (fsm_control_mode() == FSM_MODE_MANUAL_CURRENT)
-        ? i_sp_manual : 0;
+        ? i_sp_manual : i_sp_position_control; // either from comms or position control sets it
     x_sp_active = (fsm_control_mode() == FSM_MODE_MANUAL_POSITION)
-        ? x_sp_manual : 0;
+        ? x_sp_manual : 0; // TODO: calculate from available power and magnet/weight limit
 }
 
 fix16_t setpoint_get_i_sp(void)

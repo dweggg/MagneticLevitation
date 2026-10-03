@@ -34,30 +34,18 @@ Run the PC client from the repository root with `python3 -m pc.protocol`. `pc/pr
 Host commands are unframed bytes. A read includes a command and a 16-bit variable ID; a write includes a command, ID, byte count, and value. List requests are a single command byte. The IDs and numeric fields are little-endian.
 
 Every message sent by the board is wrapped in a frame: a sync byte, message type, payload length, payload, and XOR checksum. The type distinguishes log text, command replies, and telemetry samples. List results arrive as one reply per entry, and the PC combines them using each entry's index and total count.
-# Communications overview
 
-The firmware in this directory and the Python tools in `pc/` share a small binary protocol over USB CDC. The board appears to the computer as a serial port, but this is USB data, not a physical UART; the configured baud rate is compatibility bookkeeping and does not set the USB link speed.
-
-## The path through the system
-
-1. Firmware modules register named variables in `vars.c`'s shared registry. Each descriptor includes an ID, format, size, access direction, and optional stream/offset. IDs are assigned at startup in registration order, not fixed in the PC code.
-2. The PC opens the CDC serial port and asks for the variable and stream lists. Those replies give it the metadata needed to resolve names and decode later values.
-3. Host commands arrive as unframed bytes on USB OUT. `usb_cdc.c` buffers them; `protocol.c` handles reads, writes, and discovery, and queues framed device responses.
-4. Telemetry tasks copy registered variables into samples and queue them as stream frames. USB IN drains the transmit buffer; on the PC, one background reader reassembles frames and routes logs, replies, and samples while commands are running.
-5. The PC uses the discovered metadata to decode values. `pc/telemetry.py` places samples on a time axis using the firmware tick, rather than the time they happened to arrive over USB.
-
-The firmware descriptor is the source of truth for names, IDs, formats, and stream layout.
-
-## Device-to-host frames
+### Device-to-host frames
 
 Every device-to-host message uses the same outer frame. The length is the payload length in bytes; the final checksum is the XOR of every preceding frame byte, including the sync byte.
 
-```text
-+------+-------+----------------+-------------------+----------+
-| 0xA5 | type  | payload length | payload           | checksum|
-+------+-------+----------------+-------------------+----------+
-	1 B    1 B       1 B           length bytes          1 B
-```
+| Field          | Size          | Description        |
+|----------------|---------------|--------------------|
+| `0xA5`         | 1 B           | Start marker       |
+| `type`         | 1 B           | Packet type        |
+| `payload length` | 1 B         | Length of payload  |
+| `payload`      | length bytes  | Payload data       |
+| `checksum`     | 1 B           | Checksum           |
 
 The one-byte length limits a payload to 255 bytes. The type tells the receiver how to interpret it:
 
@@ -69,7 +57,7 @@ The one-byte length limits a payload to 255 bytes. The type tells the receiver h
 
 The XOR is a lightweight corruption check, not a cryptographic integrity check. The PC decoder searches for the sync byte, waits until the declared frame is complete, checks the XOR, and skips forward to resynchronize after a bad frame. USB packet boundaries are not protocol frame boundaries.
 
-## Commands and variable types
+### Commands and variable types
 
 Host-to-device commands are not wrapped in frames:
 
@@ -97,7 +85,7 @@ The PC does not guess a value's type from its bytes. It maps the format code ret
 
 Despite its name, `f16` is **not** a 16-bit float: it is a 32-bit fixed-point value. Firmware currently registers these scalar values by their format, and copies their bytes into reads and samples. The Python client also has an IEEE-754 `float` codec for explicitly requested PC-side values, but it is not one of the firmware registry's format codes.
 
-## Telemetry layout
+### Telemetry layout
 
 A stream is a named, ordered group of variables. Firmware registers the members in sample order and records each member's byte offset and size. The stream list reports the ID, nominal rate, variable count, and sample byte count; the rate is descriptive, while the actual samples are emitted by the task calling `stream_emit()` or `stream_emit_at()`.
 
@@ -107,10 +95,4 @@ stream payload = [stream_id][tick: u32 LE][value 0][value 1]...
 
 There are no names, IDs, or type tags repeated inside each sample. The PC matches the stream ID to discovered descriptors, slices each variable using its offset and size, then decodes it using its format. This keeps samples compact while allowing multiple streams and different emit rates. The tick is the firmware scheduler tick; `tick_hz` converts it to seconds. If a complete sample will not fit in the transmit queue, firmware drops the whole sample and increments `stream_dropped`.
 
-## Code map and running the client
 
-- `usb_config.h` describes the CDC endpoints; `usb_cdc.c` buffers USB bytes and runs the protocol bridge task.
-- `vars.c` / `vars.h` implement the variable and stream registry; `protocol.c` / `protocol.h` implement commands, replies, logs, framing, and sample emission.
-- `pc/transport.py` opens the serial port, reads and validates frames, and encodes/decodes values. `pc/metadata.py` stores discovered descriptors; `pc/telemetry.py` decodes and plots samples; `pc/cli.py` provides commands and the interactive console.
-
-From the repository root, run `python3 -m pc.protocol`. The client needs `pyserial`; live plotting also needs `matplotlib`. Without plotting, listing, reading, writing, monitoring, and telemetry metadata remain available.

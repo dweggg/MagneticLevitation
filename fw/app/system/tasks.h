@@ -8,7 +8,7 @@
 #define TASK_POSITION_CONTROL_HZ 100
 #define TASK_SETPOINT_HZ         100
 #define TASK_USB_PD_HZ           1000
-#define TASK_USB_CDC_HZ          5000
+#define TASK_USB_CDC_HZ          1000
 #define TASK_FSM_HZ              1000
 #define TASK_LEDS_HZ             10
 

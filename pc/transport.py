@@ -3,8 +3,10 @@ from __future__ import annotations
 import glob
 import os
 import struct
+import threading
 import time
 from collections import deque, namedtuple
+from queue import Empty, Full, Queue, SimpleQueue
 from typing import Callable
 
 from pc.metadata import normalize_format_name
@@ -74,7 +76,6 @@ class PortLogger:
         payload = self._port.read(size, *args, **kwargs)
         if payload:
             self._log_file.write(payload)
-            self._log_file.flush()
         return payload
 
     def close(self):
@@ -239,9 +240,19 @@ class Link:
         self.decoder = FrameDecoder()
         self.stream_sink: Callable[[StreamSample], None] | None = None
         self._replies: deque[bytes] = deque()
+        self._stop_reader = threading.Event()
+        self._streams: Queue[StreamSample] = Queue(maxsize=8192)
+        self._reply_events: SimpleQueue[bytes] = SimpleQueue()
+        self._log_events: SimpleQueue[bytes] = SimpleQueue()
+        self._reader_error: SimpleQueue[Exception] = SimpleQueue()
+        self._reader = threading.Thread(target=self._read_loop, name="serial-reader", daemon=True)
+        self._reader.start()
 
     def close(self) -> None:
+        self._stop_reader.set()
+        self._reader.join(timeout=0.3)
         self.port.close()
+        self._reader.join(timeout=0.3)
 
     def __enter__(self):
         return self
@@ -250,18 +261,56 @@ class Link:
         self.close()
         return False
 
+    def _read_loop(self) -> None:
+        """Keep serial reads active while the UI or command loop is busy."""
+        try:
+            while not self._stop_reader.is_set():
+                waiting = self.port.in_waiting
+                chunk = self.port.read(min(waiting, 4096) if waiting else 1)
+                if not chunk:
+                    continue
+                for kind, payload in self.decoder.feed(chunk):
+                    if kind == FRAME_LOG:
+                        self._log_events.put(payload)
+                    elif kind == FRAME_STREAM and len(payload) >= 5 and self.stream_sink is not None:
+                        sample = StreamSample(payload[0], struct.unpack_from("<I", payload, 1)[0], payload[5:])
+                        try:
+                            self._streams.put_nowait(sample)
+                        except Full:
+                            pass
+                    elif kind == FRAME_REPLY and payload:
+                        self._reply_events.put(payload)
+        except Exception as exc:
+            if not self._stop_reader.is_set():
+                self._reader_error.put(exc)
+
     def pump(self) -> None:
-        """Read whatever is waiting and dispatch every complete frame."""
-        waiting = self.port.in_waiting
-        if not waiting:
-            return
-        for kind, payload in self.decoder.feed(self.port.read(waiting)):
-            if kind == FRAME_LOG:
-                print("[LOG] " + payload.decode("ascii", errors="replace"), flush=True)
-            elif kind == FRAME_STREAM and len(payload) >= 5 and self.stream_sink is not None:
-                self.stream_sink(StreamSample(payload[0], struct.unpack_from("<I", payload, 1)[0], payload[5:]))
-            elif kind == FRAME_REPLY and payload:
-                self._replies.append(payload)
+        """Dispatch frames collected by the background serial reader."""
+        try:
+            error = self._reader_error.get_nowait()
+        except Empty:
+            error = None
+        if error is not None:
+            raise RuntimeError("Serial reader failed") from error
+
+        while True:
+            try:
+                payload = self._log_events.get_nowait()
+            except Empty:
+                break
+            print("[LOG] " + payload.decode("ascii", errors="replace"), flush=True)
+        while True:
+            try:
+                self._replies.append(self._reply_events.get_nowait())
+            except Empty:
+                break
+        while True:
+            try:
+                sample = self._streams.get_nowait()
+            except Empty:
+                break
+            if self.stream_sink is not None:
+                self.stream_sink(sample)
 
     def _send(self, payload: bytes) -> None:
         self._replies.clear()

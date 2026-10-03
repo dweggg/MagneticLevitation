@@ -2,7 +2,6 @@
 #include "pinout.h"
 #include "vars.h"
 #include "scheduler.h"
-#include "usb_pd.h"
 
 static fsm_state_t state = FSM_INIT;
 static uint8_t enable;      /* host-writable */
@@ -54,7 +53,7 @@ void fsm_task(void)
             if (control_mode == FSM_MODE_MANUAL_CURRENT) {
                 state = FSM_CURRENT_CONTROL;
             } else if (control_mode <= FSM_MODE_MANUAL_CURRENT) {
-                state = usb_pd_negotiating() ? FSM_WAIT_POWER : FSM_POSITION_CONTROL;
+                state = FSM_POSITION_CONTROL;
             } else {
                 fsm_raise_fault(FAULT_INVALID_MODE);
             }
@@ -62,30 +61,15 @@ void fsm_task(void)
         break;
     }
 
-    case FSM_WAIT_POWER:
-        funDigitalWrite(PIN_GD_EN, FUN_LOW);
-        if (enable == 0U) {
-            state = FSM_IDLE;
-        } else if (control_mode == FSM_MODE_MANUAL_CURRENT) {
-            state = FSM_CURRENT_CONTROL;
-        } else if (control_mode <= FSM_MODE_MANUAL_CURRENT && !usb_pd_negotiating()) {
-            state = FSM_POSITION_CONTROL;
-        } else if (control_mode > FSM_MODE_MANUAL_CURRENT) {
-            fsm_raise_fault(FAULT_INVALID_MODE);
-        }
-        break;
-
     case FSM_POSITION_CONTROL:
-        /* Position actuation stays disabled until its calibrated loop is implemented. */
-        funDigitalWrite(PIN_GD_EN, FUN_LOW);
+        funDigitalWrite(PIN_GD_EN,
+            (enable != 0U && control_mode == FSM_MODE_MANUAL_POSITION) ? FUN_HIGH : FUN_LOW);
         if (enable == 0U) {
             state = FSM_IDLE;
         } else if (control_mode == FSM_MODE_MANUAL_CURRENT) {
             state = FSM_CURRENT_CONTROL;
         } else if (control_mode > FSM_MODE_MANUAL_CURRENT) {
             fsm_raise_fault(FAULT_INVALID_MODE);
-        } else if (usb_pd_negotiating()) {
-            state = FSM_WAIT_POWER;
         }
         break;
 
@@ -99,7 +83,7 @@ void fsm_task(void)
             if (control_mode > FSM_MODE_MANUAL_CURRENT) {
                 fsm_raise_fault(FAULT_INVALID_MODE);
             } else {
-                state = usb_pd_negotiating() ? FSM_WAIT_POWER : FSM_POSITION_CONTROL;
+                state = FSM_POSITION_CONTROL;
             }
             funDigitalWrite(PIN_GD_EN, FUN_LOW);
             break;

@@ -83,10 +83,10 @@ void current_control_task(void)
     }
 
     /*
-     * PWM is only allowed while the FSM is in the current-control state.
+     * PWM is allowed in manual-current and manual-position control states.
      * Any other state forces both bridge outputs off.
      */
-    if (fsm_state() != FSM_CURRENT_CONTROL) {
+    if (fsm_state() != FSM_CURRENT_CONTROL && fsm_state() != FSM_POSITION_CONTROL) {
 
         // Reset the current controller so it doesn't wind up while idle.
         current_control_pid.sp = 0;

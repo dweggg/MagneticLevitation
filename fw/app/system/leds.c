@@ -26,26 +26,19 @@ void init_pins_leds(void){
 // Task
 void task_leds(void){
 
-	blink(LED_WHITE, SLOW);
-	blink(LED_RED, FAST);
-
-	// /* White LED */
-	// if (usb_cdc_debug_is_active()) {
-	// 	blink(LED_WHITE, SLOW);
-	// } else if (usb_pd_negotiating()) {
-	// 	blink(LED_WHITE, FAST);
-	// } else {
-	// 	turn_off(LED_WHITE);
-	// }
-
-	// /* Red LED */
-	// if (fsm_state() == FSM_FAULT) {
-	// 	blink(LED_RED, FAST);
-	// } else if (fsm_state() == FSM_CURRENT_CONTROL) {
-	// 	turn_on(LED_RED);
-	// } else {
-	// 	turn_off(LED_RED);
-	// }
+	/* White LED */
+	blink(LED_WHITE, SLOW); // Heartbeat, if blinking slows down or stops it means the scheduler/CPU is struggling
+    
+	/* Red LED */
+	if (fsm_state() == FSM_FAULT) {
+		blink(LED_RED, FAST);
+	} else if (fsm_state() == FSM_POSITION_CONTROL) {
+		blink(LED_RED, SLOW);
+	} else if (fsm_state() == FSM_CURRENT_CONTROL) {
+		turn_on(LED_RED);
+	} else {
+		turn_off(LED_RED);
+	}
 }
 
 // Helpers

@@ -1,9 +1,9 @@
 #include "setpoint.h"
 #include "current_control.h"
-#include "protocol.h"
 #include "vars.h"
-#include "ch32fun.h"
-#include "pinout.h"
+#include "fsm.h"
+#include "fault_limits.h"
+#include "usb_pd.h"
 #include "fix16.h"
 
 /*
@@ -96,14 +96,60 @@ static fix16_t temp_c_q16_from_raw(uint16_t raw)
 
 
 static fix16_t temp_c_q16;
+static fix16_t current_sp_manual;
+static fix16_t position_sp_manual;
+static fix16_t current_sp_active;
+static fix16_t position_sp_active;
+static fix16_t power_budget_w;
+static uint8_t power_pct = 100U;
+static uint8_t available_power_w;
 
 void init_pins_setpoint(void){
     var_monitor("temp", VAR_F16, &temp_c_q16, STREAM_NONE);
+    var_param("power_pct", VAR_U8, &power_pct);
+    var_param("current_sp_manual", VAR_F16, &current_sp_manual);
+    var_param("position_sp_manual", VAR_F16, &position_sp_manual);
+    var_monitor("power_available_w", VAR_U8, &available_power_w, STREAM_NONE);
+    var_monitor("power_budget_w", VAR_F16, &power_budget_w, STREAM_NONE);
+    var_monitor("current_sp_active", VAR_F16, &current_sp_active, STREAM_NONE);
+    var_monitor("position_sp_active", VAR_F16, &position_sp_active, STREAM_NONE);
 }
 
 void task_setpoint(void){
-
     const uint16_t raw = get_temp_meas_raw();
     temp_c_q16 = temp_c_q16_from_raw(raw);
 
+    if (temp_c_q16 >= FAULT_OVERTEMPERATURE_LIMIT_C_Q16 || temp_c_q16 < 0) {
+        fsm_raise_fault(FAULT_OVERTEMPERATURE);
+    }
+
+    available_power_w = usb_pd_get_available_power_w();
+    if (power_pct > 100U) {
+        power_pct = 100U;
+    }
+    power_budget_w = fix16_mul(
+        fix16_from_int(available_power_w),
+        fix16_div(fix16_from_int(power_pct), fix16_from_int(100))
+    );
+
+    current_sp_active = (fsm_control_mode() == FSM_MODE_MANUAL_CURRENT)
+        ? current_sp_manual : 0;
+    position_sp_active = (fsm_control_mode() == FSM_MODE_MANUAL_POSITION)
+        ? position_sp_manual : 0;
+}
+
+fix16_t setpoint_get_current_sp(void){
+    return current_sp_active;
+}
+
+fix16_t setpoint_get_position_sp(void){
+    return position_sp_active;
+}
+
+fix16_t setpoint_get_power_budget_w(void){
+    return power_budget_w;
+}
+
+fix16_t setpoint_get_temperature_c(void){
+    return temp_c_q16;
 }

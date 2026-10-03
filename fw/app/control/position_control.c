@@ -4,9 +4,11 @@
 #include "current_control.h"
 #include "scheduler.h"
 #include "tasks.h"
+#include "setpoint.h"
 
 static fix16_t B_T = 0;
 static uint16_t mag_raw = 0;
+static fix16_t position_sp_active;
 static stream_id_t position_stream = STREAM_NONE;
 
 void get_B_T(void){
@@ -20,12 +22,14 @@ void init_pins_position_control(void){
 
     var_monitor("B_T", VAR_F16, &B_T, position_stream);
     var_monitor("mag_raw", VAR_U16, &mag_raw, position_stream);
+    var_monitor("position_sp", VAR_F16, &position_sp_active, position_stream);
 
 }
 
 void task_position_control(void){
     const uint32_t tick = scheduler_get_tick();
     get_B_T();
+    position_sp_active = setpoint_get_position_sp();
     stream_emit_at(position_stream, tick);
 }
 

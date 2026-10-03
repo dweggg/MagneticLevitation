@@ -7,6 +7,8 @@
 #include "control_f16.h"
 #include "tasks.h"
 #include "scheduler.h"
+#include "setpoint.h"
+#include "fault_limits.h"
 
 
 /* ============================================================================
@@ -41,7 +43,7 @@ static uint16_t i_ref_raw;
 static uint16_t i_meas_raw;
 static fix16_t v_meas;
 static fix16_t i_fb;
-static fix16_t i_sp;
+static fix16_t i_sp_active;
 static fix16_t duty_a;
 
 static stream_id_t current_stream = STREAM_NONE;
@@ -78,6 +80,14 @@ void task_current_control(void)
     const uint32_t tick = scheduler_get_tick();
     drain_adc_dma();
 
+    const fix16_t current_magnitude = (i_fb < 0) ? -i_fb : i_fb;
+    if (current_magnitude >= FAULT_OVERCURRENT_LIMIT_A_Q16) {
+        fsm_raise_fault(FAULT_OVERCURRENT);
+    }
+    if (v_meas >= FAULT_OVERVOLTAGE_LIMIT_V_Q16) {
+        fsm_raise_fault(FAULT_OVERVOLTAGE);
+    }
+
     /* Apply switching-frequency changes written from comms */
     update_switching_frequency();
 
@@ -113,7 +123,8 @@ void task_current_control(void)
 
     fix16_t modulation_index = 0;
 
-    current_controller.sp = i_sp;
+    i_sp_active = setpoint_get_current_sp();
+    current_controller.sp = i_sp_active;
     current_controller.fb = i_fb;
     current_controller.lim_p = v_meas;
     current_controller.lim_n = -v_meas;
@@ -646,7 +657,7 @@ void init_pins_current_control(void)
 
     /* Sampled every control period (in stream order). */
     var_monitor("i_fb", VAR_F16, &i_fb, current_stream);
-    var_register("i_sp", VAR_F16, VAR_DIR_TX_RX, &i_sp, current_stream);
+    var_monitor("i_sp", VAR_F16, &i_sp_active, current_stream);
     var_monitor("v_out", VAR_F16, &current_controller.out, current_stream);
     var_monitor("duty_a", VAR_F16, &duty_a, current_stream);
 }

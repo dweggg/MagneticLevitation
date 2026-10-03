@@ -2,14 +2,21 @@
 #include "pinout.h"
 #include "vars.h"
 #include "scheduler.h"
+#include "usb_pd.h"
 
 static fsm_state_t state = FSM_INIT;
 static uint8_t enable;      /* host-writable */
+static uint8_t control_mode = FSM_MODE_AUTO_POWER;
 static uint8_t cpu_usage;   /* host-readable */
+static uint8_t state_monitor;
+static uint8_t fault_reasons;
 
 void init_pins_fsm(void){
 	var_param("enable", VAR_U8, &enable);
+    var_param("control_mode", VAR_U8, &control_mode);
 	var_monitor("cpu", VAR_U8, &cpu_usage, STREAM_NONE);
+    var_monitor("fsm_state", VAR_U8, &state_monitor, STREAM_NONE);
+    var_monitor("fault_reasons", VAR_U8, &fault_reasons, STREAM_NONE);
 
 	funPinMode(PIN_RST_BUTTON, GPIO_CFGLR_IN_PUPD);   // input with pull-up
 	funDigitalWrite(PIN_RST_BUTTON, FUN_HIGH);        // enable pull-up even though we have hardware pull-up
@@ -44,14 +51,57 @@ void task_fsm(void)
         funDigitalWrite(PIN_GD_EN, FUN_LOW);
 
         if (enable != 0U) {
-            state = FSM_CURRENT_CONTROL;
+            if (control_mode == FSM_MODE_MANUAL_CURRENT) {
+                state = FSM_CURRENT_CONTROL;
+            } else if (control_mode <= FSM_MODE_MANUAL_CURRENT) {
+                state = usb_pd_negotiating() ? FSM_WAIT_POWER : FSM_POSITION_CONTROL;
+            } else {
+                fsm_raise_fault(FAULT_INVALID_MODE);
+            }
         }
         break;
     }
 
+    case FSM_WAIT_POWER:
+        funDigitalWrite(PIN_GD_EN, FUN_LOW);
+        if (enable == 0U) {
+            state = FSM_IDLE;
+        } else if (control_mode == FSM_MODE_MANUAL_CURRENT) {
+            state = FSM_CURRENT_CONTROL;
+        } else if (control_mode <= FSM_MODE_MANUAL_CURRENT && !usb_pd_negotiating()) {
+            state = FSM_POSITION_CONTROL;
+        } else if (control_mode > FSM_MODE_MANUAL_CURRENT) {
+            fsm_raise_fault(FAULT_INVALID_MODE);
+        }
+        break;
+
+    case FSM_POSITION_CONTROL:
+        /* Position actuation stays disabled until its calibrated loop is implemented. */
+        funDigitalWrite(PIN_GD_EN, FUN_LOW);
+        if (enable == 0U) {
+            state = FSM_IDLE;
+        } else if (control_mode == FSM_MODE_MANUAL_CURRENT) {
+            state = FSM_CURRENT_CONTROL;
+        } else if (control_mode > FSM_MODE_MANUAL_CURRENT) {
+            fsm_raise_fault(FAULT_INVALID_MODE);
+        } else if (usb_pd_negotiating()) {
+            state = FSM_WAIT_POWER;
+        }
+        break;
+
     case FSM_CURRENT_CONTROL: {
         if (enable == 0U) {
             state = FSM_IDLE;
+            break;
+        }
+
+        if (control_mode != FSM_MODE_MANUAL_CURRENT) {
+            if (control_mode > FSM_MODE_MANUAL_CURRENT) {
+                fsm_raise_fault(FAULT_INVALID_MODE);
+            } else {
+                state = usb_pd_negotiating() ? FSM_WAIT_POWER : FSM_POSITION_CONTROL;
+            }
+            funDigitalWrite(PIN_GD_EN, FUN_LOW);
             break;
         }
 
@@ -65,11 +115,31 @@ void task_fsm(void)
         break;
 
     default:
-        state = FSM_FAULT;
+        fsm_raise_fault(FAULT_INVALID_MODE);
         break;
     }
+
+    state_monitor = (uint8_t)state;
 }
 
 fsm_state_t fsm_state(void){
 	return state;
+}
+
+fsm_control_mode_t fsm_control_mode(void){
+    return (fsm_control_mode_t)control_mode;
+}
+
+void fsm_raise_fault(fsm_fault_t reason){
+    if (reason == FAULT_NONE) {
+        return;
+    }
+
+    fault_reasons |= (uint8_t)reason;
+    state = FSM_FAULT;
+    funDigitalWrite(PIN_GD_EN, FUN_LOW);
+}
+
+uint8_t fsm_fault_reasons(void){
+    return fault_reasons;
 }

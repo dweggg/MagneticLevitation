@@ -105,9 +105,6 @@ int protocol_send(uint8_t type, const uint8_t *payload, uint16_t length)
 	usb_cdc_tx_send(header, 3);
 	usb_cdc_tx_send(payload, length);
 	usb_cdc_tx_send(&checksum, 1);
-	/* Prime a newly-idle bulk IN endpoint immediately; the 5 kHz CDC task
-	 * remains as a recovery path for host/USB races. */
-	usb_cdc_tx_kick();
 	return 1;
 }
 
@@ -167,13 +164,17 @@ static int send_list_entry(void)
 
 static void list_service(void)
 {
-	while (list_cmd != 0U && usb_cdc_tx_free() >= (int)LIST_MIN_FREE_BYTES) {
-		size_t total = (list_cmd == CMD_LIST_VARS) ? var_count() : stream_count();
-		if (list_index >= total) {
-			list_cmd = 0U;
-			break;
-		}
-		send_list_entry();
+	if (list_cmd == 0U || usb_cdc_tx_free() < (int)LIST_MIN_FREE_BYTES) {
+		return;
+	}
+
+	size_t total = (list_cmd == CMD_LIST_VARS) ? var_count() : stream_count();
+	if (list_index >= total) {
+		list_cmd = 0U;
+		return;
+	}
+
+	if (send_list_entry()) {
 		++list_index;
 	}
 }

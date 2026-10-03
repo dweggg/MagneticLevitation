@@ -40,8 +40,8 @@ void usb_cdc_tx_kick(void)
 
 void task_usb_cdc(void)
 {
-	usb_cdc_tx_kick();
 	protocol_bridge_poll();
+	usb_cdc_tx_kick();
 }
 
 int usb_cdc_debug_is_active(void)

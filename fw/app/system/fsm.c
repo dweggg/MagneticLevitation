@@ -5,6 +5,7 @@
 
 static fsm_state_t state = FSM_INIT;
 static uint8_t enable;      /* host-writable */
+static uint8_t fault_clear;      /* host-writable */
 static uint8_t control_mode = FSM_MODE_AUTO_POWER;
 static uint8_t cpu_usage;   /* host-readable */
 static uint8_t state_monitor;
@@ -12,6 +13,7 @@ static uint8_t fault_reasons;
 
 void fsm_init(void){
 	VARS_PARAM("enable", VAR_U8, &enable);
+	VARS_PARAM("fault_clear", VAR_U8, &fault_clear);
     VARS_PARAM("control_mode", VAR_U8, &control_mode);
 	VARS_MONITOR("cpu", VAR_U8, &cpu_usage, VARS_STREAM_NONE);
     VARS_MONITOR("fsm_state", VAR_U8, &state_monitor, VARS_STREAM_NONE);
@@ -33,6 +35,10 @@ void fsm_task(void)
     /* global override: reset button works from any state */
     if (funDigitalRead(PIN_RST_BUTTON) == FUN_LOW) {
         state = FSM_RESET;
+    }
+
+    if (state != FSM_FAULT) {
+        fault_clear = 0U;
     }
 
     switch (state) {
@@ -95,7 +101,13 @@ void fsm_task(void)
 
     case FSM_FAULT:
         funDigitalWrite(PIN_GD_EN, FUN_LOW);
-        /* stays here until reset button is pressed */
+        enable = 0U;
+
+        if (fault_clear != 0U) {
+            fault_reasons = 0U;
+            fault_clear = 0U;
+            state = FSM_IDLE;
+        }
         break;
 
     default:

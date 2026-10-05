@@ -5,7 +5,8 @@
 #include "fsm.h"
 #include "fault_limits.h"
 #include "usb_pd.h"
-#include "fix16.h"
+#include "scheduler.h"
+#include "tasks.h"
 
 /*
  * NTC temperature conversion strategy:
@@ -27,19 +28,26 @@
  *  - We sample the ADC range in 64-count chunks, so the table has 65 points:
  *    one at every 64-count boundary plus the final endpoint.
  *
- *  This was generated from a 10k/5.1k NTC divider curve and is the
- *  canonical temperature model used by the firmware.
+ *  This was generated from a 10k/5.1k NTC divider curve. (https://www.lcsc.com/datasheet/C49247665.pdf)
  */
 static const fix16_t setpoint_ntc_temp_c_q16_lut[SETPOINT_NTC_LUT_VALUE_COUNT] = {
-    -2621440, -2621440, -2125050, -1646743, -1283307, -984969, -728754, -502058,
-    -297181, -109051, 65864, 230127, 385667, 533975, 676232, 813396,
-    946255, 1075470, 1201605, 1325147, 1446522, 1566109, 1684251, 1801259,
-    1917420, 2033004, 2148268, 2263457, 2378811, 2494565, 2610956, 2728220,
-    2846601, 2964467, 3085820, 3209077, 3334532, 3462505, 3593339, 3727415,
-    3865149, 4007009, 4153519, 4305275, 4462958, 4627353, 4799377, 4980110,
-    5170835, 5373100, 5588791, 5820246, 6070405, 6343038, 6643087, 6977201,
-    7354603, 7788589, 8299274, 8919060, 9704832, 9830400, 9830400, 9830400,
-    9830400
+    F16(-40.0), F16(-40.0), F16(-32.42), F16(-25.12), 
+    F16(-19.58), F16(-15.02), F16(-11.11), F16(-7.66), 
+    F16(-4.53), F16(-1.66), F16(1.00), F16(3.51), 
+    F16(5.88), F16(8.14), F16(10.31), F16(12.41), 
+    F16(14.43), F16(16.41), F16(18.33), F16(20.22), 
+    F16(22.07), F16(23.89), F16(25.69), F16(27.48), 
+    F16(29.25), F16(31.02), F16(32.77), F16(34.53), 
+    F16(36.29), F16(38.06), F16(39.84), F16(41.62), 
+    F16(43.43), F16(45.23), F16(47.08), F16(48.96), 
+    F16(50.88), F16(52.83), F16(54.83), F16(56.87), 
+    F16(58.97), F16(61.14), F16(63.37), F16(65.69), 
+    F16(68.09), F16(70.60), F16(73.23), F16(75.99), 
+    F16(78.90), F16(81.98), F16(85.27), F16(88.80), 
+    F16(92.62), F16(96.78), F16(101.36), F16(106.46), 
+    F16(112.22), F16(118.84), F16(126.63), F16(136.09), 
+    F16(148.08), F16(150.0), F16(150.0), F16(150.0),
+    F16(150.0)
 };
 
 static fix16_t setpoint_temp_c_q16_from_adc_raw(uint16_t adc_raw)
@@ -103,23 +111,30 @@ static fix16_t x_sp_manual;
 static fix16_t i_sp_active;
 static fix16_t x_sp_active;
 static fix16_t power_budget_w;
-static uint8_t power_budget_pct = 100U;
+static uint16_t power_budget_pct = 100U; // uint16_t because in the next rev the PCB we will have a potentiometer connected to an ADC channel
 static uint8_t power_available_w;
+static stream_id_t setpoint_stream = VARS_STREAM_NONE;
 
 void setpoint_init(void)
 {
-    VARS_MONITOR("temp_c", VAR_F16, &temp_c_q16, VARS_STREAM_NONE);
-    VARS_PARAM("power_budget_pct", VAR_U8, &power_budget_pct);
+    
+    setpoint_stream = vars_create_stream("setpoint", TASK_SETPOINT_HZ);
+
+    VARS_MONITOR("temp_c", VAR_F16, &temp_c_q16, setpoint_stream);
+    VARS_PARAM("power_budget_pct", VAR_U16, &power_budget_pct);
     VARS_PARAM("i_sp_manual", VAR_F16, &i_sp_manual);
     VARS_PARAM("x_sp_manual", VAR_F16, &x_sp_manual);
-    VARS_MONITOR("power_available_w", VAR_U8, &power_available_w, VARS_STREAM_NONE);
-    VARS_MONITOR("power_budget_w", VAR_F16, &power_budget_w, VARS_STREAM_NONE);
-    VARS_MONITOR("i_sp_active", VAR_F16, &i_sp_active, VARS_STREAM_NONE);
-    VARS_MONITOR("x_sp_active", VAR_F16, &x_sp_active, VARS_STREAM_NONE);
+    VARS_MONITOR("power_available_w", VAR_U8, &power_available_w, setpoint_stream);
+    VARS_MONITOR("power_budget_w", VAR_F16, &power_budget_w, setpoint_stream);
+    VARS_MONITOR("i_sp_active", VAR_F16, &i_sp_active, setpoint_stream);
+    VARS_MONITOR("x_sp_active", VAR_F16, &x_sp_active, setpoint_stream);
 }
 
 void setpoint_task(void)
 {
+
+    const uint32_t tick = scheduler_get_tick();
+
     const uint16_t temp_adc_raw = current_control_get_temp_adc_raw();
     temp_c_q16 = setpoint_temp_c_q16_from_adc_raw(temp_adc_raw);
 
@@ -142,6 +157,8 @@ void setpoint_task(void)
         ? i_sp_manual : i_sp_position_control; // either from comms or position control sets it
     x_sp_active = (fsm_control_mode() == FSM_MODE_MANUAL_POSITION)
         ? x_sp_manual : 0; // TODO: calculate from available power and magnet/weight limit
+
+    vars_stream_emit_at(setpoint_stream, tick);
 }
 
 fix16_t setpoint_get_i_sp(void)

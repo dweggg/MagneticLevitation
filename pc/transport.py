@@ -58,24 +58,41 @@ def unpack_u16(buf: bytes) -> int:
 
 
 RAW_LOG_FILENAME = "pc/dump.log"
+MAX_LOG_BYTES = 10 * 1024 * 1024
 
 
 class PortLogger:
     def __init__(self, port: serial.Serial, log_path: str | None = None):
         self._port = port
         self._log_path = log_path or os.path.join(os.getcwd(), RAW_LOG_FILENAME)
-        self._log_file = open(self._log_path, "wb")
+        self._log_file = open(self._log_path, "wb+")
+
+    def _trim_log_if_needed(self) -> None:
+        self._log_file.flush()
+        self._log_file.seek(0, os.SEEK_END)
+        if self._log_file.tell() <= MAX_LOG_BYTES:
+            return
+
+        excess = self._log_file.tell() - MAX_LOG_BYTES
+        self._log_file.seek(excess)
+        data = self._log_file.read()
+        self._log_file.seek(0)
+        self._log_file.write(data)
+        self._log_file.truncate()
+        self._log_file.seek(0, os.SEEK_END)
 
     def write(self, data: bytes) -> int:
         payload = bytes(data)
         self._log_file.write(payload)
         self._log_file.flush()
+        self._trim_log_if_needed()
         return self._port.write(payload)
 
     def read(self, size: int = -1, *args, **kwargs):
         payload = self._port.read(size, *args, **kwargs)
         if payload:
             self._log_file.write(payload)
+            self._trim_log_if_needed()
         return payload
 
     def close(self):

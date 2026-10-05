@@ -327,12 +327,14 @@ def _handle_repl_plot_command(port, catalog: ParameterCatalog, arguments: list[s
             plot.close()
             state["plot"] = None
             port.stream_sink = None
+            port.stream_filter = None
         print("Telemetry plot closed")
         return True
     if action == "open":
         if plot is not None:
             plot.close()
         state["plot"] = LiveTelemetryPlot(catalog, _tick_hz(port, catalog), arguments[1:], state.get("plot_window", 5.0))
+        port.stream_filter = state["plot"].stream_ids
         port.stream_sink = state["plot"].on_sample
         print("Telemetry plot opened: " + ", ".join(state["plot"].channel_names))
         return True
@@ -352,6 +354,7 @@ def _handle_repl_plot_command(port, catalog: ParameterCatalog, arguments: list[s
             print("Usage: plot add <variables>")
             return True
         plot.add_channels(arguments[1:])
+        port.stream_filter = plot.stream_ids
         print("Plot: " + ", ".join(plot.channel_names))
         return True
     if action in {"remove", "rm"}:
@@ -359,6 +362,7 @@ def _handle_repl_plot_command(port, catalog: ParameterCatalog, arguments: list[s
             print("Usage: plot remove <variables>")
             return True
         plot.remove_channels(arguments[1:])
+        port.stream_filter = plot.stream_ids
         print("Plot: " + ", ".join(plot.channel_names))
         return True
     print(f"Unknown plot command: {arguments[0]}")
@@ -384,6 +388,7 @@ def run_repl(port, catalog: ParameterCatalog):
                 if not plot.is_open:
                     state["plot"] = None
                     port.stream_sink = None
+                    port.stream_filter = None
                 else:
                     plot.refresh()
             try:
@@ -406,6 +411,8 @@ def run_repl(port, catalog: ParameterCatalog):
         plot = state.get("plot")
         if plot is not None:
             plot.close()
+        port.stream_sink = None
+        port.stream_filter = None
 
 
 def _run_telemetry_list(port, catalog: ParameterCatalog) -> None:

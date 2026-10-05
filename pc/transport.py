@@ -230,15 +230,17 @@ class FrameDecoder:
 class Link:
     """Framed connection to the device.
 
-    Log frames are printed, stream frames go to ``stream_sink`` (a callable
-    taking a StreamSample) and replies are queued for ``request``. Because one
-    decoder owns the byte stream, telemetry keeps flowing while commands run.
+    Log frames are printed, selected stream frames go to ``stream_sink`` (a
+    callable taking a StreamSample) and replies are queued for ``request``.
+    Because one decoder owns the byte stream, telemetry keeps flowing while
+    commands run.
     """
 
     def __init__(self, port) -> None:
         self.port = port
         self.decoder = FrameDecoder()
         self.stream_sink: Callable[[StreamSample], None] | None = None
+        self.stream_filter: frozenset[int] | None = None
         self._replies: deque[bytes] = deque()
         self._stop_reader = threading.Event()
         self._streams: Queue[StreamSample] = Queue(maxsize=8192)
@@ -272,12 +274,16 @@ class Link:
                 for kind, payload in self.decoder.feed(chunk):
                     if kind == FRAME_LOG:
                         self._log_events.put(payload)
-                    elif kind == FRAME_STREAM and len(payload) >= 5 and self.stream_sink is not None:
-                        sample = StreamSample(payload[0], struct.unpack_from("<I", payload, 1)[0], payload[5:])
-                        try:
-                            self._streams.put_nowait(sample)
-                        except Full:
-                            pass
+                    elif kind == FRAME_STREAM and len(payload) >= 5:
+                        stream = payload[0]
+                        if self.stream_sink is not None and (
+                            self.stream_filter is None or stream in self.stream_filter
+                        ):
+                            sample = StreamSample(stream, struct.unpack_from("<I", payload, 1)[0], payload[5:])
+                            try:
+                                self._streams.put_nowait(sample)
+                            except Full:
+                                pass
                     elif kind == FRAME_REPLY and payload:
                         self._reply_events.put(payload)
         except Exception as exc:

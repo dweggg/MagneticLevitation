@@ -57,6 +57,10 @@ class LiveTelemetryPlot:
         return tuple(self._names)
 
     @property
+    def stream_ids(self) -> frozenset[int]:
+        return frozenset(self._available[name]["stream"] for name in self._names)
+
+    @property
     def is_open(self) -> bool:
         return self._figure is not None and self._plt.fignum_exists(self._figure.number)
 
@@ -170,6 +174,7 @@ class LiveTelemetryPlot:
 def plot_live(link: Link, catalog: ParameterCatalog, tick_hz: int, names: Iterable[str], window_seconds: float = 5.0) -> None:
     """Run a standalone live plot outside the interactive REPL."""
     plot = LiveTelemetryPlot(catalog, tick_hz, names, window_seconds)
+    link.stream_filter = plot.stream_ids
     link.stream_sink = plot.on_sample
     print("Telemetry plot is open; close its window or press Ctrl-C to stop.")
     try:
@@ -178,4 +183,5 @@ def plot_live(link: Link, catalog: ParameterCatalog, tick_hz: int, names: Iterab
             plot.refresh()
     finally:
         link.stream_sink = None
+        link.stream_filter = None
         plot.close()

@@ -21,13 +21,15 @@ The direction names describe the board's point of view. `TX` means readable by t
 
 `protocol.c` handles host commands, variable-list replies, logs, and outgoing frames. `protocol.h` defines the command and frame types. `usb_cdc.c` is the USB transport; `protocol.c` is the message handling above it.
 
-For telemetry, a module creates a named stream, registers its variables in sample order, and calls `stream_emit()` or `stream_emit_at()` from its task. The stream list reports the nominal rate and sample size. Each sample carries the stream ID, a firmware tick, and the variable bytes in their registered order. If the transmit buffer cannot take a whole sample, that sample is dropped and `stream_dropped` increases.
+For telemetry, a module creates a named stream, registers its variables in sample order, and calls `stream_emit()` or `stream_emit_at()` from its task. The stream list reports the nominal rate and full sample size. Each emitted sample carries the stream ID, a firmware tick, and only the subscribed variable bytes in their registered order. If the transmit buffer cannot take a whole sample, that sample is dropped and `stream_dropped` increases.
 
 ## PC side
 
 Run the PC client from the repository root with `python3 -m pc.protocol`. `pc/protocol.py` is the entry point and `pc/cli.py` implements the commands and interactive console.
 
-`pc/transport.py` opens the serial port, sends commands, decodes messages from the board, and matches replies to requests. It also keeps reading in the background so telemetry and replies can arrive together. `pc/metadata.py` stores the discovered variable and stream descriptions and lets commands use either a name or an ID. `pc/telemetry.py` decodes stream samples and provides the live plot.
+Install the PC dependencies with `python3 -m pip install -r pc/requirements.txt`. The live plot uses PyQtGraph with peak downsampling and view clipping so high-rate streams remain responsive.
+
+`pc/transport.py` opens the serial port, sends commands, decodes messages from the board, and matches replies to requests. It also keeps reading in the background so telemetry and replies can arrive together. `pc/metadata.py` stores the discovered variable and stream descriptions and lets commands use either a name or an ID. `pc/telemetry.py` decodes stream samples and provides the live PyQtGraph plot.
 
 ## Message shape
 
@@ -67,6 +69,7 @@ Host-to-device commands are not wrapped in frames:
 | Write (`0x02`) | command, ID (`u16`, little-endian), value length (`u8`), value bytes |
 | List variables (`0x03`) | command |
 | List streams (`0x04`) | command |
+| Set telemetry subscription (`0x05`) | command, variable count (`u8`), variable IDs (`u16`, little-endian each) |
 
 Read replies include the ID and raw value bytes; write replies report status. List replies are sent one entry per reply frame. Each entry includes its index and total count, allowing the PC to assemble the list. Variable descriptors include the format code, byte size, stream ID (`0xFF` means not streamed), and offset within a stream sample.
 
@@ -90,9 +93,9 @@ Despite its name, `f16` is **not** a 16-bit float: it is a 32-bit fixed-point va
 A stream is a named, ordered group of variables. Firmware registers the members in sample order and records each member's byte offset and size. The stream list reports the ID, nominal rate, variable count, and sample byte count; the rate is descriptive, while the actual samples are emitted by the task calling `stream_emit()` or `stream_emit_at()`.
 
 ```text
-stream payload = [stream_id][tick: u32 LE][value 0][value 1]...
+stream payload = [stream_id][tick: u32 LE][selected value 0][selected value 1]...
 ```
 
-There are no names, IDs, or type tags repeated inside each sample. The PC matches the stream ID to discovered descriptors, slices each variable using its offset and size, then decodes it using its format. This keeps samples compact while allowing multiple streams and different emit rates. The tick is the firmware scheduler tick; `tick_hz` converts it to seconds. If a complete sample will not fit in the transmit queue, firmware drops the whole sample and increments `stream_dropped`.
+There are no names, IDs, or type tags repeated inside each sample. Firmware sends no telemetry until it receives `SET_STREAM_SUBSCRIPTION` with the IDs of the variables the host needs. It then includes only those variables, in their original stream order, in each sample. An empty subscription disables telemetry. The sample still identifies its stream and tick, while the host uses its subscription and variable descriptors to decode the compacted value bytes. This keeps samples compact while allowing multiple streams and different emit rates. The tick is the firmware scheduler tick; `tick_hz` converts it to seconds. If a complete sample will not fit in the transmit queue, firmware drops the whole sample and increments `stream_dropped`.
 
-
+The live plot sends subscriptions when it opens, changes its selected variables, and closes. Selecting one variable therefore avoids transmitting the other variables in its stream, not just filtering them after they arrive at the PC.

@@ -13,7 +13,7 @@ MAX_POINTS = 200_000
 
 
 class LiveTelemetryPlot:
-    """Non-blocking matplotlib view of any variables registered on a stream.
+    """Non-blocking PyQtGraph view of any variables registered on a stream.
 
     Variables may come from different streams at different rates; each
     sample is placed on the x axis by its firmware tick (unwrapped from 32
@@ -22,14 +22,20 @@ class LiveTelemetryPlot:
 
     def __init__(self, catalog: ParameterCatalog, tick_hz: int, names: Iterable[str] = (), window_seconds: float = 5.0) -> None:
         try:
-            import matplotlib.pyplot as plt
+            import pyqtgraph as pg
+            from pyqtgraph.Qt import QtWidgets
         except ImportError as exc:  # pragma: no cover - depends on local environment
-            raise RuntimeError("Live plotting requires matplotlib. Install it with: python3 -m pip install matplotlib") from exc
+            raise RuntimeError(
+                "Live plotting requires PyQtGraph and a Qt binding. "
+                "Install them with: python3 -m pip install -r pc/requirements.txt"
+            ) from exc
         if tick_hz <= 0:
             raise ValueError(f"Invalid firmware tick rate: {tick_hz} Hz")
         if window_seconds <= 0:
             raise ValueError("--window must be greater than zero")
-        self._plt = plt
+        self._pg = pg
+        self._qt_widgets = QtWidgets
+        self._app = pg.mkQApp("Magnetic Levitation telemetry")
         self.catalog = catalog
         self.tick_hz = tick_hz
         self.window_seconds = window_seconds
@@ -46,7 +52,7 @@ class LiveTelemetryPlot:
         self.paused = False
         self._follow_time = True
         self._dirty = False
-        self._figure = None
+        self._window = None
         self._axes = []
         self._lines = []
         self._set_names(list(names) or list(self._available))
@@ -66,7 +72,7 @@ class LiveTelemetryPlot:
 
     @property
     def is_open(self) -> bool:
-        return self._figure is not None and self._plt.fignum_exists(self._figure.number)
+        return self._window is not None and self._window.isVisible()
 
     def _validate(self, names: Iterable[str]) -> list[str]:
         result: list[str] = []
@@ -84,18 +90,29 @@ class LiveTelemetryPlot:
             self._y.setdefault(name, deque(maxlen=MAX_POINTS))
 
     def _create_figure(self) -> None:
-        self._figure, axes = self._plt.subplots(len(self._names), 1, sharex=True, squeeze=False)
-        self._axes = [row[0] for row in axes]
+        self._window = self._pg.GraphicsLayoutWidget()
+        self._window.setWindowTitle("Magnetic Levitation telemetry")
+        self._axes = [
+            self._window.addPlot(row=index, col=0)
+            for index in range(len(self._names))
+        ]
         self._lines = []
-        for axis, name in zip(self._axes, self._names):
-            (line,) = axis.plot([], [], lw=0.8)
-            axis.set_ylabel(name)
-            axis.grid(True, alpha=0.3)
+        for index, (axis, name) in enumerate(zip(self._axes, self._names)):
+            line = axis.plot(pen=self._pg.mkPen(width=1))
+            line.setDownsampling(auto=True, method="peak")
+            line.setClipToView(True)
+            axis.setLabel("left", name)
+            axis.showGrid(x=True, y=True, alpha=0.3)
+            axis.enableAutoRange(axis=self._pg.ViewBox.YAxis, enable=True)
+            if index:
+                axis.setXLink(self._axes[0])
+            if index < len(self._axes) - 1:
+                axis.hideAxis("bottom")
             self._lines.append(line)
-        self._axes[-1].set_xlabel("firmware time (s)")
-        self._figure.canvas.manager.set_window_title("Magnetic Levitation telemetry")
-        self._figure.tight_layout()
-        self._plt.show(block=False)
+        self._axes[-1].setLabel("bottom", "firmware time", units="s")
+        streams = ", ".join(f"{s['name']}@{s['rate_hz']}Hz" for s in self.catalog.streams.values())
+        self._window.setWindowTitle(f"Magnetic Levitation telemetry - streams: {streams}")
+        self._window.show()
         self._dirty = True
 
     def set_channels(self, names: Iterable[str]) -> None:
@@ -156,28 +173,27 @@ class LiveTelemetryPlot:
         now = time.monotonic()
         if self._dirty and now - self._last_draw >= 1 / 30:
             right = max((x[-1] for x in self._x.values() if x), default=0.0)
-            for axis, line, name in zip(self._axes, self._lines, self._names):
+            for line, name in zip(self._lines, self._names):
                 xs, ys = self._x[name], self._y[name]
                 while xs and xs[0] < right - 1.1 * self.window_seconds:
                     xs.popleft()
                     ys.popleft()
-                line.set_data(list(xs), list(ys))
-                axis.relim()
-                axis.autoscale_view(scalex=False, scaley=True)
+                line.setData(xs, ys)
             if self._follow_time:
-                self._axes[-1].set_xlim(right - self.window_seconds, max(right, self.window_seconds))
-            streams = ", ".join(f"{s['name']}@{s['rate_hz']}Hz" for s in self.catalog.streams.values())
-            self._figure.suptitle(f"streams: {streams}")
-            self._figure.canvas.draw_idle()
+                self._axes[-1].setXRange(
+                    right - self.window_seconds,
+                    max(right, self.window_seconds),
+                    padding=0,
+                )
             self._last_draw = now
             self._dirty = False
-        self._plt.pause(0.001)
+        self._qt_widgets.QApplication.processEvents()
         return self.is_open
 
     def close(self) -> None:
-        if self._figure is not None:
-            self._plt.close(self._figure)
-            self._figure = None
+        if self._window is not None:
+            self._window.close()
+            self._window = None
 
 
 def plot_live(link: Link, catalog: ParameterCatalog, tick_hz: int, names: Iterable[str], window_seconds: float = 5.0) -> None:

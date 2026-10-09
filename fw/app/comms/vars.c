@@ -106,12 +106,19 @@ void vars_stream_emit_at(stream_id_t stream, uint32_t tick)
 	sample[2] = (uint8_t)(tick >> 8U);
 	sample[3] = (uint8_t)(tick >> 16U);
 	sample[4] = (uint8_t)(tick >> 24U);
+	uint8_t data_bytes = 0U;
 	for (uint8_t i = 0; i < s->count; ++i) {
 		const var_t *v = &var_table[s->members[i]];
-		memcpy(&sample[5U + v->offset], v->ptr, v->size);
+		if (protocol_stream_variable_enabled(v->id)) {
+			memcpy(&sample[5U + data_bytes], v->ptr, v->size);
+			data_bytes = (uint8_t)(data_bytes + v->size);
+		}
+	}
+	if (data_bytes == 0U) {
+		return;
 	}
 
-	if (protocol_send(PROTOCOL_FRAME_STREAM, sample, (uint16_t)(5U + s->bytes)) == 0) {
+	if (protocol_send(PROTOCOL_FRAME_STREAM, sample, (uint16_t)(5U + data_bytes)) == 0) {
 		++stream_dropped;
 	}
 }

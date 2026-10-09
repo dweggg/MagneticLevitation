@@ -79,7 +79,8 @@ static uint16_t protocol_append_hex(char *buffer, uint16_t position, uint16_t si
  * PROTOCOL_FRAME_STREAM ([stream id][u32 tick LE][sample bytes]).
  *
  * Host -> device commands are unframed and short:
- *   READ [id16], WRITE [id16][len][data], LIST_VARS, LIST_STREAMS.
+ *   READ [id16], WRITE [id16][len][data], LIST_VARS, LIST_STREAMS,
+ *   SET_STREAM_SUBSCRIPTION [count][id16...].
  * Replies are [cmd][status][body...]; list replies carry one entry per frame.
  */
 
@@ -125,6 +126,17 @@ static void protocol_put_u16(uint8_t *p, uint16_t v) { p[0] = (uint8_t)v; p[1] =
  * list never overflows the transmit ring or fights the telemetry for it. */
 static uint8_t list_cmd;    /* 0 = idle */
 static uint8_t list_index;
+static uint8_t stream_subscription_active;
+static uint8_t subscribed_variables[VARS_MAX_VARIABLE_COUNT];
+static uint8_t rx_pending[PROTOCOL_RX_BUFFER_SIZE_BYTES];
+static uint16_t rx_pending_length;
+static uint16_t rx_discard_bytes;
+
+int protocol_stream_variable_enabled(uint16_t id)
+{
+	return stream_subscription_active != 0U && id != 0U &&
+	       id <= VARS_MAX_VARIABLE_COUNT && subscribed_variables[id - 1U] != 0U;
+}
 
 static int protocol_send_list_entry(void)
 {
@@ -203,6 +215,24 @@ static void protocol_handle_write(uint16_t id, const uint8_t *data, uint8_t leng
 	protocol_send_reply(PROTOCOL_COMMAND_WRITE, PROTOCOL_STATUS_OK, NULL, 0);
 }
 
+static void protocol_handle_stream_subscription(const uint8_t *ids, uint8_t count)
+{
+	uint8_t selected[VARS_MAX_VARIABLE_COUNT] = {0};
+	for (uint8_t i = 0; i < count; ++i) {
+		uint16_t id = (uint16_t)ids[2U * i] | ((uint16_t)ids[2U * i + 1U] << 8U);
+		const var_t *v = vars_find(id);
+		if (v == NULL || v->stream == VARS_STREAM_NONE) {
+			protocol_send_reply(PROTOCOL_COMMAND_SET_STREAM_SUBSCRIPTION, PROTOCOL_STATUS_ERROR, NULL, 0);
+			return;
+		}
+		selected[id - 1U] = 1U;
+	}
+
+	memcpy(subscribed_variables, selected, sizeof(subscribed_variables));
+	stream_subscription_active = 1U;
+	protocol_send_reply(PROTOCOL_COMMAND_SET_STREAM_SUBSCRIPTION, PROTOCOL_STATUS_OK, NULL, 0);
+}
+
 int protocol_log_write(const uint8_t *buf, uint16_t len)
 {
 	return protocol_send(PROTOCOL_FRAME_LOG, buf, len);
@@ -275,44 +305,88 @@ int protocol_log_format(const char *format, ...)
 
 int protocol_bridge_poll(void)
 {
-	uint8_t frame[PROTOCOL_RX_BUFFER_SIZE_BYTES];
 	int available = usb_cdc_rx_available();
 	int read_count = 0;
 
-	if (available > 0) {
-		read_count = usb_cdc_rx_read(frame, available > (int)sizeof(frame) ? (int)sizeof(frame) : available);
+	if (available > 0 && rx_pending_length < sizeof(rx_pending)) {
+		int room = (int)sizeof(rx_pending) - rx_pending_length;
+		read_count = usb_cdc_rx_read(&rx_pending[rx_pending_length],
+		                             available > room ? room : available);
+		rx_pending_length = (uint16_t)(rx_pending_length + read_count);
 	}
 
-	for (int pos = 0; pos < read_count; ) {
-		uint8_t command = frame[pos++];
+	uint16_t pos = 0U;
+	while (pos < rx_pending_length) {
+		if (rx_discard_bytes != 0U) {
+			uint16_t remaining = (uint16_t)(rx_pending_length - pos);
+			uint16_t discard = remaining < rx_discard_bytes ? remaining : rx_discard_bytes;
+			pos = (uint16_t)(pos + discard);
+			rx_discard_bytes = (uint16_t)(rx_discard_bytes - discard);
+			continue;
+		}
+
+		uint8_t command = rx_pending[pos];
 		if (command == PROTOCOL_COMMAND_LIST_VARS || command == PROTOCOL_COMMAND_LIST_STREAMS) {
+			++pos;
 			list_cmd = command;
 			list_index = 0U;
 			continue;
 		}
-		if (command != PROTOCOL_COMMAND_READ && command != PROTOCOL_COMMAND_WRITE) {
-			continue;   /* resync on unknown bytes */
+		if (command == PROTOCOL_COMMAND_SET_STREAM_SUBSCRIPTION) {
+			if (rx_pending_length - pos < 2U) {
+				break;
+			}
+			uint8_t count = rx_pending[pos + 1U];
+			uint16_t command_length = (uint16_t)(2U + 2U * count);
+			if (count > VARS_MAX_VARIABLE_COUNT) {
+				protocol_send_reply(PROTOCOL_COMMAND_SET_STREAM_SUBSCRIPTION,
+				                    PROTOCOL_STATUS_ERROR, NULL, 0);
+				pos = (uint16_t)(pos + 2U);
+				rx_discard_bytes = (uint16_t)(2U * count);
+				continue;
+			}
+			if (rx_pending_length - pos < command_length) {
+				break;
+			}
+			protocol_handle_stream_subscription(&rx_pending[pos + 2U], count);
+			pos = (uint16_t)(pos + command_length);
+			continue;
 		}
-		if (pos + 2 > read_count) {
+		if (command != PROTOCOL_COMMAND_READ && command != PROTOCOL_COMMAND_WRITE) {
+			++pos;   /* resync on unknown bytes */
+			continue;
+		}
+		if (rx_pending_length - pos < 3U) {
 			break;
 		}
-		uint16_t id = (uint16_t)frame[pos] | ((uint16_t)frame[pos + 1] << 8);
-		pos += 2;
+		uint16_t id = (uint16_t)rx_pending[pos + 1U] | ((uint16_t)rx_pending[pos + 2U] << 8U);
 
 		if (command == PROTOCOL_COMMAND_READ) {
 			protocol_handle_read(id);
+			pos = (uint16_t)(pos + 3U);
 			continue;
 		}
-		if (pos >= read_count) {
+		if (rx_pending_length - pos < 4U) {
 			break;
 		}
-		uint8_t length = frame[pos++];
-		if (pos + length > read_count) {
+		uint8_t length = rx_pending[pos + 3U];
+		if (length > VARS_MAX_BODY_BYTES) {
 			protocol_send_reply(PROTOCOL_COMMAND_WRITE, PROTOCOL_STATUS_ERROR, NULL, 0);
+			pos = (uint16_t)(pos + 4U);
+			rx_discard_bytes = length;
+			continue;
+		}
+		uint16_t command_length = (uint16_t)(4U + length);
+		if (rx_pending_length - pos < command_length) {
 			break;
 		}
-			protocol_handle_write(id, &frame[pos], length);
-		pos += length;
+		protocol_handle_write(id, &rx_pending[pos + 4U], length);
+		pos = (uint16_t)(pos + command_length);
+	}
+
+	if (pos != 0U) {
+		rx_pending_length = (uint16_t)(rx_pending_length - pos);
+		memmove(rx_pending, &rx_pending[pos], rx_pending_length);
 	}
 
 	protocol_service_list();

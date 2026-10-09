@@ -8,6 +8,7 @@
 #define PROTOCOL_COMMAND_WRITE        0x02U
 #define PROTOCOL_COMMAND_LIST_VARS    0x03U
 #define PROTOCOL_COMMAND_LIST_STREAMS 0x04U
+#define PROTOCOL_COMMAND_SET_STREAM_SUBSCRIPTION 0x05U
 #define PROTOCOL_STATUS_OK            0x00U
 #define PROTOCOL_STATUS_ERROR         0x01U
 
@@ -22,6 +23,7 @@ int protocol_send(uint8_t type, const uint8_t *payload, uint16_t length);
 int protocol_log_write(const uint8_t *buf, uint16_t len);
 int protocol_log_format(const char *format, ...);
 int protocol_bridge_poll(void);
+int protocol_stream_variable_enabled(uint16_t id);
 
 #define PROTOCOL_LOG(format, ...) do { \
 	protocol_log_format(format, ##__VA_ARGS__); \

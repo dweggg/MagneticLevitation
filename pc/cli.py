@@ -5,7 +5,7 @@ import os
 import select
 import sys
 import time
-from typing import Iterable
+from typing import Callable, Iterable
 
 try:
     import termios
@@ -310,6 +310,38 @@ def _handle_repl_command(port, catalog: ParameterCatalog, line: str, state: dict
         return False
 
 
+def _configure_plot_stream(port, plot: LiveTelemetryPlot) -> None:
+    port.stream_sink = None
+    port.stream_filter = frozenset()
+    port.set_stream_subscription(plot.subscription_ids)
+    port.stream_filter = plot.stream_ids
+    port.stream_sink = plot.on_sample
+
+
+def _stop_plot_stream(port) -> None:
+    port.stream_sink = None
+    port.stream_filter = frozenset()
+    port.set_stream_subscription(())
+
+
+def _change_plot_channels(port, plot: LiveTelemetryPlot, change: Callable[[], None]) -> None:
+    previous_names = list(plot.channel_names)
+    port.stream_sink = None
+    port.stream_filter = frozenset()
+    try:
+        change()
+        port.set_stream_subscription(plot.subscription_ids)
+    except Exception:
+        if list(plot.channel_names) != previous_names:
+            plot.set_channels(previous_names)
+            port.set_stream_subscription(plot.subscription_ids)
+        port.stream_filter = plot.stream_ids
+        port.stream_sink = plot.on_sample
+        raise
+    port.stream_filter = plot.stream_ids
+    port.stream_sink = plot.on_sample
+
+
 def _handle_repl_plot_command(port, catalog: ParameterCatalog, arguments: list[str], state: dict) -> bool:
     if not arguments:
         print("Usage: plot open [variables] | close | add <variables> | remove <variables> | list")
@@ -324,19 +356,25 @@ def _handle_repl_plot_command(port, catalog: ParameterCatalog, arguments: list[s
         return True
     if action == "close":
         if plot is not None:
-            plot.close()
-            state["plot"] = None
-            port.stream_sink = None
-            port.stream_filter = None
+            try:
+                _stop_plot_stream(port)
+            finally:
+                plot.close()
+                state["plot"] = None
         print("Telemetry plot closed")
         return True
     if action == "open":
         if plot is not None:
+            _stop_plot_stream(port)
             plot.close()
-        state["plot"] = LiveTelemetryPlot(catalog, _tick_hz(port, catalog), arguments[1:], state.get("plot_window", 5.0))
-        port.stream_filter = state["plot"].stream_ids
-        port.stream_sink = state["plot"].on_sample
-        print("Telemetry plot opened: " + ", ".join(state["plot"].channel_names))
+        plot = LiveTelemetryPlot(catalog, _tick_hz(port, catalog), arguments[1:], state.get("plot_window", 5.0))
+        try:
+            _configure_plot_stream(port, plot)
+        except Exception:
+            plot.close()
+            raise
+        state["plot"] = plot
+        print("Telemetry plot opened: " + ", ".join(plot.channel_names))
         return True
     if plot is None or not plot.is_open:
         print("Telemetry plot is not open. Use: plot open [variables]")
@@ -353,16 +391,14 @@ def _handle_repl_plot_command(port, catalog: ParameterCatalog, arguments: list[s
         if len(arguments) < 2:
             print("Usage: plot add <variables>")
             return True
-        plot.add_channels(arguments[1:])
-        port.stream_filter = plot.stream_ids
+        _change_plot_channels(port, plot, lambda: plot.add_channels(arguments[1:]))
         print("Plot: " + ", ".join(plot.channel_names))
         return True
     if action in {"remove", "rm"}:
         if len(arguments) < 2:
             print("Usage: plot remove <variables>")
             return True
-        plot.remove_channels(arguments[1:])
-        port.stream_filter = plot.stream_ids
+        _change_plot_channels(port, plot, lambda: plot.remove_channels(arguments[1:]))
         print("Plot: " + ", ".join(plot.channel_names))
         return True
     print(f"Unknown plot command: {arguments[0]}")
@@ -387,8 +423,7 @@ def run_repl(port, catalog: ParameterCatalog):
             if plot is not None:
                 if not plot.is_open:
                     state["plot"] = None
-                    port.stream_sink = None
-                    port.stream_filter = None
+                    _stop_plot_stream(port)
                 else:
                     plot.refresh()
             try:
@@ -410,9 +445,13 @@ def run_repl(port, catalog: ParameterCatalog):
         editor.close()
         plot = state.get("plot")
         if plot is not None:
-            plot.close()
-        port.stream_sink = None
-        port.stream_filter = None
+            try:
+                _stop_plot_stream(port)
+            finally:
+                plot.close()
+        else:
+            port.stream_sink = None
+            port.stream_filter = frozenset()
 
 
 def _run_telemetry_list(port, catalog: ParameterCatalog) -> None:

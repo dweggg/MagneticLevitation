@@ -61,6 +61,10 @@ class LiveTelemetryPlot:
         return frozenset(self._available[name]["stream"] for name in self._names)
 
     @property
+    def subscription_ids(self) -> tuple[int, ...]:
+        return tuple(int(self._available[name]["id"]) for name in self._names)
+
+    @property
     def is_open(self) -> bool:
         return self._figure is not None and self._plt.fignum_exists(self._figure.number)
 
@@ -122,15 +126,20 @@ class LiveTelemetryPlot:
         if self.paused:
             return  # keep the tick unwrapper continuous so resume has no jump
         t = (self._unwrapped - self._base) / self.tick_hz
-        for name in self._names:
+        stream_names = sorted(
+            (name for name in self._names if self._available[name]["stream"] == sample.stream),
+            key=lambda name: self._available[name]["offset"],
+        )
+        if not stream_names or len(sample.data) != sum(self._available[name]["size"] for name in stream_names):
+            return
+        offset = 0
+        for name in stream_names:
             var = self._available[name]
-            if var["stream"] != sample.stream:
-                continue
-            raw = sample.data[var["offset"]:var["offset"] + var["size"]]
-            if len(raw) == var["size"]:
-                self._x[name].append(t)
-                self._y[name].append(float(decode_value(raw, var["format"])))
-                self._dirty = True
+            raw = sample.data[offset:offset + var["size"]]
+            offset += var["size"]
+            self._x[name].append(t)
+            self._y[name].append(float(decode_value(raw, var["format"])))
+            self._dirty = True
 
     def pause(self) -> None:
         self.paused = True
@@ -174,14 +183,23 @@ class LiveTelemetryPlot:
 def plot_live(link: Link, catalog: ParameterCatalog, tick_hz: int, names: Iterable[str], window_seconds: float = 5.0) -> None:
     """Run a standalone live plot outside the interactive REPL."""
     plot = LiveTelemetryPlot(catalog, tick_hz, names, window_seconds)
-    link.stream_filter = plot.stream_ids
-    link.stream_sink = plot.on_sample
-    print("Telemetry plot is open; close its window or press Ctrl-C to stop.")
+    subscribed = False
     try:
+        link.stream_sink = None
+        link.stream_filter = frozenset()
+        link.set_stream_subscription(plot.subscription_ids)
+        subscribed = True
+        link.stream_filter = plot.stream_ids
+        link.stream_sink = plot.on_sample
+        print("Telemetry plot is open; close its window or press Ctrl-C to stop.")
         while plot.is_open:
             link.pump()
             plot.refresh()
     finally:
         link.stream_sink = None
-        link.stream_filter = None
-        plot.close()
+        link.stream_filter = frozenset()
+        try:
+            if subscribed:
+                link.set_stream_subscription(())
+        finally:
+            plot.close()

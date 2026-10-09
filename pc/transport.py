@@ -22,7 +22,9 @@ CMD_READ = 0x01
 CMD_WRITE = 0x02
 CMD_LIST_VARS = 0x03
 CMD_LIST_STREAMS = 0x04
+CMD_SET_STREAM_SUBSCRIPTION = 0x05
 STATUS_OK = 0x00
+MAX_STREAM_SUBSCRIPTION_VARIABLES = 56
 
 FRAME_SYNC = 0xA5
 FRAME_LOG = 0x01
@@ -365,6 +367,18 @@ class Link:
             entries[reply[2]] = reply
             total = reply[3]
         return [entries[i] for i in sorted(entries)]
+
+    def set_stream_subscription(self, variable_ids: Iterable[int], timeout: float = 1.0) -> None:
+        """Ask firmware to stream only the selected variables."""
+        ids = list(dict.fromkeys(variable_ids))
+        if len(ids) > MAX_STREAM_SUBSCRIPTION_VARIABLES:
+            raise ValueError(f"At most {MAX_STREAM_SUBSCRIPTION_VARIABLES} variables can be subscribed")
+        if any(not 0 < obj_id <= 0xFFFF for obj_id in ids):
+            raise ValueError("Stream subscription IDs must be in the range 1..65535")
+        payload = bytes([CMD_SET_STREAM_SUBSCRIPTION, len(ids)]) + b"".join(pack_u16(obj_id) for obj_id in ids)
+        reply = self.request(payload, timeout=timeout)
+        if len(reply) < 2 or reply[1] != STATUS_OK:
+            raise RuntimeError("Firmware rejected the telemetry stream subscription")
 
 
 def list_params(link: Link) -> list[dict]:

@@ -26,7 +26,7 @@
 #include <stddef.h>
 #include <stdint.h>
 
-#define VARS_MAX_VARIABLE_COUNT        48U
+#define VARS_MAX_VARIABLE_COUNT        56U
 #define VARS_MAX_STREAM_COUNT          4U
 #define VARS_STREAM_MAX_VARIABLES     40U
 #define VARS_STREAM_MAX_PAYLOAD_BYTES 192U /* sample payload, excluding id + tick */
@@ -86,9 +86,9 @@ size_t vars_get_variable_count(void);
 const stream_t *vars_get_stream_at(size_t index);
 size_t vars_get_stream_count(void);
 
-/* Sample a stream now: copies every member variable and queues one frame
- * stamped with the firmware tick. Never blocks; drops (and counts) if the
- * transmit ring cannot take the whole frame. */
+/* Sample a stream now: copies subscribed member variables and queues one
+ * frame stamped with the firmware tick. Never blocks; drops (and counts) if
+ * the transmit ring cannot take the whole frame. */
 void vars_stream_emit(stream_id_t stream);
 void vars_stream_emit_at(stream_id_t stream, uint32_t tick);
 

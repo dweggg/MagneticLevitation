@@ -47,21 +47,21 @@ I think I might have added those two via groups to lower switching loop inductan
 - [X] 6. Review RST button behavior, or think of a way to hw reset the MCU, without firmware -> not necessary, but if needed current design could be made work like that if we flashed with a debugger and not with the bootloader
 - [X] 7. Disconnect U2 (MT3608) output without EN pin, PMOS maybe -> not needed, drivers have UVLO at 5.5V
 - [X] 8. Remove JLCJLCJLCJLC
-- [S] 9. Move power supply section a bit down and leave more clearance with board edge
-- [S] 10. Move debug/UART connectors and RST button, also turn them DNP
+- [X] 9. Move power supply section a bit down and leave more clearance with board edge
+- [X] 10. Move debug/UART connectors and RST button, also turn them DNP
 - [X] 11. Improve bootstrap layout? Works just fine even with the ugly rework, not needed.
 - [P] 12. Replace expensive capacitors with something cheaper available as basic JLCPCBA: So far replaced all 22uF with 10uF. Pending proper review with BOM. removed yet another bom line!
 - [X] 13. Find cuter output connector? Maybe even SMD so back side stays clean -> found a cute but expensive wago. worth it imo
 - [X] 14. Review Rgate, since at 12V V_GS, I_G_pk = 12V/10R = 1.2A which is bigger than XJNG2103 1A -> increased to 15R
 - [X] 15. Try to reduce electrolytic cap height? If we have XY space we can have half capacitance, half height but x2 parts -> reduced to 5.6mm, same as connector, without decreasing C or increasing diameter. Doesnt make sense to go lower unless connector goes lower, which is not happening
 - [X] 16. R16/R17 should be a bit bigger if they need to be hand replaced -> part of bootstrap, same thing, it works
-- [S] 17. Testpoints for gates!!! Even if they're difficult to place
+- [X] 17. Testpoints for gates!!! Even if they're difficult to place
 - [X] 18. Add revision number in sch and pcb
 - [X] 19. Automatic bootloader entry with a MOSFET or similar instead of button (or parallel to button) -> meh not worth it. The flashing experience through bootloader is not that bad. TI is 200x worse even with a fancy jtag probe
-- [S] 20. Add potentiometer for setpoint percentage of power
+- [X] 20. Add potentiometer for setpoint percentage of power
 - [X] 21. Add sillkscreen for board ID
 - [P] 22. Fix for issue #4 -> added FT Rotation Offset field and set to 0, but investigation is pending
-- [S] 23. Fix for issue #5: Replaced 3V3 buck with LDO which removes change #2. I was scared of the inductor saturating and maybe doing something funny with the analog rail. Playing safe even though it clearly works somehow in the current version.
+- [X] 23. Fix for issue #5: Replaced 3V3 buck with LDO which removes change #2. I was scared of the inductor saturating and maybe doing something funny with the analog rail. Playing safe even though it clearly works somehow in the current version.
 
 ---
 

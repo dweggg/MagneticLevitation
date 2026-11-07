@@ -9,9 +9,9 @@
 
 [X] 3. NTC reads 0V, so either pin is bad/misconfigured, or C31 is shorted or something (~0Ohm between TP13 and GND)
 
-[ ] 4. Some boards have the inductor rotated 90deg!! That would make the boost not work at all
+[X] 4. Some boards have the inductor rotated 90deg!! That would make the boost not work at all
 
-[ ] 5. Vbus sag with pulsed current in a coil around the board. I don't think it's a good idea to have inductors wound in the same axis as the coil we're trying to control, but is there any alternative?
+[X] 5. Vbus sag with pulsed current in a coil around the board. I don't think it's a good idea to have inductors wound in the same axis as the coil we're trying to control, but is there any alternative?
 
 
 ---
@@ -50,7 +50,7 @@ I think I might have added those two via groups to lower switching loop inductan
 - [X] 9. Move power supply section a bit down and leave more clearance with board edge
 - [X] 10. Move debug/UART connectors and RST button, also turn them DNP
 - [X] 11. Improve bootstrap layout? Works just fine even with the ugly rework, not needed.
-- [P] 12. Replace expensive capacitors with something cheaper available as basic JLCPCBA: So far replaced all 22uF with 10uF. Pending proper review with BOM. removed yet another bom line!
+- [X] 12. Replace expensive capacitors with something cheaper available as basic JLCPCBA: So far replaced all 22uF with 10uF. Pending proper review with BOM. removed yet another bom line! Was cheap enough already i think.
 - [X] 13. Find cuter output connector? Maybe even SMD so back side stays clean -> found a cute but expensive wago. worth it imo
 - [X] 14. Review Rgate, since at 12V V_GS, I_G_pk = 12V/10R = 1.2A which is bigger than XJNG2103 1A -> increased to 15R
 - [X] 15. Try to reduce electrolytic cap height? If we have XY space we can have half capacitance, half height but x2 parts -> reduced to 5.6mm, same as connector, without decreasing C or increasing diameter. Doesnt make sense to go lower unless connector goes lower, which is not happening
@@ -60,7 +60,7 @@ I think I might have added those two via groups to lower switching loop inductan
 - [X] 19. Automatic bootloader entry with a MOSFET or similar instead of button (or parallel to button) -> meh not worth it. The flashing experience through bootloader is not that bad. TI is 200x worse even with a fancy jtag probe
 - [X] 20. Add potentiometer for setpoint percentage of power
 - [X] 21. Add sillkscreen for board ID
-- [P] 22. Fix for issue #4 -> added FT Rotation Offset field and set to 0, but investigation is pending
+- [X] 22. Fix for issue #4 -> added FT Rotation Offset field and set to 0, but investigation is pending. Handled with an assembly remark in prod.
 - [X] 23. Fix for issue #5: Replaced 3V3 buck with LDO which removes change #2. I was scared of the inductor saturating and maybe doing something funny with the analog rail. Playing safe even though it clearly works somehow in the current version.
 
 ---

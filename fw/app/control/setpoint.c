@@ -1,10 +1,12 @@
 #include "setpoint.h"
 #include "current_control.h"
-#include "protocol.h"
-#include "parameters.h"
-#include "ch32fun.h"
-#include "pinout.h"
-#include "fix16.h"
+#include "position_control.h"
+#include "vars.h"
+#include "fsm.h"
+#include "fault_limits.h"
+#include "usb_pd.h"
+#include "scheduler.h"
+#include "tasks.h"
 
 /*
  * NTC temperature conversion strategy:
@@ -13,11 +15,11 @@
  *  - Instead, we precompute the temperature curve in q16.16 fixed-point and
  *    interpolate between the nearest two table points.
  */
-#define NTC_ADC_BITS              12U
-#define NTC_ADC_MAX_RAW           ((1U << NTC_ADC_BITS) - 1U)
-#define NTC_LUT_SHIFT             6U
-#define NTC_LUT_SIZE              (1U << NTC_LUT_SHIFT)
-#define NTC_LUT_VALUE_COUNT       (NTC_LUT_SIZE + 1U)
+#define SETPOINT_NTC_ADC_BITS        12U
+#define SETPOINT_NTC_ADC_MAX_RAW     ((1U << SETPOINT_NTC_ADC_BITS) - 1U)
+#define SETPOINT_NTC_LUT_SHIFT       6U
+#define SETPOINT_NTC_LUT_SIZE        (1U << SETPOINT_NTC_LUT_SHIFT)
+#define SETPOINT_NTC_LUT_VALUE_COUNT (SETPOINT_NTC_LUT_SIZE + 1U)
 
 /*
  * LUT layout:
@@ -26,22 +28,29 @@
  *  - We sample the ADC range in 64-count chunks, so the table has 65 points:
  *    one at every 64-count boundary plus the final endpoint.
  *
- *  This was generated from a 10k/5.1k NTC divider curve and is the
- *  canonical temperature model used by the firmware.
+ *  This was generated from a 10k/5.1k NTC divider curve. (https://www.lcsc.com/datasheet/C49247665.pdf)
  */
-static const fix16_t ntc_lut_q16[NTC_LUT_VALUE_COUNT] = {
-    -2621440, -2621440, -2125050, -1646743, -1283307, -984969, -728754, -502058,
-    -297181, -109051, 65864, 230127, 385667, 533975, 676232, 813396,
-    946255, 1075470, 1201605, 1325147, 1446522, 1566109, 1684251, 1801259,
-    1917420, 2033004, 2148268, 2263457, 2378811, 2494565, 2610956, 2728220,
-    2846601, 2964467, 3085820, 3209077, 3334532, 3462505, 3593339, 3727415,
-    3865149, 4007009, 4153519, 4305275, 4462958, 4627353, 4799377, 4980110,
-    5170835, 5373100, 5588791, 5820246, 6070405, 6343038, 6643087, 6977201,
-    7354603, 7788589, 8299274, 8919060, 9704832, 9830400, 9830400, 9830400,
-    9830400
+static const fix16_t setpoint_ntc_temp_c_q16_lut[SETPOINT_NTC_LUT_VALUE_COUNT] = {
+    F16(-40.0), F16(-40.0), F16(-32.42), F16(-25.12), 
+    F16(-19.58), F16(-15.02), F16(-11.11), F16(-7.66), 
+    F16(-4.53), F16(-1.66), F16(1.00), F16(3.51), 
+    F16(5.88), F16(8.14), F16(10.31), F16(12.41), 
+    F16(14.43), F16(16.41), F16(18.33), F16(20.22), 
+    F16(22.07), F16(23.89), F16(25.69), F16(27.48), 
+    F16(29.25), F16(31.02), F16(32.77), F16(34.53), 
+    F16(36.29), F16(38.06), F16(39.84), F16(41.62), 
+    F16(43.43), F16(45.23), F16(47.08), F16(48.96), 
+    F16(50.88), F16(52.83), F16(54.83), F16(56.87), 
+    F16(58.97), F16(61.14), F16(63.37), F16(65.69), 
+    F16(68.09), F16(70.60), F16(73.23), F16(75.99), 
+    F16(78.90), F16(81.98), F16(85.27), F16(88.80), 
+    F16(92.62), F16(96.78), F16(101.36), F16(106.46), 
+    F16(112.22), F16(118.84), F16(126.63), F16(136.09), 
+    F16(148.08), F16(150.0), F16(150.0), F16(150.0),
+    F16(150.0)
 };
 
-static fix16_t temp_c_q16_from_raw(uint16_t raw)
+static fix16_t setpoint_temp_c_q16_from_adc_raw(uint16_t adc_raw)
 {
     uint16_t index;
     uint16_t fract;
@@ -49,8 +58,8 @@ static fix16_t temp_c_q16_from_raw(uint16_t raw)
     fix16_t temp_hi;
 
     /* Clamp the raw ADC value to the last legal table point. */
-    if (raw >= NTC_ADC_MAX_RAW) {
-        raw = NTC_ADC_MAX_RAW;
+    if (adc_raw >= SETPOINT_NTC_ADC_MAX_RAW) {
+        adc_raw = SETPOINT_NTC_ADC_MAX_RAW;
     }
 
     /*
@@ -59,12 +68,12 @@ static fix16_t temp_c_q16_from_raw(uint16_t raw)
      *  - fract is the remainder inside that segment, i.e. how far between the
      *    lower and upper LUT points the raw value sits.
      */
-    index = raw >> NTC_LUT_SHIFT;
-    fract = raw & ((1U << NTC_LUT_SHIFT) - 1U);
+    index = adc_raw >> SETPOINT_NTC_LUT_SHIFT;
+    fract = adc_raw & ((1U << SETPOINT_NTC_LUT_SHIFT) - 1U);
 
     /* Guard against walking exactly to the final table index. */
-    if (index >= (NTC_LUT_SIZE)) {
-        index = NTC_LUT_SIZE - 1U;
+    if (index >= SETPOINT_NTC_LUT_SIZE) {
+        index = SETPOINT_NTC_LUT_SIZE - 1U;
     }
 
     /*
@@ -89,23 +98,85 @@ static fix16_t temp_c_q16_from_raw(uint16_t raw)
      * in q16.16. Then fix16_lerp16 does exactly:
      *   temp = temp_lo + (temp_hi - temp_lo) * f_q16
      */
-    temp_lo = ntc_lut_q16[index];
-    temp_hi = ntc_lut_q16[index + 1U];
-    return fix16_lerp16(temp_lo, temp_hi, (uint16_t)((uint32_t)fract << (16U - NTC_LUT_SHIFT)));
+    temp_lo = setpoint_ntc_temp_c_q16_lut[index];
+    temp_hi = setpoint_ntc_temp_c_q16_lut[index + 1U];
+    return fix16_lerp16(temp_lo, temp_hi, (uint16_t)((uint32_t)fract << (16U - SETPOINT_NTC_LUT_SHIFT)));
 }
 
 
 static fix16_t temp_c_q16;
+static fix16_t i_sp_manual;
+static fix16_t i_sp_position_control;
+static fix16_t x_sp_manual;
+static fix16_t i_sp_active;
+static fix16_t x_sp_active;
+static fix16_t power_budget_w;
+static uint16_t power_budget_pct = 100U; // uint16_t because in the next rev the PCB we will have a potentiometer connected to an ADC channel
+static uint8_t power_available_w;
+static stream_id_t setpoint_stream = VARS_STREAM_NONE;
 
-void init_pins_setpoint(void){
+void setpoint_init(void)
+{
+    
+    setpoint_stream = vars_create_stream("setpoint", TASK_SETPOINT_HZ);
+
+    VARS_MONITOR("temp_c", VAR_F16, &temp_c_q16, setpoint_stream);
+    VARS_PARAM("power_budget_pct", VAR_U16, &power_budget_pct);
+    VARS_PARAM("i_sp_manual", VAR_F16, &i_sp_manual);
+    VARS_PARAM("x_sp_manual", VAR_F16, &x_sp_manual);
+    VARS_MONITOR("power_available_w", VAR_U8, &power_available_w, setpoint_stream);
+    VARS_MONITOR("power_budget_w", VAR_F16, &power_budget_w, setpoint_stream);
+    VARS_MONITOR("i_sp_active", VAR_F16, &i_sp_active, setpoint_stream);
+    VARS_MONITOR("x_sp_active", VAR_F16, &x_sp_active, setpoint_stream);
 }
 
-void task_setpoint(void){
+void setpoint_task(void)
+{
 
-    const uint16_t raw = get_temp_meas_raw();
-    temp_c_q16 = temp_c_q16_from_raw(raw);
+    const uint32_t tick = scheduler_get_tick();
 
-    parameters_publish(PARAM_ID_TEMP, &temp_c_q16);
+    const uint16_t temp_adc_raw = current_control_get_temp_adc_raw();
+    temp_c_q16 = setpoint_temp_c_q16_from_adc_raw(temp_adc_raw);
 
+    if (temp_c_q16 >= FAULT_OVERTEMPERATURE_LIMIT_C_Q16 || temp_c_q16 < 0) {
+        fsm_raise_fault(FAULT_OVERTEMPERATURE);
+    }
 
+    power_available_w = usb_pd_get_available_power_w();
+    if (power_budget_pct > 100U) {
+        power_budget_pct = 100U;
+    }
+    power_budget_w = fix16_mul(
+        fix16_from_int(power_available_w),
+        fix16_div(fix16_from_int(power_budget_pct), fix16_from_int(100))
+    );
+
+    i_sp_position_control = position_control_get_i_sp();
+    
+    i_sp_active = (fsm_control_mode() == FSM_MODE_MANUAL_CURRENT)
+        ? i_sp_manual : i_sp_position_control; // either from comms or position control sets it
+    x_sp_active = (fsm_control_mode() == FSM_MODE_MANUAL_POSITION)
+        ? x_sp_manual : 0; // TODO: calculate from available power and magnet/weight limit
+
+    vars_stream_emit_at(setpoint_stream, tick);
+}
+
+fix16_t setpoint_get_i_sp(void)
+{
+    return i_sp_active;
+}
+
+fix16_t setpoint_get_x_sp(void)
+{
+    return x_sp_active;
+}
+
+fix16_t setpoint_get_power_budget_w(void)
+{
+    return power_budget_w;
+}
+
+fix16_t setpoint_get_temp_c(void)
+{
+    return temp_c_q16;
 }

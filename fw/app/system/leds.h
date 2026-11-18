@@ -1,8 +1,8 @@
 #ifndef LEDS_H
 #define LEDS_H
 
-void init_pins_leds(void);
+void leds_init(void);
 
-void task_leds(void);
+void leds_task(void);
 
 #endif // LEDS_H

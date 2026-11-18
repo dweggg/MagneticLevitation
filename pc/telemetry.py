@@ -1,180 +1,166 @@
-"""Decoder and plotting helpers for the USB CDC telemetry stream."""
+"""Live plotting for the multi-stream telemetry, x axis = firmware time."""
 
 from __future__ import annotations
 
 from collections import deque
-from dataclasses import dataclass
-import struct
 import time
 from typing import Iterable
 
+from pc.metadata import ParameterCatalog
+from pc.transport import Link, StreamSample, decode_value
 
-TELEMETRY_SYNC = b"\xa5\x5a"
-TELEMETRY_FRAME_SIZE = 20
-TELEMETRY_CHANNEL_COUNT = 4
-
-
-@dataclass(frozen=True)
-class TelemetryFrame:
-    sequence: int
-    values: tuple[float, float, float, float]
-
-
-class TelemetryDecoder:
-    """Incrementally extract valid frames from a mixed CDC byte stream."""
-
-    def __init__(self) -> None:
-        self._buffer = bytearray()
-
-    def feed(self, data: bytes) -> list[TelemetryFrame]:
-        self._buffer.extend(data)
-        frames: list[TelemetryFrame] = []
-
-        while True:
-            start = self._buffer.find(TELEMETRY_SYNC)
-            if start < 0:
-                # Keep one possible leading sync byte for the next read.
-                del self._buffer[:-1]
-                break
-            if start:
-                del self._buffer[:start]
-            if len(self._buffer) < TELEMETRY_FRAME_SIZE:
-                break
-
-            candidate = self._buffer[:TELEMETRY_FRAME_SIZE]
-            checksum = 0
-            for byte in candidate[:-1]:
-                checksum ^= byte
-            if checksum != candidate[-1]:
-                del self._buffer[0]
-                continue
-
-            sequence = candidate[2]
-            raw_values = struct.unpack_from("<4i", candidate, 3)
-            frames.append(TelemetryFrame(sequence, tuple(value / 65536.0 for value in raw_values)))
-            del self._buffer[:TELEMETRY_FRAME_SIZE]
-
-        return frames
-
-
-def selected_channels(names: Iterable[str], available_channels: Iterable[str]) -> tuple[int, ...]:
-    """Return channel indices, rejecting unknown names and duplicates."""
-    available = tuple(available_channels)
-    result: list[int] = []
-    for name in names:
-        try:
-            index = available.index(name)
-        except ValueError as exc:
-            choices = ", ".join(available)
-            raise ValueError(f"Unknown telemetry variable '{name}'. Choose from: {choices}") from exc
-        if index not in result:
-            result.append(index)
-    return tuple(result)
+MAX_POINTS = 200_000
 
 
 class LiveTelemetryPlot:
-    """Non-blocking matplotlib telemetry view owned by the caller's event loop."""
+    """Non-blocking PyQtGraph view of any variables registered on a stream.
 
-    def __init__(self, available_channels: Iterable[str], channel_names: Iterable[str], rate_hz: int, window_seconds: float = 5.0) -> None:
+    Variables may come from different streams at different rates; each
+    sample is placed on the x axis by its firmware tick (unwrapped from 32
+    bits and divided by the device tick rate), never by arrival time.
+    """
+
+    def __init__(self, catalog: ParameterCatalog, tick_hz: int, names: Iterable[str] = (), window_seconds: float = 5.0) -> None:
         try:
-            import matplotlib.pyplot as plt
+            import pyqtgraph as pg
+            from pyqtgraph.Qt import QtWidgets
         except ImportError as exc:  # pragma: no cover - depends on local environment
-            raise RuntimeError("Live plotting requires matplotlib. Install it with: python3 -m pip install matplotlib") from exc
-
-        if rate_hz <= 0:
-            raise ValueError(f"Invalid telemetry rate: {rate_hz} Hz")
+            raise RuntimeError(
+                "Live plotting requires PyQtGraph and a Qt binding. "
+                "Install them with: python3 -m pip install -r pc/requirements.txt"
+            ) from exc
+        if tick_hz <= 0:
+            raise ValueError(f"Invalid firmware tick rate: {tick_hz} Hz")
         if window_seconds <= 0:
             raise ValueError("--window must be greater than zero")
-        self._plt = plt
-        self.rate_hz = rate_hz
+        self._pg = pg
+        self._qt_widgets = QtWidgets
+        self._app = pg.mkQApp("Magnetic Levitation telemetry")
+        self.catalog = catalog
+        self.tick_hz = tick_hz
         self.window_seconds = window_seconds
-        self._available_channels = tuple(available_channels)
-        if len(self._available_channels) != TELEMETRY_CHANNEL_COUNT:
-            raise ValueError(f"Unsupported telemetry layout: expected {TELEMETRY_CHANNEL_COUNT} channels, got {len(self._available_channels)}")
-        self._indices = list(selected_channels(channel_names, self._available_channels) or range(len(self._available_channels)))
-        max_samples = max(2, int(rate_hz * window_seconds))
-        self._samples = deque(maxlen=max_samples)
-        self._values = [deque(maxlen=max_samples) for _ in self._available_channels]
-        self._decoder = TelemetryDecoder()
-        self._last_sequence: int | None = None
-        self._sample_number = 0
-        self._missing = 0
+        self._available = {v["name"]: v for v in catalog.stream_vars()}
+        if not self._available:
+            raise ValueError("The device has no streamed variables")
+        self._names: list[str] = []
+        self._x: dict[str, deque] = {}
+        self._y: dict[str, deque] = {}
+        self._last_tick: int | None = None
+        self._unwrapped = 0
+        self._base: int | None = None
         self._last_draw = 0.0
         self.paused = False
         self._follow_time = True
         self._dirty = False
-        self._figure = None
+        self._window = None
         self._axes = []
         self._lines = []
+        self._set_names(list(names) or list(self._available))
         self._create_figure()
 
     @property
     def channel_names(self) -> tuple[str, ...]:
-        return tuple(self._available_channels[index] for index in self._indices)
+        return tuple(self._names)
+
+    @property
+    def stream_ids(self) -> frozenset[int]:
+        return frozenset(self._available[name]["stream"] for name in self._names)
+
+    @property
+    def subscription_ids(self) -> tuple[int, ...]:
+        return tuple(int(self._available[name]["id"]) for name in self._names)
 
     @property
     def is_open(self) -> bool:
-        return self._figure is not None and self._plt.fignum_exists(self._figure.number)
+        return self._window is not None and self._window.isVisible()
+
+    def _validate(self, names: Iterable[str]) -> list[str]:
+        result: list[str] = []
+        for name in names:
+            if name not in self._available:
+                raise ValueError(f"Unknown streamed variable '{name}'. Choose from: {', '.join(self._available)}")
+            if name not in result:
+                result.append(name)
+        return result
+
+    def _set_names(self, names: list[str]) -> None:
+        self._names = self._validate(names)
+        for name in self._names:
+            self._x.setdefault(name, deque(maxlen=MAX_POINTS))
+            self._y.setdefault(name, deque(maxlen=MAX_POINTS))
 
     def _create_figure(self) -> None:
-        self._figure, axes = self._plt.subplots(len(self._indices), 1, sharex=True, squeeze=False)
-        self._axes = [row[0] for row in axes]
+        self._window = self._pg.GraphicsLayoutWidget()
+        self._window.setWindowTitle("Magnetic Levitation telemetry")
+        self._axes = [
+            self._window.addPlot(row=index, col=0)
+            for index in range(len(self._names))
+        ]
         self._lines = []
-        for axis, index in zip(self._axes, self._indices):
-            (line,) = axis.plot([], [], lw=0.8)
-            axis.set_ylabel(self._available_channels[index])
-            axis.grid(True, alpha=0.3)
+        for index, (axis, name) in enumerate(zip(self._axes, self._names)):
+            line = axis.plot(pen=self._pg.mkPen(width=1))
+            line.setDownsampling(auto=True, method="peak")
+            line.setClipToView(True)
+            axis.setLabel("left", name)
+            axis.showGrid(x=True, y=True, alpha=0.3)
+            axis.enableAutoRange(axis=self._pg.ViewBox.YAxis, enable=True)
+            if index:
+                axis.setXLink(self._axes[0])
+            if index < len(self._axes) - 1:
+                axis.hideAxis("bottom")
             self._lines.append(line)
-        self._axes[-1].set_xlabel("time (s)")
-        self._figure.canvas.manager.set_window_title("Magnetic Levitation telemetry")
-        self._figure.tight_layout()
-        self._plt.show(block=False)
+        self._axes[-1].setLabel("bottom", "firmware time", units="s")
+        streams = ", ".join(f"{s['name']}@{s['rate_hz']}Hz" for s in self.catalog.streams.values())
+        self._window.setWindowTitle(f"Magnetic Levitation telemetry - streams: {streams}")
+        self._window.show()
         self._dirty = True
 
-    def set_channels(self, channel_names: Iterable[str]) -> None:
-        indices = list(selected_channels(channel_names, self._available_channels))
-        if not indices:
+    def set_channels(self, names: Iterable[str]) -> None:
+        names = self._validate(names)
+        if not names:
             raise ValueError("Select at least one telemetry variable")
-        if indices == self._indices:
+        if names == self._names:
             return
         self.close()
-        self._indices = indices
+        self._set_names(names)
         self._create_figure()
 
-    def add_channels(self, channel_names: Iterable[str]) -> None:
-        additions = selected_channels(channel_names, self._available_channels)
-        self.set_channels([*self.channel_names, *(self._available_channels[index] for index in additions)])
+    def add_channels(self, names: Iterable[str]) -> None:
+        self.set_channels([*self._names, *names])
 
-    def remove_channels(self, channel_names: Iterable[str]) -> None:
-        unwanted = set(selected_channels(channel_names, self._available_channels))
-        self.set_channels(self._available_channels[index] for index in self._indices if index not in unwanted)
+    def remove_channels(self, names: Iterable[str]) -> None:
+        unwanted = set(self._validate(names))
+        self.set_channels(n for n in self._names if n not in unwanted)
 
-    def feed(self, data: bytes) -> None:
-        for frame in self._decoder.feed(data):
-            if self._last_sequence is not None:
-                gap = (frame.sequence - self._last_sequence) & 0xFF
-                if gap == 0:
-                    continue
-                self._missing += gap - 1
-                self._sample_number += gap
-            self._last_sequence = frame.sequence
-            self._samples.append(self._sample_number / self.rate_hz)
-            for bucket, value in zip(self._values, frame.values):
-                bucket.append(value)
-            self._sample_number += 1
+    def on_sample(self, sample: StreamSample) -> None:
+        """Link stream sink: place one sample on the firmware time axis."""
+        if self._last_tick is None:
+            self._unwrapped = self._base = sample.tick
+        else:
+            # Signed 32-bit delta tolerates wrap-around and slight cross-stream reordering.
+            self._unwrapped += ((sample.tick - self._last_tick + 0x80000000) & 0xFFFFFFFF) - 0x80000000
+        self._last_tick = sample.tick
+        if self.paused:
+            return  # keep the tick unwrapper continuous so resume has no jump
+        t = (self._unwrapped - self._base) / self.tick_hz
+        stream_names = sorted(
+            (name for name in self._names if self._available[name]["stream"] == sample.stream),
+            key=lambda name: self._available[name]["offset"],
+        )
+        if not stream_names or len(sample.data) != sum(self._available[name]["size"] for name in stream_names):
+            return
+        offset = 0
+        for name in stream_names:
+            var = self._available[name]
+            raw = sample.data[offset:offset + var["size"]]
+            offset += var["size"]
+            self._x[name].append(t)
+            self._y[name].append(float(decode_value(raw, var["format"])))
             self._dirty = True
-
-    def discard(self, data: bytes) -> None:
-        """Consume frames without changing the displayed history while paused."""
-        for frame in self._decoder.feed(data):
-            # Keep the next resumed frame adjacent to the visible history.
-            # The host still drains USB continuously, avoiding device-side drops.
-            self._last_sequence = frame.sequence
 
     def pause(self) -> None:
         self.paused = True
-        # Stop applying automatic limits so toolbar pan/zoom remains intact.
-        self._follow_time = False
+        self._follow_time = False  # keep toolbar pan/zoom intact
 
     def resume(self) -> None:
         self.paused = False
@@ -185,36 +171,51 @@ class LiveTelemetryPlot:
         if not self.is_open:
             return False
         now = time.monotonic()
-        if self._dirty and self._samples and now - self._last_draw >= 1 / 30:
-            x_values = list(self._samples)
-            for axis, line, index in zip(self._axes, self._lines, self._indices):
-                line.set_data(x_values, list(self._values[index]))
-                axis.relim()
-                axis.autoscale_view(scalex=False, scaley=True)
+        if self._dirty and now - self._last_draw >= 1 / 30:
+            right = max((x[-1] for x in self._x.values() if x), default=0.0)
+            for line, name in zip(self._lines, self._names):
+                xs, ys = self._x[name], self._y[name]
+                while xs and xs[0] < right - 1.1 * self.window_seconds:
+                    xs.popleft()
+                    ys.popleft()
+                line.setData(xs, ys)
             if self._follow_time:
-                right = x_values[-1]
-                self._axes[-1].set_xlim(max(0.0, right - self.window_seconds), max(self.window_seconds, right))
-            self._figure.suptitle(f"{self.rate_hz} Hz  |  host sequence gaps: {self._missing}")
-            self._figure.canvas.draw_idle()
+                self._axes[-1].setXRange(
+                    right - self.window_seconds,
+                    max(right, self.window_seconds),
+                    padding=0,
+                )
             self._last_draw = now
             self._dirty = False
-        self._plt.pause(0.001)
+        self._qt_widgets.QApplication.processEvents()
         return self.is_open
 
     def close(self) -> None:
-        if self._figure is not None:
-            self._plt.close(self._figure)
-            self._figure = None
+        if self._window is not None:
+            self._window.close()
+            self._window = None
 
 
-def plot_live(port, available_channels: Iterable[str], channel_names: Iterable[str], rate_hz: int, window_seconds: float = 5.0) -> None:
+def plot_live(link: Link, catalog: ParameterCatalog, tick_hz: int, names: Iterable[str], window_seconds: float = 5.0) -> None:
     """Run a standalone live plot outside the interactive REPL."""
-    plot = LiveTelemetryPlot(available_channels, channel_names, rate_hz, window_seconds)
-    print("Telemetry plot is open; close its window or press Ctrl-C to stop.")
+    plot = LiveTelemetryPlot(catalog, tick_hz, names, window_seconds)
+    subscribed = False
     try:
+        link.stream_sink = None
+        link.stream_filter = frozenset()
+        link.set_stream_subscription(plot.subscription_ids)
+        subscribed = True
+        link.stream_filter = plot.stream_ids
+        link.stream_sink = plot.on_sample
+        print("Telemetry plot is open; close its window or press Ctrl-C to stop.")
         while plot.is_open:
-            waiting = getattr(port, "in_waiting", 0)
-            plot.feed(port.read(waiting or 4096))
+            link.pump()
             plot.refresh()
     finally:
-        plot.close()
+        link.stream_sink = None
+        link.stream_filter = frozenset()
+        try:
+            if subscribed:
+                link.set_stream_subscription(())
+        finally:
+            plot.close()

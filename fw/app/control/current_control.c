@@ -3,19 +3,21 @@
 #include "ch32fun.h"
 #include "pinout.h"
 #include "fsm.h"
-#include "parameters.h"
+#include "vars.h"
 #include "control_f16.h"
 #include "tasks.h"
-#include "telemetry.h"
+#include "scheduler.h"
+#include "setpoint.h"
+#include "fault_limits.h"
 
 
 /* ============================================================================
  * ADC Configuration
  * ========================================================================== */
 
-#define ADC_SEQUENCE_LENGTH    5U
-#define ADC_DMA_FRAME_COUNT    32U
-#define ADC_DMA_SAMPLE_COUNT   (ADC_SEQUENCE_LENGTH * ADC_DMA_FRAME_COUNT)
+#define CURRENT_CONTROL_ADC_SEQUENCE_LENGTH  5U
+#define CURRENT_CONTROL_ADC_DMA_FRAME_COUNT   32U
+#define CURRENT_CONTROL_ADC_DMA_SAMPLE_COUNT  (CURRENT_CONTROL_ADC_SEQUENCE_LENGTH * CURRENT_CONTROL_ADC_DMA_FRAME_COUNT)
 
 
 /* ============================================================================
@@ -31,74 +33,74 @@
  *   [3] MAG
  *   [4] TEMP
  */
-static volatile uint16_t adc_dma_buffer[ADC_DMA_SAMPLE_COUNT];
-static uint16_t adc_dma_read_frame;
+static volatile uint16_t current_control_adc_dma_buffer[CURRENT_CONTROL_ADC_DMA_SAMPLE_COUNT];
+static uint16_t current_control_adc_dma_read_frame;
 
-static uint16_t adc_mag_raw;
-static uint16_t adc_temp_raw;
+static uint16_t magnetic_field_adc_raw;
+static uint16_t temp_adc_raw;
 
-static fix16_t v_meas;
+static uint16_t i_ref_adc_raw;
+static uint16_t i_meas_adc_raw;
+static fix16_t v_fb;
 static fix16_t i_fb;
-static fix16_t i_sp;
+static fix16_t i_sp_active;
+static fix16_t pwm_duty_a;
+
+static stream_id_t current_control_stream = VARS_STREAM_NONE;
 
 
 /* Current controller.
- * Gains and limits are configured in init_current_controller().
+ * Gains and limits are configured in current_control_controller_init().
  */
-static pid_f16_t current_controller = {0};
-
-/* Last-applied gains, kept only to detect changes from comms. */
-static fix16_t cached_kp;
-static fix16_t cached_ki;
-static uint32_t pwm_switching_frequency_hz;
+static pid_f16_t current_control_pid = {0};
 
 /* ============================================================================
  * Forward declarations
  * ========================================================================== */
 
-static void init_adc_current_control(void);
-static void drain_adc_dma(void);
-static void init_current_controller(void);
-static void update_current_controller_parameters(void);
-static void apply_pwm_switching_frequency(uint32_t frequency_hz);
+static void current_control_adc_init(void);
+static void current_control_adc_drain_dma(void);
+static void current_control_controller_init(void);
 
 /* ============================================================================
  * Control loop
  * ========================================================================== */
 
-void task_current_control(void)
+void current_control_task(void)
 {
-    fix16_t telemetry_values[TELEMETRY_CHANNEL_COUNT];
     /*
      * Always process ADC data, even when PWM output is disabled.
      */
-    drain_adc_dma();
+    const uint32_t tick = scheduler_get_tick();
+    current_control_adc_drain_dma();
 
-    /* Fetch parameter updates from comms */
-    update_current_controller_parameters();
+    const fix16_t i_magnitude = (i_fb < 0) ? -i_fb : i_fb;
+    if (i_magnitude >= FAULT_OVERCURRENT_LIMIT_A_Q16) {
+        fsm_raise_fault(FAULT_OVERCURRENT);
+    }
+    if (v_fb >= FAULT_OVERVOLTAGE_LIMIT_V_Q16) {
+        fsm_raise_fault(FAULT_OVERVOLTAGE);
+    }
 
     /*
-     * PWM is only allowed while the FSM is in the current-control state.
+     * PWM is allowed in manual-current and manual-position control states.
      * Any other state forces both bridge outputs off.
      */
-    if (fsm_state() != FSM_CURRENT_CONTROL) {
+    if (fsm_state() != FSM_CURRENT_CONTROL && fsm_state() != FSM_POSITION_CONTROL) {
 
         // Reset the current controller so it doesn't wind up while idle.
-        current_controller.sp = 0;
-        current_controller.integral_k = 0;
-        current_controller.integral_k1 = 0;
-        current_controller.out = 0;
+        current_control_pid.sp = 0;
+        current_control_pid.integral_k = 0;
+        current_control_pid.integral_k1 = 0;
+        current_control_pid.out = 0;
 
         // Force PWM outputs off.
         TIM1->CH1CVR = 0;
         TIM1->CH2CVR = 0;
 
         // Current is still worth measuring; everything else reports as 0.
-        telemetry_values[0] = i_fb;
-        telemetry_values[1] = 0;
-        telemetry_values[2] = 0;
-        telemetry_values[3] = 0;
-        telemetry_capture(telemetry_values, TELEMETRY_CHANNEL_COUNT);
+        pwm_duty_a = 0;
+        vars_stream_emit_at(current_control_stream, tick);
         return;
     }
 
@@ -108,34 +110,29 @@ void task_current_control(void)
      * ------------------------------------------------------------------------
      */
 
-    fix16_t duty_a = 0;
-    fix16_t duty_b = 0;
+    fix16_t pwm_duty_b = 0;
 
     fix16_t modulation_index = 0;
 
-    current_controller.sp = i_sp;
-    current_controller.fb = i_fb;
-    current_controller.lim_p = v_meas;
-    current_controller.lim_n = -v_meas;
+    i_sp_active = setpoint_get_i_sp();
+    current_control_pid.sp = i_sp_active;
+    current_control_pid.fb = i_fb;
+    current_control_pid.lim_p = v_fb;
+    current_control_pid.lim_n = -v_fb;
 
-    pid_f16_run(&current_controller);
-    modulation_index = fix16_div(current_controller.out, v_meas);
+    pid_f16_run(&current_control_pid);
+    modulation_index = fix16_div(current_control_pid.out, v_fb);
 
     // duty = 0.5 gives zero output voltage.
-    // duty = 0.0 gives -v_meas.
-    // duty = 1.0 gives +v_meas.
-    duty_a = fix16_mul(modulation_index, fix16_from_float(0.5f)) + fix16_from_float(0.5f);
-    duty_b = fix16_one - duty_a;
+    // duty = 0.0 gives -v_fb.
+    // duty = 1.0 gives +v_fb.
+    pwm_duty_a = fix16_mul(modulation_index, fix16_from_float(0.5f)) + fix16_from_float(0.5f);
+    pwm_duty_b = fix16_one - pwm_duty_a;
 
-    TIM1->CH1CVR = current_control_duty_to_ticks(duty_a);
-    TIM1->CH2CVR = current_control_duty_to_ticks(duty_b);
+    TIM1->CH1CVR = current_control_duty_to_ticks(pwm_duty_a);
+    TIM1->CH2CVR = current_control_duty_to_ticks(pwm_duty_b);
 
-    // Stream variables
-    telemetry_values[0] = current_controller.fb;
-    telemetry_values[1] = current_controller.sp;
-    telemetry_values[2] = current_controller.out;
-    telemetry_values[3] = duty_a;
-    telemetry_capture(telemetry_values, TELEMETRY_CHANNEL_COUNT);
+    vars_stream_emit_at(current_control_stream, tick);
 
 }
 
@@ -144,7 +141,7 @@ void task_current_control(void)
  * Current-controller configuration
  * ========================================================================== */
 
-static void init_current_controller(void)
+static void current_control_controller_init(void)
 {
     /*
      * PI tuning:
@@ -161,12 +158,12 @@ static void init_current_controller(void)
      *
      * No derivative term is used.
      */
-    current_controller = (pid_f16_t){
+    current_control_pid = (pid_f16_t){
         .kp = fix16_from_float(0.9f),
         .ki = fix16_from_float(600.0f),
         .kd = fix16_from_float(0.0f),
 
-        .ts = TASK_CURRENT_CONTROL_S_F16,
+        .ts = TASK_CURRENT_CONTROL_PERIOD_S_Q16,
 
         /* Output is currently limited to the available voltage range. */
         .lim_p = fix16_from_float(1.0f),
@@ -174,66 +171,11 @@ static void init_current_controller(void)
     };
 }
 
-static void update_current_controller_parameters(void)
-{
-    fix16_t fetched_kp;
-    fix16_t fetched_ki;
-    fix16_t fetched_i_sp;
-    uint32_t fetched_fsw_hz;
-
-    if (parameters_fetch(
-            PARAM_ID_CURRENT_KP,
-            &fetched_kp,
-            sizeof(fetched_kp)) >= 0) {
-
-        if (fetched_kp != cached_kp) {
-            cached_kp = fetched_kp;
-            current_controller.kp = fetched_kp;
-        }
-    }
-
-    if (parameters_fetch(
-            PARAM_ID_CURRENT_KI,
-            &fetched_ki,
-            sizeof(fetched_ki)) >= 0) {
-
-        if (fetched_ki != cached_ki) {
-            cached_ki = fetched_ki;
-            current_controller.ki = fetched_ki;
-        }
-    }
-
-    if (parameters_fetch(
-            PARAM_ID_I_SP,
-            &fetched_i_sp,
-            sizeof(fetched_i_sp)) >= 0) {
-
-        /* TODO: drop this once the setpoint comes from position_control
-         * instead of directly from comms. */
-        i_sp = fetched_i_sp;
-    }
-
-    if (parameters_fetch(
-            PARAM_ID_FSW,
-            &fetched_fsw_hz,
-            sizeof(fetched_fsw_hz)) >= 0) {
-
-        if (fetched_fsw_hz != pwm_switching_frequency_hz) {
-            apply_pwm_switching_frequency(fetched_fsw_hz);
-
-            pwm_switching_frequency_hz = fetched_fsw_hz;
-
-            LOG("PWM switching frequency updated to %u Hz", (unsigned int)pwm_switching_frequency_hz);
-        }
-    }
-}
-
-
 /* ============================================================================
  * ADC
  * ========================================================================== */
 
-static void init_adc_current_control(void)
+static void current_control_adc_init(void)
 {
     /* Enable and reset ADC1. */
     RCC->APB2PCENR |= RCC_APB2Periph_ADC1;
@@ -265,16 +207,16 @@ static void init_adc_current_control(void)
      *   code 7: 241 cycles  = 40.17 us
      *
      * Channel mapping:
-     *   CH2 = I_REF
-     *   CH3 = MAG
-     *   CH4 = V_MEAS
+     *   CH2 = MAG
+     *   CH3 = V_MEAS
+     *   CH4 = I_REF
      *   CH5 = I_MEAS
      *   CH6 = TEMP
      */
     ADC1->SAMPTR2 =
-        ((ADC_SMP0_1)            << (3U * 2U)) |  /* CH2: I_REF */
-        ((ADC_SMP0_1)            << (3U * 3U)) |  /* CH3: MAG */
-        ((ADC_SMP0_0 | ADC_SMP0_2) << (3U * 4U)) | /* CH4: V_MEAS */
+        ((ADC_SMP0_1)            << (3U * 2U)) |  /* CH2: MAG */
+        ((ADC_SMP0_1)            << (3U * 3U)) |  /* CH3: V_MEAS */
+        ((ADC_SMP0_0 | ADC_SMP0_2) << (3U * 4U)) | /* CH4: I_REF */
         ((ADC_SMP0_1) << (3U * 5U)) | /* CH5: I_MEAS */
         ((ADC_SMP0_1)            << (3U * 6U));   /* CH6: TEMP */
 
@@ -284,14 +226,14 @@ static void init_adc_current_control(void)
     /* Scan five channels per trigger. */
     ADC1->CTLR1 = ADC_SCAN;
 
-    ADC1->RSQR1 = ((ADC_SEQUENCE_LENGTH - 1U) << 20U);
+    ADC1->RSQR1 = ((CURRENT_CONTROL_ADC_SEQUENCE_LENGTH - 1U) << 20U);
     ADC1->RSQR2 = 0;
 
     ADC1->RSQR3 =
-        (3U << 0U)  |   /* CH3: MAG */
-        (4U << 5U)  |   /* CH4: V_MEAS */
-        (5U << 10U) |   /* CH5: I_REF */
-        (2U << 15U) |   /* CH2: I_MEAS */
+        (3U << 0U)  |   /* CH3: V_MEAS */
+        (4U << 5U)  |   /* CH4: I_REF */
+        (5U << 10U) |   /* CH5: I_MEAS */
+        (2U << 15U) |   /* CH2: MAG */
         (6U << 20U);    /* CH6: TEMP */
 
     ADC1->CTLR2 = ADC_ADON;
@@ -312,8 +254,8 @@ static void init_adc_current_control(void)
 
     DMA1_Channel1->CFGR = 0;
     DMA1_Channel1->PADDR = (uintptr_t)&ADC1->RDATAR;
-    DMA1_Channel1->MADDR = (uintptr_t)adc_dma_buffer;
-    DMA1_Channel1->CNTR = ADC_DMA_SAMPLE_COUNT;
+    DMA1_Channel1->MADDR = (uintptr_t)current_control_adc_dma_buffer;
+    DMA1_Channel1->CNTR = CURRENT_CONTROL_ADC_DMA_SAMPLE_COUNT;
 
     DMA1_Channel1->CFGR =
         DMA_CFGR1_CIRC |
@@ -332,13 +274,13 @@ static void init_adc_current_control(void)
 }
 
 
-static void drain_adc_dma(void)
+static void current_control_adc_drain_dma(void)
 {
-    uint32_t voltage_sum = 0;
-    uint32_t current_ref_sum = 0;
-    uint32_t current_meas_sum = 0;
-    uint32_t mag_sum = 0;
-    uint32_t temp_sum = 0;
+    uint32_t v_adc_sum = 0;
+    uint32_t i_ref_adc_sum = 0;
+    uint32_t i_meas_adc_sum = 0;
+    uint32_t magnetic_field_adc_sum = 0;
+    uint32_t temp_adc_sum = 0;
 
     uint16_t frame_count = 0;
 
@@ -349,12 +291,12 @@ static void drain_adc_dma(void)
      */
     const uint16_t write_sample =
         (uint16_t)(
-            (ADC_DMA_SAMPLE_COUNT - DMA1_Channel1->CNTR)
-            % ADC_DMA_SAMPLE_COUNT
+            (CURRENT_CONTROL_ADC_DMA_SAMPLE_COUNT - DMA1_Channel1->CNTR)
+            % CURRENT_CONTROL_ADC_DMA_SAMPLE_COUNT
         );
 
     const uint16_t write_frame =
-        (uint16_t)(write_sample / ADC_SEQUENCE_LENGTH);
+        (uint16_t)(write_sample / CURRENT_CONTROL_ADC_SEQUENCE_LENGTH);
 
 
     /*
@@ -364,22 +306,22 @@ static void drain_adc_dma(void)
      * task falls behind DMA.
      */
     while (
-        adc_dma_read_frame != write_frame &&
-        frame_count < ADC_DMA_FRAME_COUNT
+        current_control_adc_dma_read_frame != write_frame &&
+        frame_count < CURRENT_CONTROL_ADC_DMA_FRAME_COUNT
     ) {
         const uint16_t offset =
-            adc_dma_read_frame * ADC_SEQUENCE_LENGTH;
+            current_control_adc_dma_read_frame * CURRENT_CONTROL_ADC_SEQUENCE_LENGTH;
 
-        voltage_sum     += adc_dma_buffer[offset + 0U];
-        current_ref_sum += adc_dma_buffer[offset + 1U];
-        current_meas_sum += adc_dma_buffer[offset + 2U];
-        mag_sum         += adc_dma_buffer[offset + 3U];
-        temp_sum        += adc_dma_buffer[offset + 4U];
+        v_adc_sum += current_control_adc_dma_buffer[offset + 0U];
+        i_ref_adc_sum += current_control_adc_dma_buffer[offset + 1U];
+        i_meas_adc_sum += current_control_adc_dma_buffer[offset + 2U];
+        magnetic_field_adc_sum += current_control_adc_dma_buffer[offset + 3U];
+        temp_adc_sum += current_control_adc_dma_buffer[offset + 4U];
 
-        adc_dma_read_frame =
+        current_control_adc_dma_read_frame =
             (uint16_t)(
-                (adc_dma_read_frame + 1U)
-                % ADC_DMA_FRAME_COUNT
+                (current_control_adc_dma_read_frame + 1U)
+                % CURRENT_CONTROL_ADC_DMA_FRAME_COUNT
             );
 
         ++frame_count;
@@ -398,20 +340,16 @@ static void drain_adc_dma(void)
      * Averaging here reduces ADC noise before the values reach the control
      * algorithm and the parameter system.
      */
-    const uint16_t voltage_raw =
-        (uint16_t)(voltage_sum / frame_count);
+    const uint16_t v_adc_raw = (uint16_t)(v_adc_sum / frame_count);
 
-    const uint16_t current_ref_raw =
-        (uint16_t)(current_ref_sum / frame_count);
+    i_ref_adc_raw = (uint16_t)(i_ref_adc_sum / frame_count);
+    i_meas_adc_raw = (uint16_t)(i_meas_adc_sum / frame_count);
 
-    const uint16_t current_meas_raw =
-        (uint16_t)(current_meas_sum / frame_count);
+    magnetic_field_adc_raw =
+        (uint16_t)(magnetic_field_adc_sum / frame_count);
 
-    adc_mag_raw =
-        (uint16_t)(mag_sum / frame_count);
-
-    adc_temp_raw =
-        (uint16_t)(temp_sum / frame_count);
+    temp_adc_raw =
+        (uint16_t)(temp_adc_sum / frame_count);
 
 
     /*
@@ -419,25 +357,18 @@ static void drain_adc_dma(void)
      *
      * i_fb is measured current minus the current-reference offset.
      */
-    v_meas = fix16_mul(
-        fix16_from_int(voltage_raw),
-        ADC_V_MEAS_GAIN
+    v_fb = fix16_mul(
+        fix16_from_int(v_adc_raw),
+        CURRENT_CONTROL_ADC_V_MEAS_GAIN
     );
 
     i_fb = fix16_mul(
         fix16_from_int(
-            (int32_t)current_meas_raw -
-            (int32_t)current_ref_raw
+            (int32_t)i_meas_adc_raw -
+            (int32_t)i_ref_adc_raw
         ),
-        ADC_I_MEAS_GAIN
+        CURRENT_CONTROL_ADC_I_MEAS_GAIN
     );
-
-
-    // Publish measurements to comms. TODO: make some sort of high speed stream for these
-    parameters_publish(PARAM_ID_V_MEAS, &v_meas);
-    parameters_publish(PARAM_ID_I_REF, &current_ref_raw);
-    parameters_publish(PARAM_ID_I_MEAS, &current_meas_raw);
-    parameters_publish(PARAM_ID_I_FB, &i_fb);
 }
 
 
@@ -479,7 +410,7 @@ uint16_t current_control_duty_to_ticks(fix16_t duty_q16)
 /*
  * Convert a uint32 frequency into TIM1 ticks.
  */
-static uint32_t pwm_frequency_to_period_ticks(uint32_t frequency_hz)
+static uint32_t current_control_pwm_frequency_to_period_ticks(uint32_t frequency_hz)
 {
     if (frequency_hz == 0U) {
         return 0U;
@@ -496,41 +427,11 @@ static uint32_t pwm_frequency_to_period_ticks(uint32_t frequency_hz)
     ) - 1U;
 }
 
-/*
- * Safely update switching frequency
- */
-static void apply_pwm_switching_frequency(uint32_t frequency_hz)
-{
-    const uint32_t period_ticks =
-        pwm_frequency_to_period_ticks(frequency_hz);
-
-    if (period_ticks == 0U) {
-        return;
-    }
-
-    /*
-     * Stop timer while changing its period.
-     */
-    TIM1->CTLR1 &= ~TIM_CEN;
-
-    TIM1->ATRLR = period_ticks;
-
-    /*
-     * Force ARR shadow register update.
-     */
-    TIM1->SWEVGR = TIM_UG;
-
-    /*
-     * Restart PWM.
-     */
-    TIM1->CTLR1 |= TIM_CEN;
-}
-
-void init_pwm_current_control(void)
+static void current_control_pwm_init(void)
 {
     const uint32_t timer_clk_hz = FUNCONF_SYSTEM_CORE_CLOCK;
 
-    const uint32_t pwm_period_ticks = pwm_frequency_to_period_ticks(PWM_SWITCHING_FREQUENCY_HZ);
+    const uint32_t pwm_period_ticks = current_control_pwm_frequency_to_period_ticks(CURRENT_CONTROL_PWM_SWITCHING_FREQUENCY_HZ);
 
 
     /*
@@ -545,20 +446,12 @@ void init_pwm_current_control(void)
     const uint64_t deadtime_ticks_raw =
         (
             (uint64_t)timer_clk_hz *
-            (uint64_t)PWM_DEADTIME_NS +
+            (uint64_t)CURRENT_CONTROL_PWM_DEADTIME_NS +
             500000000ULL
         ) / 1000000000ULL;
 
     uint32_t deadtime_ticks =
         (uint32_t)deadtime_ticks_raw;
-
-
-    LOG(
-        "period_ticks=%u deadtime_ticks=%u",
-        (unsigned int)pwm_period_ticks,
-        (unsigned int)deadtime_ticks
-    );
-
 
     /* Enable TIM1. */
     RCC->APB2PCENR |= RCC_APB2Periph_TIM1;
@@ -620,10 +513,10 @@ void init_pwm_current_control(void)
 
     /* Apply configured output polarities. */
     TIM1->CCER |=
-        (PWM_AH_POLARITY ? TIM_CC1P  : 0U) |
-        (PWM_AL_POLARITY ? TIM_CC1NP : 0U) |
-        (PWM_BH_POLARITY ? TIM_CC2P  : 0U) |
-        (PWM_BL_POLARITY ? TIM_CC2NP : 0U);
+        (CURRENT_CONTROL_PWM_AH_POLARITY ? TIM_CC1P  : 0U) |
+        (CURRENT_CONTROL_PWM_AL_POLARITY ? TIM_CC1NP : 0U) |
+        (CURRENT_CONTROL_PWM_BH_POLARITY ? TIM_CC2P  : 0U) |
+        (CURRENT_CONTROL_PWM_BL_POLARITY ? TIM_CC2NP : 0U);
 
 
     /*
@@ -676,7 +569,7 @@ void init_pwm_current_control(void)
  * Initialization
  * ========================================================================== */
 
-void init_pins_current_control(void)
+void current_control_init(void)
 {
     /* Configure all current control ADC inputs as analog inputs. */
     funPinMode(PIN_V_MEAS,    GPIO_CFGLR_IN_ANALOG);
@@ -686,11 +579,26 @@ void init_pins_current_control(void)
     funPinMode(PIN_TEMP_MEAS, GPIO_CFGLR_IN_ANALOG);
 
     /* Hardware initialization. */
-    init_adc_current_control();
-    init_pwm_current_control();
+    current_control_adc_init();
+    current_control_pwm_init();
 
     /* Control loop configuration. */
-    init_current_controller();
+    current_control_controller_init();
+
+    /* Host-visible variables. Gains point straight into the controller. */
+    current_control_stream = vars_create_stream("current", TASK_CURRENT_CONTROL_HZ);
+
+    VARS_PARAM("i_kp", VAR_F16, &current_control_pid.kp);
+    VARS_PARAM("i_ki", VAR_F16, &current_control_pid.ki);
+    VARS_MONITOR("v_fb", VAR_F16, &v_fb, VARS_STREAM_NONE);
+    VARS_MONITOR("i_ref_adc_raw", VAR_U16, &i_ref_adc_raw, VARS_STREAM_NONE);
+    VARS_MONITOR("i_meas_adc_raw", VAR_U16, &i_meas_adc_raw, VARS_STREAM_NONE);
+
+    /* Sampled every control period (in stream order). */
+    VARS_MONITOR("i_fb", VAR_F16, &i_fb, current_control_stream);
+    VARS_MONITOR("i_sp", VAR_F16, &i_sp_active, current_control_stream);
+    VARS_MONITOR("v_out", VAR_F16, &current_control_pid.out, current_control_stream);
+    VARS_MONITOR("duty_a", VAR_F16, &pwm_duty_a, current_control_stream);
 }
 
 
@@ -698,13 +606,13 @@ void init_pins_current_control(void)
  * Public measurements
  * ========================================================================== */
 
-uint16_t get_mag_meas_raw(void)
+uint16_t current_control_get_magnetic_field_adc_raw(void)
 {
-    return adc_mag_raw;
+    return magnetic_field_adc_raw;
 }
 
 
-uint16_t get_temp_meas_raw(void)
+uint16_t current_control_get_temp_adc_raw(void)
 {
-    return adc_temp_raw;
+    return temp_adc_raw;
 }

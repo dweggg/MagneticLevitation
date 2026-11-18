@@ -44,10 +44,24 @@ class ParameterCatalog:
     def __init__(self) -> None:
         self._by_id: dict[int, dict[str, Any]] = {}
         self._by_name: dict[str, int] = {}
+        self.streams: dict[int, dict[str, Any]] = {}
 
     def clear(self) -> None:
         self._by_id.clear()
         self._by_name.clear()
+        self.streams.clear()
+
+    def update_streams(self, items: Iterable[dict[str, Any]]) -> None:
+        for item in items:
+            self.streams[int(item["id"])] = dict(item)
+
+    def stream_vars(self, stream_id: int | None = None) -> list[dict[str, Any]]:
+        """Streamed variables in wire order (stream, offset); optionally one stream."""
+        found = [i for i in self._by_id.values() if i.get("stream", 0xFF) != 0xFF and (stream_id is None or i["stream"] == stream_id)]
+        return sorted(found, key=lambda i: (i["stream"], i["offset"]))
+
+    def variable_by_name(self, name: str) -> dict[str, Any]:
+        return self._by_id[self.resolve(name)]
 
     def update(self, items: Iterable[dict[str, Any]]) -> list[dict[str, Any]]:
         normalized: list[dict[str, Any]] = []
@@ -60,6 +74,8 @@ class ParameterCatalog:
             normalized_format = normalize_format_name(raw_format)
             info["format"] = normalized_format
             info["size"] = int(info.get("size", 0))
+            info["stream"] = int(info.get("stream", 0xFF))
+            info["offset"] = int(info.get("offset", 0))
             info["fmt_name"] = normalized_format
             self._by_id[obj_id] = info
             self._by_name[str(info["name"]).strip().lower()] = obj_id
@@ -79,6 +95,8 @@ class ParameterCatalog:
             "direction": 0,
             "format": "raw",
             "size": 0,
+            "stream": 0xFF,
+            "offset": 0,
             "fmt_name": "raw",
         }
         return fallback

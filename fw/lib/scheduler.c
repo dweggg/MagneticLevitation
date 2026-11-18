@@ -83,7 +83,8 @@ void scheduler_run(void) {
             uint32_t delta_ticks = end - start;
             next->last_exec_us = (delta_ticks * 1000000U) / sched_ticks_per_sec;
 
-            next->last_tick += next->period_ticks;
+            uint32_t elapsed = end - next->last_tick;
+            next->last_tick += (elapsed / next->period_ticks) * next->period_ticks;
             next->exec_count++;
         } else {
             sched_dummy++;
